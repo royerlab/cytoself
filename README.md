@@ -13,6 +13,6 @@ https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1 <br />
 https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1
 
 
-We are currently cleaning our code to make it easier for others to look at and use.
-Please bear with us while we prepare our code, examples, and package cytoself.
+** NOTE: We are currently cleaning our code to make it easier for others to look at and use.
+Please bear with us while we prepare our code, examples, and package cytoself. **
 
