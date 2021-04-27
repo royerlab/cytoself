@@ -4,7 +4,7 @@ Applying cytoself to images of 1311 endogenously labeled proteins from the recen
 [OpenCell](https://opencell.czbiohub.org) database creates a highly resolved protein localization atlas
 [[1]](https://www.biorxiv.org/content/10.1101/2021.03.29.437450v1). 
 The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
-proteins on the sole basis of their localization [2](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
+proteins on the sole basis of their localization [[2]](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
 
 [1] Cho, Nathan H., et al. "OpenCell: proteome-scale endogenous tagging enables the cartography of human cellular organization." bioRxiv (2021).
 https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1
