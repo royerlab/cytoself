@@ -44,7 +44,7 @@ There is a submodule for each model variant that provides methods for constructi
 
 `Analytics` is a simple module to perform analytic processes such as dimension reduction and plotting. 
 You may want to modify it too to perform your own analysis. This module is in `cytoself.analysis.analytics`. 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself_internal/blob/main/examples/simple_example.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
 
 
 ## Installation
