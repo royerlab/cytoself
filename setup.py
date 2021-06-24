@@ -34,6 +34,7 @@ setuptools.setup(
     version=get_version("cytoself/__init__.py"),
     author="",
     author_email="",
+    license="BSD 3-Clause",
     description="An image feature extractor with self-supervised learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
