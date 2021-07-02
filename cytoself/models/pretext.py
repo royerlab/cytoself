@@ -43,7 +43,7 @@ class CytoselfPretextModel(CytoselfBaseModel):
         early_stop_lr=1e-8,
         callbacks_start_from=10,
         num_embeddings=(128, 128),
-        embedding_dims=(64, 64),  # was (64, 512) in older models
+        embedding_dims=(64, 64),
         commitment_costs=(0.25, 0.25),
         num_fc_units=128,
         num_fc_output_classes=1311,

@@ -9,7 +9,7 @@
 
 ![Alt Text](images/rotating_umap.gif)
 
-cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from cell images. 
+cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from microscopy images. 
 This model is described in detail in our recent preprint [[2]](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
 The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
 proteins on the sole basis of their localization.
@@ -26,7 +26,8 @@ https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1
 
 ## How cytoself works
 cytoself uses images and its identity information as a label to learn the localization patterns of proteins.
-We used cell images where single protein is labeled and the ID of labeled protein as identity information.
+We used cell images where single protein is labeled and the ID of labeled protein as 
+identity information.
 
 ![Alt Text](images/workflow.jpg)
 
