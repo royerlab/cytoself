@@ -33,18 +33,26 @@ identity information.
 
 
 ## What's in this repository
-This repository offers three main components: `DataManager`, `cytoself.models`, and `Analytics`.
+This repository offers three main components: 
+[`DataManager`](https://github.com/royerlab/cytoself/blob/df0e421aa291879275582c51119cbd0319b2a004/cytoself/data_loader/data_manager.py#L6), 
+[`cytoself.models`](https://github.com/royerlab/cytoself/tree/main/cytoself/models), 
+and 
+[`Analytics`](https://github.com/royerlab/cytoself/blob/df0e421aa291879275582c51119cbd0319b2a004/cytoself/analysis/analytics.py#L18).
 
-`DataManager` is a simple module to handle train, validate and test data. 
+[`DataManager`](https://github.com/royerlab/cytoself/blob/df0e421aa291879275582c51119cbd0319b2a004/cytoself/data_loader/data_manager.py#L6) 
+is a simple module to handle train, validate and test data. 
 You may want to modify it to adapt to your own data structure.
-This module is in `cytoself.data_loader.data_manager`.
+This module is in 
+[`cytoself.data_loader.data_manager`](https://github.com/royerlab/cytoself/blob/main/cytoself/data_loader/data_manager.py).
 
-`cytoself.models` contains modules for three different variants of the cytoself model: 
+[`cytoself.models` ](https://github.com/royerlab/cytoself/tree/main/cytoself/models)
+contains modules for three different variants of the cytoself model: 
 a model without split-quantization, a model without the pretext task, and the 'full' model (refer to our preprint for details about these variants). 
 There is a submodule for each model variant that provides methods for constructing, compiling, and training the models (which are built using tensorflow).
 
 `Analytics` is a simple module to perform analytic processes such as dimension reduction and plotting. 
-You may want to modify it too to perform your own analysis. This module is in `cytoself.analysis.analytics`. 
+You may want to modify it too to perform your own analysis. This module is in 
+[`cytoself.analysis.analytics`](https://github.com/royerlab/cytoself/blob/main/cytoself/analysis/analytics.py). 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
 
 
@@ -62,7 +70,9 @@ git clone https://github.com/royerlab/cytoself.git
 
 ## (Option) Install TensorFlow GPU
 If your computer is equipped with GPUs that supports Tensorflow 1.15, you can install Tensorflow-gpu to utilize GPUs.
-Make sure to install the following packages before running `setup.py`, otherwise you may want to uninstall and reinstall them with conda.
+Make sure to install the following packages before running 
+[`setup.py`](https://github.com/royerlab/cytoself/blob/main/setup.py)
+, otherwise you may want to uninstall and reinstall them with conda.
 ```shell script
 conda install h5py=2.10.0
 conda install tensorflow-gpu=1.15
@@ -75,7 +85,8 @@ python setup.py develop
 ```
 
 ## Example script
-A minimal example script is in `example/simple_training.py`.
+A minimal example script is in 
+[`example/simple_training.py`](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py).
 
 Test if this package runs in your computer with command 
 ```shell script
