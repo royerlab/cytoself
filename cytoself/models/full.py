@@ -124,6 +124,11 @@ class CytoselfFullModel(CytoselfSQModel):
         )
 
     def init_savepath(self, path_dict=None, domakedirs=True):
+        """
+        Create directories for saving outcomes.
+        :param path_dict: home path for the output path
+        :param domakedirs: make directories if True
+        """
         if self.kwargs.get("init_savepath"):
             # One can create custom structured folder hierarchy here.
             self.savepath_dict["metadata"] = ""
@@ -282,6 +287,10 @@ class CytoselfFullModel(CytoselfSQModel):
         )
 
     def compile_model(self, data_variance):
+        """
+        Compile a TensorFLow model.
+        :param data_variance: variance of training data. (required for VQ computation)
+        """
         if self.model is None:
             raise ValueError("Model has not been created yet.")
         else:
@@ -338,6 +347,12 @@ class CytoselfFullModel(CytoselfSQModel):
         )
 
     def plot_history(self, history_df=None, title="Training history", savepath=None):
+        """
+        Plot training history.
+        :param history_df: training history in dataframe format
+        :param title: plot title
+        :param savepath: save path
+        """
         if history_df is None:
             if self.history_df is not None:
                 history_df = self.history_df
@@ -430,6 +445,14 @@ class CytoselfFullModel(CytoselfSQModel):
     def plot_reconstruction_panel(
         self, train_raw, test_raw, channel_names=None, savepath=None, grid_size=(4, 8),
     ):
+        """
+        Plot input and output images in a panel.
+        :param train_raw: training data
+        :param test_raw: test data
+        :param channel_names: a list of channel names
+        :param savepath: save path
+        :param grid_size: grid size for each panel
+        """
         num_demo = min(train_raw.shape[0], test_raw.shape[0])
         train_raw = train_raw[:num_demo]
         test_raw = test_raw[:num_demo]
