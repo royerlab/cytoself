@@ -44,7 +44,6 @@ setuptools.setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
@@ -58,5 +57,5 @@ setuptools.setup(
     package_dir={"": f".{path.sep}"},
     packages=setuptools.find_packages(),
     install_requires=default_requirements,
-    python_requires=">=3.6, <3.8",
+    python_requires=">=3.7, <3.8",
 )

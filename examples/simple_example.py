@@ -36,7 +36,6 @@ gdown.download(
     'protein_uniloc.csv',
     quiet=False
 )
-
 # Download dendrogram index to plot feature spectrum
 gdown.download(
     'https://drive.google.com/uc?id=1WrxhGsSzivZVAlL_K2FLVsRmHrsfhyrI',
@@ -64,12 +63,14 @@ print("Constructing model and DataManager...")
 model = CytoselfFullModel(input_image_shape=[100, 100, 2], num_fc_output_classes=len(np.unique(label_data)))
 data_manager = DataManager(
         train_data=image_data[:100],
-        val_data=image_data[:100],
-        test_data=image_data,
+        val_data=image_data[100:200],
+        test_data=image_data[200:],
         train_label=label_data[:100],
-        val_label=label_data[:100],
-        test_label=label_data,
+        val_label=label_data[100:200],
+        test_label=label_data[200:],
 )
+# Note. The data split here is only to provide an example of how to run cytoself. Please make sure the data is
+# split properly when you train your read data.
 
 # Compile the model with data_manager
 model.compile_with_datamanager(data_manager)
