@@ -57,32 +57,43 @@ You may want to modify it too to perform your own analysis. This module is in
 
 
 ## Installation
-Recommended: create a new environment by
+Recommended: create a new environment and install cytoself on the environment from pypi
 ```shell script
-conda create -n cytoself python=3.7
+conda create -y -n cytoself python=3.7
+conda activate cytoself
+pip install cytoself
 ```
 
-Clone this repository 
-
-```shell script
-git clone https://github.com/royerlab/cytoself.git
-```
-
-## (Option) Install TensorFlow GPU
-If your computer is equipped with GPUs that supports Tensorflow 1.15, you can install Tensorflow-gpu to utilize GPUs.
-Make sure to install the following packages before running 
-[`setup.py`](https://github.com/royerlab/cytoself/blob/main/setup.py)
-, otherwise you may want to uninstall and reinstall them with conda.
+### (Option) Install TensorFlow GPU
+If your computer is equipped with GPUs that support Tensorflow 1.15, you can install Tensorflow-gpu to utilize GPUs.
+Install the following packages before cytoself, or uninstall the existing CPU versions and reinstall the GPU versions 
+again with conda.
 ```shell script
 conda install h5py=2.10.0
 conda install tensorflow-gpu=1.15
 ```
 
-Run the following code inside the cytoself folder to install dependencies.
+### For the developers
+
+You can also install cytoself from this GitHub repository.
 
 ```shell script
-python setup.py develop
+git clone https://github.com/royerlab/cytoself.git
+pip install .
 ```
+
+### Troubleshooting
+
+In case of getting errors in the installation, run the following code inside the cytoself folder to manually install 
+the dependencies.
+
+```shell
+pip install -r requirements.txt
+```
+
+As a reference for a complete dependency, the snapshot of a working environment can be found in 
+[`environment.yml`](https://github.com/royerlab/cytoself/blob/main/environment.yml)
+
 
 ## Example script
 A minimal example script is in 

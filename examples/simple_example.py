@@ -13,42 +13,35 @@ A simple demo.
 #%% Download example data ================================================================================
 print("Downloading data...")
 # Download model weights
-try:
-    gdown.download(
-        'https://drive.google.com/uc?id=1gkiEMKdadOel4Xh6KoS2U603JTkZhgDw',
-        'pretrained_model.h5',
-        quiet=False
-    )
-    # Download label data
-    gdown.download(
-        'https://drive.google.com/uc?id=16-0bhKrUMbZ0DSz768Z_q13yNivHyfVO',
-        'example_label.npy',
-        quiet=False
-    )
-    # Download image data
-    gdown.download(
-        'https://drive.google.com/uc?id=1znRLbYJJqd11Zqv-5_yUmNjarKcwIWMg',
-        'example_image.npy',
-        quiet=False
-    )
-    # Download localization table
-    gdown.download(
-        'https://drive.google.com/uc?id=1RM654Qavcy8gG5uy3mCzi8EsOT_xOlVd',
-        'protein_uniloc.csv',
-        quiet=False
-    )
-
-    # Download dendrogram index to plot feature spectrum
-    gdown.download(
-        'https://drive.google.com/uc?id=1WrxhGsSzivZVAlL_K2FLVsRmHrsfhyrI',
-        'dgram_index1.npy',
-        quiet=False
-    )
-except Exception as e:
-    print(
-        'An error occurred during downloading data. '
-        'This is observed occasionally but please be patient and try to run the code again.'
-    )
+gdown.download(
+    'https://drive.google.com/uc?id=1gkiEMKdadOel4Xh6KoS2U603JTkZhgDw',
+    'pretrained_model.h5',
+    quiet=False
+)
+# Download label data
+gdown.download(
+    'https://drive.google.com/uc?id=16-0bhKrUMbZ0DSz768Z_q13yNivHyfVO',
+    'example_label.npy',
+    quiet=False
+)
+# Download image data
+gdown.download(
+    'https://drive.google.com/uc?id=1znRLbYJJqd11Zqv-5_yUmNjarKcwIWMg',
+    'example_image.npy',
+    quiet=False
+)
+# Download localization table
+gdown.download(
+    'https://drive.google.com/uc?id=1RM654Qavcy8gG5uy3mCzi8EsOT_xOlVd',
+    'protein_uniloc.csv',
+    quiet=False
+)
+# Download dendrogram index to plot feature spectrum
+gdown.download(
+    'https://drive.google.com/uc?id=1WrxhGsSzivZVAlL_K2FLVsRmHrsfhyrI',
+    'dgram_index1.npy',
+    quiet=False
+)
 
 
 #%% Load example data =====================================================================================
