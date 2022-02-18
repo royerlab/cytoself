@@ -69,8 +69,7 @@ If your computer is equipped with GPUs that support Tensorflow 1.15, you can ins
 Install the following packages before cytoself, or uninstall the existing CPU versions and reinstall the GPU versions 
 again with conda.
 ```shell script
-conda install h5py=2.10.0
-conda install tensorflow-gpu=1.15
+conda install -y h5py=2.10.0 tensorflow-gpu=1.15
 ```
 
 ### For the developers
@@ -113,10 +112,10 @@ A full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of G
 ## Tested Environment
 Google Colab (CPU/GPU/TPU)
 
-macOS 10.14.6, RAM 32GB (CPU)
+macOS 11.6.1, RAM 32GB (CPU)
 
 Windows10 Pro 64bit, RAM 32GB (CPU)
 
-Ubuntu 18.04.5 LTS, TITAN xp, CUDA 10.2 (GPU)
+Ubuntu 18.04.6 LTS, RTX 2080Ti, CUDA 11.2 (CPU/GPU)
 
 

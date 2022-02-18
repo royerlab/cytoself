@@ -15,7 +15,7 @@ def corr_single(i1, ar1, dim, data1):
     """
     corr = np.zeros((1, dim))
     for i2, ar2 in enumerate(data1):
-        corr[:, i2 + i1] = pearsonr(ar1, ar2)[0]
+        corr[:, i2 + i1] = pearsonr(np.nan_to_num(ar1), np.nan_to_num(ar2))[0]
     return corr
 
 
