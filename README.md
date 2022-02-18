@@ -91,7 +91,7 @@ the dependencies.
 pip install -r requirements.txt
 ```
 
-As a reference for a complete dependency, the snapshot of a working environment can be found in 
+As a reference for a complete dependency, a snapshot of a working environment can be found in 
 [`environment.yml`](https://github.com/royerlab/cytoself/blob/main/environment.yml)
 
 
