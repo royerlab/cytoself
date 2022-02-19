@@ -112,7 +112,7 @@ A full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of G
 ## Tested Environment
 Google Colab (CPU/GPU/TPU)
 
-macOS 11.6.1, RAM 32GB (CPU)
+macOS 10.14.6, RAM 32GB (CPU)
 
 Windows10 Pro 64bit, RAM 32GB (CPU)
 
