@@ -114,7 +114,7 @@ Google Colab (CPU/GPU/TPU)
 
 macOS 10.14.6, RAM 32GB (CPU)
 
-Windows10 Pro 64bit, RAM 32GB (CPU)
+Windows10 Pro 64bit, RTX 1080Ti, CUDA 11.6 (CPU/GPU)
 
 Ubuntu 18.04.6 LTS, RTX 2080Ti, CUDA 11.2 (CPU/GPU)
 
