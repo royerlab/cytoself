@@ -8,38 +8,39 @@ from cytoself.components.blocks.conv_block import Conv2dBN
 class ResidualBlockUnit2d(nn.Module):
     def __init__(
         self,
-        in_channels: int,
-        out_channels: int,
+        num_channels: int,
         act: str = "swish",
         use_depthwise: bool = False,
+        bn_affine=False,
         name: str = 'res',
         **kwargs,
     ) -> None:
         """
         2D Residual Block
-        :param in_channels: Number of channels in the input image
-        :param out_channels: Number of channels produced by the convolution
+        :param num_channels: Number of channels in the input and output image
         :param act: Activation function
         :param use_depthwise: Use depthwise convolution if True.
+        :param bn_affine: If True, batch normalization has learnable affine parameters. Default: False
         :param name: Name of this block module. Default: res
         """
         super().__init__()
         self.name = name
         self.conv1 = Conv2dBN(
-            in_channels, out_channels, act=act, pad=kwargs['pad'],
-            conv_gp='depthwise' if use_depthwise else 1, name=f'{name}_cvbn1'
+            num_channels, num_channels, act=act, conv_gp='depthwise' if use_depthwise else 1,
+            bn_affine=bn_affine, name=f'{name}_cvbn1', **kwargs
         )
         self.conv2 = nn.Conv2d(
-            in_channels,
-            out_channels,
+            num_channels,
+            num_channels,
             kernel_size=3,
             stride=1,
-            padding=kwargs['pad'],
             dilation=1,
-            groups='depthwise' if use_depthwise else 1,
+            groups=num_channels if use_depthwise else 1,
             bias=False,
+            padding='same',
+            **kwargs,
         )
-        self.bn2 = nn.BatchNorm2d(out_channels, affine=False)
+        self.bn2 = nn.BatchNorm2d(num_channels, affine=bn_affine)
         if act == 'relu':
             self.act = nn.ReLU()
         elif act == 'lrelu':
@@ -62,20 +63,18 @@ class ResidualBlockUnit2d(nn.Module):
 class ResidualBlockRepeat(nn.Module):
     def __init__(
             self,
-            in_channels: int,
-            out_channels: int,
+            num_channels: int,
             num_resblocks: int,
             act="swish",
             use_depthwise=False,
             block=None,
-            name='res',
+            name='res_rpeat',
             **kwargs,
     ) -> None:
         """
         A series of Residual Blocks
-        :param in_channels:
-        :param out_channels:
-        :param num_resblocks:
+        :param num_channels: Number of channels in the input and output image
+        :param num_resblocks: Number of residual blocks
         :param act: Activation function
         :param use_depthwise: Use depthwise convolution if True
         :param block: Unit block to repeat
@@ -87,7 +86,7 @@ class ResidualBlockRepeat(nn.Module):
         self.name = name
         layer_dict = OrderedDict()
         for i in range(num_resblocks):
-            layer_dict[f'res{i + 1}'] = block(in_channels, out_channels, act, use_depthwise, **kwargs)
+            layer_dict[f'res{i + 1}'] = block(num_channels, act, use_depthwise, **kwargs)
         self.res_repeat = nn.Sequential(layer_dict)
 
     def forward(self, x: Tensor) -> Tensor:

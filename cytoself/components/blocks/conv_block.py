@@ -73,26 +73,3 @@ class Conv2dBN(nn.Module):
         x = self.bn(x)
         x = self.act(x)
         return x
-
-#
-#
-# class autoencoder(nn.Module):
-#     def __init__(self):
-#         self.enc = Encoder()
-#         self.dec = Decoder()
-#
-#     def forward(self,x,mode):
-#         pass
-#
-# model = autoencoder()
-#
-# model.encoder.block1.conv2d
-#
-# def makemodel(start_index, end_index):
-#     short_encoder = nn.Sequential(
-#         [model.encoder.block2,
-#          model.encoder.block3,
-#          model.encoder.block4]
-#     )
-#
-#     short_decoder = nn.Sequential()
