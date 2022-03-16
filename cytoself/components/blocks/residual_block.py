@@ -51,13 +51,13 @@ class ResidualBlockUnit2d(nn.Module):
         )
         self.bn2 = nn.BatchNorm2d(num_channels, affine=bn_affine)
         if act == 'relu':
-            self.act = nn.ReLU()
+            self.act2 = nn.ReLU()
         elif act == 'lrelu':
-            self.act = nn.LeakyReLU(negative_slope=0.3)
+            self.act2 = nn.LeakyReLU(negative_slope=0.3)
         elif act == 'swish':
-            self.act = nn.SiLU()
+            self.act2 = nn.SiLU()
         elif act == 'hswish':
-            self.act = nn.Hardswish()
+            self.act2 = nn.Hardswish()
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -65,7 +65,7 @@ class ResidualBlockUnit2d(nn.Module):
         x = self.conv2(x)
         x = self.bn2(x)
         x += identity
-        x = self.act(x)
+        x = self.act2(x)
         return x
 
 
@@ -105,7 +105,7 @@ class ResidualBlockRepeat(nn.Module):
         self.name = name
         layer_dict = OrderedDict()
         for i in range(num_resblocks):
-            layer_dict[f'res{i + 1}'] = block(num_channels, act, use_depthwise, **kwargs)
+            layer_dict[f'res{i + 1}'] = block(num_channels, act, use_depthwise, name=f'res{i + 1}', **kwargs)
         self.res_repeat = nn.Sequential(layer_dict)
 
     def forward(self, x: Tensor) -> Tensor:

@@ -12,10 +12,23 @@ def test_calc_groups():
         assert calc_groups(i, 32, verbose=False) == 1
 
 
-def test_Conv2dBN():
-    model = Conv2dBN(32, 16)
+def test_Conv2dBN(model=None):
+    if model is None:
+        model = Conv2dBN(32, 16)
     for key, val in {'conv': nn.Conv2d, 'bn': nn.BatchNorm2d, 'act': nn.SiLU}.items():
         if hasattr(model, key):
-            assert isinstance(model.conv, val)
+            assert isinstance(getattr(model, key), val)
         else:
             raise AttributeError('Conv2dBN has no attribute ', key)
+
+    try:
+        model = Conv2dBN(32, 16, conv_gp='depthwise')
+        assert model.conv.groups == 16
+    except Exception as e:
+        print(e)
+
+    try:
+        model = Conv2dBN(32, 16, bn_affine=True)
+        assert model.bn.affine
+    except Exception as e:
+        print(e)
