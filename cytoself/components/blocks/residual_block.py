@@ -1,27 +1,36 @@
 from collections import OrderedDict
-from typing import Type, Any, Callable, Union, List, Optional
+from typing import Type, Optional
 from torch import nn
 from torch import Tensor
 from cytoself.components.blocks.conv_block import Conv2dBN
 
 
 class ResidualBlockUnit2d(nn.Module):
+    """
+    A unit block of 2D residual network.
+    """
     def __init__(
         self,
         num_channels: int,
         act: str = "swish",
         use_depthwise: bool = False,
-        bn_affine=False,
+        bn_affine: bool = False,
         name: str = 'res',
         **kwargs,
     ) -> None:
         """
-        2D Residual Block
-        :param num_channels: Number of channels in the input and output image
-        :param act: Activation function
-        :param use_depthwise: Use depthwise convolution if True.
-        :param bn_affine: If True, batch normalization has learnable affine parameters. Default: False
-        :param name: Name of this block module. Default: res
+        Parameters
+        ----------
+        num_channels : int
+            Number of input and output channels. i.e. the resulting module will have the same input & output channels.
+        act : str
+            Activation function
+        use_depthwise : bool
+            Use depthwise convolution if True.
+        bn_affine : bool
+            If True, batch normalization has learnable affine parameters. Default: False
+        name : str
+            Name of this block module. Default: res
         """
         super().__init__()
         self.name = name
@@ -61,24 +70,34 @@ class ResidualBlockUnit2d(nn.Module):
 
 
 class ResidualBlockRepeat(nn.Module):
+    """
+    A block of repeating residual blocks
+    """
     def __init__(
             self,
             num_channels: int,
             num_resblocks: int,
-            act="swish",
-            use_depthwise=False,
-            block=None,
-            name='res_rpeat',
+            act: str = "swish",
+            use_depthwise: bool = False,
+            block: Optional[Type[ResidualBlockUnit2d]] = None,
+            name: str = 'res_rpeat',
             **kwargs,
     ) -> None:
         """
-        A series of Residual Blocks
-        :param num_channels: Number of channels in the input and output image
-        :param num_resblocks: Number of residual blocks
-        :param act: Activation function
-        :param use_depthwise: Use depthwise convolution if True
-        :param block: Unit block to repeat
-        :param name: Name of this block module. Default: res_repeat
+        Parameters
+        ----------
+        num_channels : int
+            Number of input and output channels. i.e. the resulting module will have the same input & output channels.
+        num_resblocks : int
+            Number of residual blocks
+        act : str
+            Activation function
+        use_depthwise : bool
+            Use depthwise convolution if True.
+        block : None or resnet block module
+            Unit block to repeat
+        name : str
+            Name of this block module. Default: res
         """
         super().__init__()
         if block is None:

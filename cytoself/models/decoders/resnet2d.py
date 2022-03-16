@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from typing import Type, Any, Callable, Union, List, Optional
+from typing import Optional
 import numpy as np
 from torch import nn
 from torch import Tensor
@@ -10,35 +9,49 @@ from cytoself.components.blocks.residual_block import ResidualBlockRepeat
 class DecoderResnet(nn.Module):
     def __init__(
         self,
-        input_shape,
-        output_shape,
-        num_residual_layers=2,
-        num_hiddens=None,
-        num_hidden_decrease=True,
-        min_hiddens=1,
-        act="swish",
-        sampling_mode='bilinear',
-        num_blocks=None,
-        use_upsampling=True,
-        use_depthwise=False,
-        name=None,
+        input_shape: tuple,
+        output_shape: tuple,
+        num_residual_layers: int = 2,
+        num_hiddens: Optional[int] = None,
+        num_hidden_decrease: bool = True,
+        min_hiddens: int = 1,
+        act: str = "swish",
+        sampling_mode: str = 'bilinear',
+        num_blocks: Optional[int] = None,
+        use_upsampling: bool = True,
+        use_depthwise: bool = False,
+        name: str = 'decoder',
         **kwargs,
     ) -> None:
         """
-        Resnet Decoder
-        :param input_shape: Input shape
-        :param output_shape: Output shape
-        :param num_residual_layers: Number of residual repeat in each residual block
-        :param num_hiddens: Number of hidden embeddings (i.e. the channel size right after input shape.)
-        :param num_hidden_decrease: Number of channels (i.e. embeddings) will be half at the end of each residual
-        block if True.
-        :param min_hiddens: Minimum number of hidden embeddings
-        :param act: Activation function
-        :param sampling_mode: Sampling mode for upsampling
-        :param num_blocks: Number of residual blocks
-        :param use_upsampling: Upsampling will be used if True
-        :param use_depthwise: Depthwise convolution will be used if True
-        :param name: Name of this module
+        Parameters
+        ----------
+        input_shape : tuple
+            Input tensor shape: (Channel, Height, Width)
+        output_shape : tuple
+            Output tensor shape: (Channel, Height, Width)
+        num_residual_layers : int
+            Number of residual repeat in each residual block. Default: 2
+        num_hiddens : int or None
+            Number of hidden embeddings (i.e. the channel size right after input shape.)
+            If None, it will be same as the input channel size. Default: None
+        num_hidden_decrease : bool
+            Number of channels (i.e. embeddings) will be halved at the end of each residual block if True until it
+            reaches the min_hiddens. Default: True.
+        min_hiddens : int
+            Minimum number of hidden embeddings. Default: 1
+        act : str
+            Activation function
+        sampling_mode : str
+            Sampling mode for upsampling. Default: bilinear
+        num_blocks : int or None
+            Number of the blocks of repeating residual blocks
+        use_upsampling : bool
+            An upsampling layer will be added before each repeating residual block if True
+        use_depthwise : bool
+            Use depthwise convolution if True.
+        name : str
+            Name of this block module. Default: res
         """
         super().__init__()
         input_shape = np.array(input_shape)

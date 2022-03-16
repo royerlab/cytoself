@@ -1,8 +1,23 @@
+from typing import Union
 from torch import nn
 from warnings import warn
 
 
-def calc_groups(in_channels, out_channels):
+def calc_groups(in_channels: int, out_channels: int):
+    """
+    Calculates proper number of groups for Conv2d.
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels
+    out_channels : int
+        Number of output channels
+
+    Returns
+    -------
+    int
+        Number of groups
+    """
     if int(out_channels / in_channels) * in_channels == out_channels:
         return int(out_channels / in_channels)
     else:
@@ -14,6 +29,9 @@ def calc_groups(in_channels, out_channels):
 
 
 class Conv2dBN(nn.Module):
+    """
+    A set of layers of Conv2d, BachNorm2d and activation.
+    """
     def __init__(
         self,
         in_channels: int,
@@ -21,27 +39,39 @@ class Conv2dBN(nn.Module):
         kernel_size: int = 3,
         stride: int = 1,
         act: str = 'swish',
-        pad='same',
-        conv_gp=1,
-        dilation=1,
+        pad: Union[int, str, tuple] = 'same',
+        conv_gp: Union[int, str] = 1,
+        dilation: int = 1,
         use_bias: bool = False,
         bn_affine: bool = False,
         name: str = 'conv2dbn',
     ) -> None:
         """
-        2D Convolution block with batch normalization and activation
-        :param in_channels: Number of channels in the input image
-        :param out_channels: Number of channels produced by the convolution
-        :param kernel_size: Size of the convolving kernel
-        :param stride: Stride of the convolution. Default: 1
-        :param act: Activation function
-        :param pad: Padding added to all four sides of the input. Default: 'same'
-        :param conv_gp: Number of blocked connections from input channels to output channels.
-        Or 'depthwise' for depthwise convolution. Default: 1
-        :param dilation: Spacing between kernel elements. Default: 1
-        :param use_bias: If True, adds a learnable bias to the output. Default: True
-        :param bn_affine: If True, batch normalization has learnable affine parameters. Default: False
-        :param name: Name of this block module. Default: conv2dbn
+        Parameters
+        ----------
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            Size of the convolving kernel
+        stride : int
+            Stride of the convolution. Default: 1
+        act : str
+            Activation function
+        pad : int or str or tuple
+            Padding added to all four sides of the input. Default: 'same'
+        conv_gp : int or str
+            Number of blocked connections from input channels to output channels.
+            Or 'depthwise' for depthwise convolution. Default: 1
+        dilation : int
+            Spacing between kernel elements. Default: 1
+        use_bias : bool
+            If True, adds a learnable bias to the output. Default: True
+        bn_affine : bool
+            If True, batch normalization has learnable affine parameters. Default: False
+        name : str
+            Name of this block module. Default: conv2dbn
         """
         super().__init__()
         if conv_gp == 'depthwise':
