@@ -16,10 +16,10 @@ def test_ResidualBlockUnit2d(model=None):
             raise AttributeError('ResidualBlockUnit2d has no attribute ', key)
 
 
-def test_ResidualBlockRepeat(model=None):
+def test_ResidualBlockRepeat(model=None, n=2):
     if model is None:
-        model = ResidualBlockRepeat(32, 3)
-    assert len(model.res_repeat._modules) == 3
-    for i in range(3):
+        model = ResidualBlockRepeat(32, n)
+    assert len(model.res_repeat._modules) == n
+    for i in range(n):
         assert isinstance(getattr(model.res_repeat, f'res{i + 1}'), ResidualBlockUnit2d)
     test_ResidualBlockUnit2d(getattr(model.res_repeat, f'res{i + 1}'))

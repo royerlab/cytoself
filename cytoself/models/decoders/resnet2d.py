@@ -7,6 +7,9 @@ from cytoself.components.blocks.residual_block import ResidualBlockRepeat
 
 
 class DecoderResnet(nn.Module):
+    """
+    Resnet model as a decoder.
+    """
     def __init__(
         self,
         input_shape: tuple,
@@ -62,35 +65,35 @@ class DecoderResnet(nn.Module):
         if num_blocks is None:
             num_blocks = max(np.ceil(np.log2(output_shape[1:] / input_shape[1:])).astype(int))
 
-        self.decoder = nn.ModuleList()
+        self.decoder = nn.ModuleDict()
         if num_hiddens is None:
             num_hiddens = input_shape[0]
         else:
-            self.decoder.append(Conv2dBN(input_shape[0], num_hiddens, act=act, conv_gp=1, name=f'dec_first', **kwargs))
+            self.decoder[f'dec_first'] = Conv2dBN(
+                input_shape[0], num_hiddens, act=act, conv_gp=1, name=f'dec_first', **kwargs
+            )
         _num_hiddens = num_hiddens
 
         for i in range(num_blocks):
             if use_upsampling:
                 target_shape = tuple(np.ceil(output_shape[1:] / (2 ** (num_blocks - (i + 1)))).astype(int))
-                self.decoder.append(nn.Upsample(size=target_shape, mode=sampling_mode, align_corners=False))
+                self.decoder[f'up{i + 1}'] = nn.Upsample(size=target_shape, mode=sampling_mode, align_corners=False)
 
-            self.decoder.append(
-                ResidualBlockRepeat(
-                    num_hiddens, num_residual_layers, act=act, use_depthwise=use_depthwise,
-                    name=f'res{i+1}', **kwargs,
-                )
+            self.decoder[f'resrep{i+1}'] = ResidualBlockRepeat(
+                num_hiddens, num_residual_layers, act=act, use_depthwise=use_depthwise,
+                name=f'res{i+1}', **kwargs,
             )
 
             if num_hidden_decrease:
                 _num_hiddens = max(int(num_hiddens / 2), min_hiddens)
             if i == num_blocks - 1:
                 _num_hiddens = output_shape[0]
-            self.decoder.append(
-                Conv2dBN(num_hiddens, _num_hiddens, act=act, conv_gp=1, name=f'res{i + 1}last', **kwargs)
+            self.decoder[f'resrep{i+1}last'] = Conv2dBN(
+                num_hiddens, _num_hiddens, act=act, conv_gp=1, name=f'resrep{i + 1}last', **kwargs
             )
             num_hiddens = _num_hiddens
 
     def forward(self, x: Tensor) -> Tensor:
-        for lyr in self.decoder:
+        for _, lyr in self.decoder.items():
             x = lyr(x)
         return x
