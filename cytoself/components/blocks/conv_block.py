@@ -3,7 +3,7 @@ from torch import nn
 from warnings import warn
 
 
-def calc_groups(in_channels: int, out_channels: int):
+def calc_groups(in_channels: int, out_channels: int, verbose: bool = True):
     """
     Calculates proper number of groups for Conv2d.
     Parameters
@@ -12,19 +12,22 @@ def calc_groups(in_channels: int, out_channels: int):
         Number of input channels
     out_channels : int
         Number of output channels
+    verbose : bool
+        Print user warnings if True
 
     Returns
     -------
     int
         Number of groups
     """
-    if int(out_channels / in_channels) * in_channels == out_channels:
-        return int(out_channels / in_channels)
+    if int(in_channels / out_channels) * out_channels == in_channels:
+        return out_channels
     else:
-        warn(
-            f'out_channels {out_channels} is indivisible by input channel {in_channels}. '
-            f'conv_gp is set to 1.', UserWarning
-        )
+        if verbose:
+            warn(
+                f'in_channels {in_channels} is indivisible by output channel {out_channels}.\n'
+                f'conv_gp is set to 1.', UserWarning
+            )
         return 1
 
 
