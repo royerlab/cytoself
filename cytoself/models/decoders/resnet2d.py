@@ -10,6 +10,7 @@ class DecoderResnet(nn.Module):
     """
     Resnet model as a decoder.
     """
+
     def __init__(
         self,
         input_shape: tuple,
@@ -81,8 +82,12 @@ class DecoderResnet(nn.Module):
                 self.decoder[f'up{i + 1}'] = nn.Upsample(size=target_shape, mode=sampling_mode, align_corners=False)
 
             self.decoder[f'resrep{i+1}'] = ResidualBlockRepeat(
-                num_hiddens, num_residual_layers, act=act, use_depthwise=use_depthwise,
-                name=f'res{i+1}', **kwargs,
+                num_hiddens,
+                num_residual_layers,
+                act=act,
+                use_depthwise=use_depthwise,
+                name=f'res{i+1}',
+                **kwargs,
             )
 
             if num_hidden_decrease:

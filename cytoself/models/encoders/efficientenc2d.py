@@ -33,7 +33,7 @@ default_block_args = [
     {'expand_ratio': 6, 'kernel': 3, 'stride': 2, 'input_channels': 40, 'out_channels': 80, 'num_layers': 3},
     {'expand_ratio': 6, 'kernel': 5, 'stride': 1, 'input_channels': 80, 'out_channels': 112, 'num_layers': 3},
     {'expand_ratio': 6, 'kernel': 5, 'stride': 2, 'input_channels': 112, 'out_channels': 192, 'num_layers': 4},
-    {'expand_ratio': 6, 'kernel': 3, 'stride': 1, 'input_channels': 192, 'out_channels': 320, 'num_layers': 1}
+    {'expand_ratio': 6, 'kernel': 3, 'stride': 1, 'input_channels': 192, 'out_channels': 320, 'num_layers': 1},
 ]
 
 
@@ -148,13 +148,13 @@ class MBConv(nn.Module):
 
 class EfficientNet(nn.Module):
     def __init__(
-            self,
-            inverted_residual_setting: List[MBConvConfig],
-            in_channels: Optional[int] = None,
-            out_channels: Optional[int] = None,
-            stochastic_depth_prob: float = 0.2,
-            block: Optional[Callable[..., nn.Module]] = None,
-            norm_layer: Optional[Callable[..., nn.Module]] = None,
+        self,
+        inverted_residual_setting: List[MBConvConfig],
+        in_channels: Optional[int] = None,
+        out_channels: Optional[int] = None,
+        stochastic_depth_prob: float = 0.2,
+        block: Optional[Callable[..., nn.Module]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
         """
         EfficientNet main class
@@ -199,8 +199,12 @@ class EfficientNet(nn.Module):
             firstconv_output_channels = inverted_residual_setting[0].input_channels
             layers.append(
                 ConvNormActivation(
-                    in_channels, firstconv_output_channels, kernel_size=3, stride=2, norm_layer=norm_layer,
-                    activation_layer=nn.SiLU
+                    in_channels,
+                    firstconv_output_channels,
+                    kernel_size=3,
+                    stride=2,
+                    norm_layer=norm_layer,
+                    activation_layer=nn.SiLU,
                 )
             )
 
@@ -258,12 +262,7 @@ class EfficientNet(nn.Module):
         return x
 
 
-def _efficientnet(
-        blocks_args: List[dict],
-        width_mult: float,
-        depth_mult: float,
-        **kwargs: Any
-) -> EfficientNet:
+def _efficientnet(blocks_args: List[dict], width_mult: float, depth_mult: float, **kwargs: Any) -> EfficientNet:
     bneck_conf = partial(MBConvConfig, width_mult=width_mult, depth_mult=depth_mult)
     inverted_residual_setting = []
     for arg in blocks_args:
@@ -383,9 +382,7 @@ def efficientenc_b5(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(
-        blocks_args, 1.6, 2.2, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs
-    )
+    return _efficientnet(blocks_args, 1.6, 2.2, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)
 
 
 def efficientenc_b6(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> EfficientNet:
@@ -404,9 +401,7 @@ def efficientenc_b6(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(
-        blocks_args, 1.8, 2.6, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs
-    )
+    return _efficientnet(blocks_args, 1.8, 2.6, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)
 
 
 def efficientenc_b7(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> EfficientNet:
@@ -425,6 +420,4 @@ def efficientenc_b7(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(
-        blocks_args, 2.0, 3.1, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs
-    )
+    return _efficientnet(blocks_args, 2.0, 3.1, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)

@@ -1,0 +1,9 @@
+numpy>=1.21
+pandas>=1.4
+matplotlib>=3.5
+umap-learn==0.5.2
+tqdm>=4.63
+colorcet>=3
+seaborn>=0.11
+torch>=1.10
+torchvision>=0.12

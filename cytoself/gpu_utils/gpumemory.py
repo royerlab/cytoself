@@ -5,6 +5,7 @@ def gpuinfo(gpuidx):
     :return: GPU information in dictionary
     """
     import subprocess
+
     sp = subprocess.Popen(
         ['nvidia-smi', '-q', '-i', str(gpuidx), '-d', 'MEMORY'], stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )

@@ -9,6 +9,7 @@ class ResidualBlockUnit2d(nn.Module):
     """
     A unit block of 2D residual network.
     """
+
     def __init__(
         self,
         num_channels: int,
@@ -36,8 +37,13 @@ class ResidualBlockUnit2d(nn.Module):
         act = act.lower()
         self.name = name
         self.conv1 = Conv2dBN(
-            num_channels, num_channels, act=act, conv_gp='depthwise' if use_depthwise else 1,
-            bn_affine=bn_affine, name=f'{name}_cvbn1', **kwargs
+            num_channels,
+            num_channels,
+            act=act,
+            conv_gp='depthwise' if use_depthwise else 1,
+            bn_affine=bn_affine,
+            name=f'{name}_cvbn1',
+            **kwargs,
         )
         self.conv2 = nn.Conv2d(
             num_channels,
@@ -74,6 +80,7 @@ class ResidualBlockRepeat(nn.Module):
     """
     A block of repeating residual blocks
     """
+
     def __init__(
         self,
         num_channels: int,
@@ -113,4 +120,3 @@ class ResidualBlockRepeat(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         x = self.res_repeat(x)
         return x
-

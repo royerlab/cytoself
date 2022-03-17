@@ -17,9 +17,16 @@ def test_DecoderResnet():
     assert len(model.decoder._modules) == 10
 
     for key, val in {
-        'dec_first': Conv2dBN, 'up1': nn.Upsample, 'resrep1': ResidualBlockRepeat, 'resrep1last': Conv2dBN,
-        'up2':  nn.Upsample, 'resrep2': ResidualBlockRepeat, 'resrep2last': Conv2dBN,
-        'up3': nn.Upsample, 'resrep3': ResidualBlockRepeat, 'resrep3last': Conv2dBN
+        'dec_first': Conv2dBN,
+        'up1': nn.Upsample,
+        'resrep1': ResidualBlockRepeat,
+        'resrep1last': Conv2dBN,
+        'up2': nn.Upsample,
+        'resrep2': ResidualBlockRepeat,
+        'resrep2last': Conv2dBN,
+        'up3': nn.Upsample,
+        'resrep3': ResidualBlockRepeat,
+        'resrep3last': Conv2dBN,
     }.items():
         if hasattr(model.decoder, key):
             assert isinstance(getattr(model.decoder, key), val)
