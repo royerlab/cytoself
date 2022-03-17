@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="root@tony:8023" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="cytoselftorch3090 (poweruser@hirofumiws:22)" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="cytoselftorch3090 (poweruser@hirofumiws:22)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="root@tony:8023">
         <serverdata>
           <mappings>
