@@ -92,13 +92,14 @@ class Conv2dBN(nn.Module):
             bias=use_bias,
         )
         self.bn = nn.BatchNorm2d(out_channels, affine=bn_affine)
-        if act.lower() == 'relu':
+        act = act.lower()
+        if act == 'relu':
             self.act = nn.ReLU()
-        elif act.lower() == 'lrelu':
+        elif act == 'lrelu':
             self.act = nn.LeakyReLU(negative_slope=0.3)
-        elif act.lower() == 'swish':
+        elif act == 'swish':
             self.act = nn.SiLU()
-        elif act.lower() == 'hswish':
+        elif act == 'hswish':
             self.act = nn.Hardswish()
         else:
             warn(f'{act} not found. No activation layer.', UserWarning)

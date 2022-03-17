@@ -59,6 +59,7 @@ class DecoderResnet(nn.Module):
         super().__init__()
         input_shape = np.array(input_shape)
         output_shape = np.array(output_shape)
+        act = act.lower()
         self.name = name
 
         # Automatically determine the number of residual blocks

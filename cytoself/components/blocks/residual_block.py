@@ -33,6 +33,7 @@ class ResidualBlockUnit2d(nn.Module):
             Name of this block module. Default: res
         """
         super().__init__()
+        act = act.lower()
         self.name = name
         self.conv1 = Conv2dBN(
             num_channels, num_channels, act=act, conv_gp='depthwise' if use_depthwise else 1,
@@ -74,14 +75,14 @@ class ResidualBlockRepeat(nn.Module):
     A block of repeating residual blocks
     """
     def __init__(
-            self,
-            num_channels: int,
-            num_resblocks: int,
-            act: str = "swish",
-            use_depthwise: bool = False,
-            block: Optional[Type[ResidualBlockUnit2d]] = None,
-            name: str = 'res_rpeat',
-            **kwargs,
+        self,
+        num_channels: int,
+        num_resblocks: int,
+        act: str = "swish",
+        use_depthwise: bool = False,
+        block: Optional[Type[ResidualBlockUnit2d]] = None,
+        name: str = 'res_rpeat',
+        **kwargs,
     ) -> None:
         """
         Parameters
@@ -100,6 +101,7 @@ class ResidualBlockRepeat(nn.Module):
             Name of this block module. Default: res
         """
         super().__init__()
+        act = act.lower()
         if block is None:
             block = ResidualBlockUnit2d
         self.name = name
