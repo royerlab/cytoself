@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# desktop icon in MacOS
+.DS_Store
+
+# experimental folder
+sandbox
