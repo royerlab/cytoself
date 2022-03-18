@@ -17,8 +17,8 @@ def gpuinfo(gpuidx):
             key, val = item.split(':')
             key, val = key.strip(), val.strip()
             out_dict[key] = val
-        except:
-            pass
+        except Exception as e:
+            print(e)
     return out_dict
 
 
@@ -42,8 +42,8 @@ def getbestgpu(log_level=0):
         freemem = getfreegpumem(gpuidx)
         freememlist.append(freemem)
         if log_level == 0:
-            print("GPU device %d has %d MiB left." % (gpuidx, freemem))
+            print('GPU device %d has %d MiB left.' % (gpuidx, freemem))
     idbest = freememlist.index(max(freememlist))
     if log_level < 2:
-        print("--> GPU device %d was chosen" % idbest)
+        print('--> GPU device %d was chosen' % idbest)
     return idbest

@@ -71,8 +71,8 @@ class DecoderResnet(nn.Module):
         if num_hiddens is None:
             num_hiddens = input_shape[0]
         else:
-            self.decoder[f'dec_first'] = Conv2dBN(
-                input_shape[0], num_hiddens, act=act, conv_gp=1, name=f'dec_first', **kwargs
+            self.decoder['dec_first'] = Conv2dBN(
+                input_shape[0], num_hiddens, act=act, conv_gp=1, name='dec_first', **kwargs
             )
         _num_hiddens = num_hiddens
 

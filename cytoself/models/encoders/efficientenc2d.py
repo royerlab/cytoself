@@ -1,10 +1,8 @@
 import copy
 import math
-from warnings import warn
 from functools import partial
-from typing import Any, Callable, Optional, List, Sequence, Optional
+from typing import Any, Callable, List, Sequence, Optional
 
-import torch
 from torch import nn, Tensor
 from torchvision.ops import StochasticDepth
 
