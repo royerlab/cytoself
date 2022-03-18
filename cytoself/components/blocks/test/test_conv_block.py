@@ -7,7 +7,7 @@ def test_calc_groups():
     for i in (16, 2, 1):
         assert calc_groups(32, i, verbose=False) == i
         assert calc_groups(i, 32, verbose=False) == 1
-    for i in (30, 15):
+    for i in (30, 14):
         assert calc_groups(32, i, verbose=False) == 1
         assert calc_groups(i, 32, verbose=False) == 1
 
@@ -16,10 +16,8 @@ def test_Conv2dBN(model=None):
     if model is None:
         model = Conv2dBN(32, 16)
     for key, val in {'conv': nn.Conv2d, 'bn': nn.BatchNorm2d, 'act': nn.SiLU}.items():
-        if hasattr(model, key):
-            assert isinstance(getattr(model, key), val)
-        else:
-            raise AttributeError('Conv2dBN has no attribute ', key)
+        assert hasattr(model, key)
+        assert isinstance(getattr(model, key), val)
 
 
 def test_Conv2dBN_conv_gp():
@@ -35,6 +33,10 @@ def test_Conv2dBN_bn_affine():
 
 
 def test_Conv2dBN_act():
-    for key, val in {'relu': nn.ReLU, 'lrelu': nn.LeakyReLU, 'hswish': nn.Hardswish}.items():
+    for key, val in {
+        'relu': nn.ReLU,
+        'lrelu': nn.LeakyReLU,
+        'hswish': nn.Hardswish,
+    }.items():
         model = Conv2dBN(32, 16, act=key)
         assert isinstance(model.act, val)

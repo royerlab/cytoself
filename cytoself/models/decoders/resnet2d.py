@@ -72,7 +72,12 @@ class DecoderResnet(nn.Module):
             num_hiddens = input_shape[0]
         else:
             self.decoder['dec_first'] = Conv2dBN(
-                input_shape[0], num_hiddens, act=act, conv_gp=1, name='dec_first', **kwargs
+                input_shape[0],
+                num_hiddens,
+                act=act,
+                conv_gp=1,
+                name='dec_first',
+                **kwargs,
             )
         _num_hiddens = num_hiddens
 
@@ -95,7 +100,12 @@ class DecoderResnet(nn.Module):
             if i == num_blocks - 1:
                 _num_hiddens = output_shape[0]
             self.decoder[f'resrep{i+1}last'] = Conv2dBN(
-                num_hiddens, _num_hiddens, act=act, conv_gp=1, name=f'resrep{i + 1}last', **kwargs
+                num_hiddens,
+                _num_hiddens,
+                act=act,
+                conv_gp=1,
+                name=f'resrep{i + 1}last',
+                **kwargs,
             )
             num_hiddens = _num_hiddens
 

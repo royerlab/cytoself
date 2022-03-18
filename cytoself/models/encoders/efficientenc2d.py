@@ -25,13 +25,62 @@ __all__ = [
 
 
 default_block_args = [
-    {'expand_ratio': 1, 'kernel': 3, 'stride': 1, 'input_channels': 32, 'out_channels': 16, 'num_layers': 1},
-    {'expand_ratio': 6, 'kernel': 3, 'stride': 2, 'input_channels': 16, 'out_channels': 24, 'num_layers': 2},
-    {'expand_ratio': 6, 'kernel': 5, 'stride': 2, 'input_channels': 24, 'out_channels': 40, 'num_layers': 2},
-    {'expand_ratio': 6, 'kernel': 3, 'stride': 2, 'input_channels': 40, 'out_channels': 80, 'num_layers': 3},
-    {'expand_ratio': 6, 'kernel': 5, 'stride': 1, 'input_channels': 80, 'out_channels': 112, 'num_layers': 3},
-    {'expand_ratio': 6, 'kernel': 5, 'stride': 2, 'input_channels': 112, 'out_channels': 192, 'num_layers': 4},
-    {'expand_ratio': 6, 'kernel': 3, 'stride': 1, 'input_channels': 192, 'out_channels': 320, 'num_layers': 1},
+    {
+        'expand_ratio': 1,
+        'kernel': 3,
+        'stride': 1,
+        'input_channels': 32,
+        'out_channels': 16,
+        'num_layers': 1,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 3,
+        'stride': 2,
+        'input_channels': 16,
+        'out_channels': 24,
+        'num_layers': 2,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 5,
+        'stride': 2,
+        'input_channels': 24,
+        'out_channels': 40,
+        'num_layers': 2,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 3,
+        'stride': 2,
+        'input_channels': 40,
+        'out_channels': 80,
+        'num_layers': 3,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 5,
+        'stride': 1,
+        'input_channels': 80,
+        'out_channels': 112,
+        'num_layers': 3,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 5,
+        'stride': 2,
+        'input_channels': 112,
+        'out_channels': 192,
+        'num_layers': 4,
+    },
+    {
+        'expand_ratio': 6,
+        'kernel': 3,
+        'stride': 1,
+        'input_channels': 192,
+        'out_channels': 320,
+        'num_layers': 1,
+    },
 ]
 
 
@@ -123,12 +172,22 @@ class MBConv(nn.Module):
 
         # squeeze and excitation
         squeeze_channels = max(1, cnf.input_channels // 4)
-        layers.append(se_layer(expanded_channels, squeeze_channels, activation=partial(nn.SiLU, inplace=True)))
+        layers.append(
+            se_layer(
+                expanded_channels,
+                squeeze_channels,
+                activation=partial(nn.SiLU, inplace=True),
+            )
+        )
 
         # project
         layers.append(
             ConvNormActivation(
-                expanded_channels, cnf.out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=None
+                expanded_channels,
+                cnf.out_channels,
+                kernel_size=1,
+                norm_layer=norm_layer,
+                activation_layer=None,
             )
         )
 
@@ -380,7 +439,13 @@ def efficientenc_b5(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(blocks_args, 1.6, 2.2, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)
+    return _efficientnet(
+        blocks_args,
+        1.6,
+        2.2,
+        norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
+        **kwargs,
+    )
 
 
 def efficientenc_b6(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> EfficientNet:
@@ -399,7 +464,13 @@ def efficientenc_b6(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(blocks_args, 1.8, 2.6, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)
+    return _efficientnet(
+        blocks_args,
+        1.8,
+        2.6,
+        norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
+        **kwargs,
+    )
 
 
 def efficientenc_b7(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> EfficientNet:
@@ -418,4 +489,10 @@ def efficientenc_b7(blocks_args: Optional[List[dict]] = None, **kwargs: Any) -> 
     """
     if blocks_args is None:
         blocks_args = default_block_args
-    return _efficientnet(blocks_args, 2.0, 3.1, norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01), **kwargs)
+    return _efficientnet(
+        blocks_args,
+        2.0,
+        3.1,
+        norm_layer=partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
+        **kwargs,
+    )

@@ -9,10 +9,17 @@ from cytoself.components.blocks.test.test_residual_block import test_ResidualBlo
 
 def test_DecoderResnet():
     input_shape, output_shape, num_hiddens = (576, 4, 4), (64, 25, 25), 64
+
+    model = DecoderResnet(input_shape, output_shape)
+    assert not hasattr(model.decoder, 'dec_first')
+    assert list(model.decoder)[0] == 'up1'
+    assert len(list(model.decoder)) == 9
+
     model = DecoderResnet(input_shape, output_shape, num_hiddens=num_hiddens)
     data = torch.randn(1, 576, 4, 4)
     output = model(data)
-
+    assert hasattr(model.decoder, 'dec_first')
+    assert isinstance(model.decoder.dec_first, Conv2dBN)
     assert tuple(output.shape)[1:] == output_shape
     assert len(model.decoder._modules) == 10
 
@@ -28,11 +35,9 @@ def test_DecoderResnet():
         'resrep3': ResidualBlockRepeat,
         'resrep3last': Conv2dBN,
     }.items():
-        if hasattr(model.decoder, key):
-            assert isinstance(getattr(model.decoder, key), val)
-            if key == 'resrep1last':
-                test_Conv2dBN(getattr(model.decoder, key))
-            elif key == 'resrep1':
-                test_ResidualBlockRepeat(getattr(model.decoder, key))
-        else:
-            raise AttributeError('ResidualBlockUnit2d has no attribute ', key)
+        assert hasattr(model.decoder, key)
+        assert isinstance(getattr(model.decoder, key), val)
+        if key == 'resrep1last':
+            test_Conv2dBN(getattr(model.decoder, key))
+        elif key == 'resrep1':
+            test_ResidualBlockRepeat(getattr(model.decoder, key))

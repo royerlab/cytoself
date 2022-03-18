@@ -7,7 +7,9 @@ def gpuinfo(gpuidx):
     import subprocess
 
     sp = subprocess.Popen(
-        ['nvidia-smi', '-q', '-i', str(gpuidx), '-d', 'MEMORY'], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        ['nvidia-smi', '-q', '-i', str(gpuidx), '-d', 'MEMORY'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     out_str = sp.communicate()
     out_list = out_str[0].decode("utf-8").split('BAR1', 1)[0].split('\n')

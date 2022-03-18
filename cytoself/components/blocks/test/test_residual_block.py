@@ -1,5 +1,8 @@
 from torch import nn
-from cytoself.components.blocks.residual_block import ResidualBlockUnit2d, ResidualBlockRepeat
+from cytoself.components.blocks.residual_block import (
+    ResidualBlockUnit2d,
+    ResidualBlockRepeat,
+)
 from cytoself.components.blocks.conv_block import Conv2dBN
 from cytoself.components.blocks.test.test_conv_block import test_Conv2dBN
 
@@ -7,13 +10,26 @@ from cytoself.components.blocks.test.test_conv_block import test_Conv2dBN
 def test_ResidualBlockUnit2d(model=None):
     if model is None:
         model = ResidualBlockUnit2d(32)
-    for key, val in {'conv1': Conv2dBN, 'conv2': nn.Conv2d, 'bn2': nn.BatchNorm2d, 'act2': nn.SiLU}.items():
-        if hasattr(model, key):
-            assert isinstance(getattr(model, key), val)
-            if key == 'conv1':
-                test_Conv2dBN(getattr(model, key))
-        else:
-            raise AttributeError('ResidualBlockUnit2d has no attribute ', key)
+    for key, val in {
+        'conv1': Conv2dBN,
+        'conv2': nn.Conv2d,
+        'bn2': nn.BatchNorm2d,
+        'act2': nn.SiLU,
+    }.items():
+        assert hasattr(model, key)
+        assert isinstance(getattr(model, key), val)
+        if key == 'conv1':
+            test_Conv2dBN(getattr(model, key))
+
+
+def test_ResidualBlockUnit2d_act():
+    for key, val in {
+        'relu': nn.ReLU,
+        'lrelu': nn.LeakyReLU,
+        'hswish': nn.Hardswish,
+    }.items():
+        model = ResidualBlockUnit2d(32, act=key)
+        assert isinstance(model.act2, val)
 
 
 def test_ResidualBlockRepeat(model=None, n=2):

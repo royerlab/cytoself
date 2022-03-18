@@ -2,9 +2,6 @@ name: Python Package using Conda
 
 on: [push]
 
-env:
-  CODECOV_TOKEN: "54292350-c3cc-4a06-9165-0f02511707aa"
-
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -23,18 +20,23 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file requirements.txt --name base
+        pip install -r requirements.txt
     - name: Lint with flake8
       run: |
         conda install flake8
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 cytoself --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
-    - name: Test with pytest
+        flake8 cytoself --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
+    - name: Generate coverage report
       run: |
-        conda install pytest-cov codecov
-        python -m pytest cytoself --disable-pytest-warnings
-    - name: Push to codecov
-      run: |
-        codecov
+        pip install pytest
+        pip install pytest-cov
+        pytest --cov=./cytoself --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        flags: unittests
+        verbose: true
