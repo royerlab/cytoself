@@ -21,14 +21,20 @@ def test_Conv2dBN(model=None):
         else:
             raise AttributeError('Conv2dBN has no attribute ', key)
 
-    try:
-        model = Conv2dBN(32, 16, conv_gp='depthwise')
-        assert model.conv.groups == 16
-    except Exception as e:
-        print(e)
 
-    try:
-        model = Conv2dBN(32, 16, bn_affine=True)
-        assert model.bn.affine
-    except Exception as e:
-        print(e)
+def test_Conv2dBN_conv_gp():
+    model = Conv2dBN(32, 16, conv_gp='depthwise')
+    assert model.conv.groups == 16
+    model = Conv2dBN(32, 16, conv_gp=4)
+    assert model.conv.groups == 4
+
+
+def test_Conv2dBN_bn_affine():
+    model = Conv2dBN(32, 16, bn_affine=True)
+    assert model.bn.affine
+
+
+def test_Conv2dBN_act():
+    for key, val in {'relu': nn.ReLU, 'lrelu': nn.LeakyReLU, 'hswish': nn.Hardswish}.items():
+        model = Conv2dBN(32, 16, act=key)
+        assert isinstance(model.act, val)
