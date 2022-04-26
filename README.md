@@ -124,6 +124,9 @@ The full data used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
 protein, nucleus, nuclear distance, nuclear segmentation]`.
 
+Due to the large size, the whole data is split to 10 files. The files are intended to be concatenated together to 
+form one large numpy file or one large csv.
+
 [Image_data00.npy](https://drive.google.com/file/d/15_CHBPT-p5JG44acP6D2hKd8jAacZatp/view?usp=sharing)  
 [Image_data01.npy](https://drive.google.com/file/d/1m7Cj2OALiZTIiHpvb9zFPG_I3j1wRnzK/view?usp=sharing)  
 [Image_data02.npy](https://drive.google.com/file/d/17nknzqlcYO3n9bAe4FwGVPkU-mJAhQ4j/view?usp=sharing)  
