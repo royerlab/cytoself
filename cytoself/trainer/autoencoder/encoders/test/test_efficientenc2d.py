@@ -24,7 +24,7 @@ block_args = [
 
 
 def test_efficientenc_b0_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b0
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
 
     model = efficientenc_b0()
     assert len(model.features._modules) == 7
@@ -39,7 +39,7 @@ def test_efficientenc_b0_default():
 
 
 def test_efficientenc_b0_channels():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b0
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
 
     model = efficientenc_b0(block_args, in_channels=2, out_channels=64)
     assert len(model.features._modules) == len(block_args) + 2
@@ -50,7 +50,7 @@ def test_efficientenc_b0_channels():
 
 
 def test_efficientenc_b1_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b1
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b1
 
     model = efficientenc_b1()
     assert len(model.features._modules) == 7
@@ -63,7 +63,7 @@ def test_efficientenc_b1_default():
 
 
 def test_efficientenc_b2_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b2
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b2
 
     model = efficientenc_b2()
     assert len(model.features._modules) == 7
@@ -76,7 +76,7 @@ def test_efficientenc_b2_default():
 
 
 def test_efficientenc_b3_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b3
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b3
 
     model = efficientenc_b3()
     assert len(model.features._modules) == 7
@@ -89,7 +89,7 @@ def test_efficientenc_b3_default():
 
 
 def test_efficientenc_b4_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b4
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b4
 
     model = efficientenc_b4()
     assert len(model.features._modules) == 7
@@ -102,7 +102,7 @@ def test_efficientenc_b4_default():
 
 
 def test_efficientenc_b5_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b5
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b5
 
     model = efficientenc_b5()
     assert len(model.features._modules) == 7
@@ -115,7 +115,7 @@ def test_efficientenc_b5_default():
 
 
 def test_efficientenc_b6_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b6
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b6
 
     model = efficientenc_b6()
     assert len(model.features._modules) == 7
@@ -128,7 +128,7 @@ def test_efficientenc_b6_default():
 
 
 def test_efficientenc_b7_default():
-    from cytoself.models.encoders.efficientenc2d import efficientenc_b7
+    from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b7
 
     model = efficientenc_b7()
     assert len(model.features._modules) == 7

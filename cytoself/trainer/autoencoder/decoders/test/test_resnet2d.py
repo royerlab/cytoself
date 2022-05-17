@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from cytoself.components.blocks.residual_block import ResidualBlockRepeat
 from cytoself.components.blocks.conv_block import Conv2dBN
-from cytoself.models.decoders.resnet2d import DecoderResnet
+from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 from cytoself.components.blocks.test.test_conv_block import test_Conv2dBN
 from cytoself.components.blocks.test.test_residual_block import test_ResidualBlockRepeat
 

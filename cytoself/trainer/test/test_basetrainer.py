@@ -7,7 +7,7 @@ import torch
 from ..basetrainer import BaseTrainer
 
 
-class Test_get_file_df(TestCase):
+class test_BaseTrainer(TestCase):
     def setUp(self):
         self._basepath = tempfile.mkdtemp()
         self.trainer = BaseTrainer(self._basepath)

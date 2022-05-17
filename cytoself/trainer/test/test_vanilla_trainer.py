@@ -1,19 +1,10 @@
 from os.path import join
+
 import torch
 
 from cytoself.datamanager.datamanager_oc import DataManagerOpenCell
-from ..vanilla import VanillaAE, VanillaAETrainer
 from cytoself.datamanager.test.test_datamanager_oc import TmpDirTestCase
-
-
-def test_VanillaAE():
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    input_shape, emb_shape = (2, 100, 100), (64, 4, 4)
-    model = VanillaAE(input_shape, emb_shape, input_shape)
-    model.to(device)
-    input_data = torch.randn((1,) + input_shape).to(device)
-    out = model(input_data)
-    assert out.shape == input_data.shape
+from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 
 class test_VanillaAETrainer(TmpDirTestCase):

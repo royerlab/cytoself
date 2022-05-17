@@ -28,7 +28,7 @@ class TmpDirTestCase(TestCase):
             np.save(join(self._basepath, f'protein{i}_label.npy'), test_label[ind])
 
 
-class Test_get_file_df(TmpDirTestCase):
+class test_get_file_df(TmpDirTestCase):
     def setUp(self, shape=(2, 10, 10)):
         super().setUp()
         self.gen_npy(shape)
@@ -49,7 +49,7 @@ class Test_get_file_df(TmpDirTestCase):
             assert df['nuc'].str.contains(join(self._basepath, f'protein{i}_nuc.npy')).any()
 
 
-class Test_DataManagerOpenCell(Test_get_file_df):
+class test_DataManagerOpenCell(test_get_file_df):
     def setUp(self):
         super().setUp()
         self.datamgr = DataManagerOpenCell(self._basepath, ['nuc'])
