@@ -21,17 +21,17 @@ class TmpDirTestCase(TestCase):
     def tearDown(self):
         rmtree(self._basepath)
 
-    def gen_npy(self):
+    def gen_npy(self, shape=(2, 10, 10)):
         for i in range(test_label[:, 0].max() + 1):
             ind = test_label[:, 0] == i
-            np.save(join(self._basepath, f'protein{i}_nuc.npy'), np.zeros((sum(ind), 2, 10, 10), dtype=np.uint8))
+            np.save(join(self._basepath, f'protein{i}_nuc.npy'), np.zeros((sum(ind),) + shape, dtype=np.uint8))
             np.save(join(self._basepath, f'protein{i}_label.npy'), test_label[ind])
 
 
 class Test_get_file_df(TmpDirTestCase):
-    def setUp(self):
+    def setUp(self, shape=(2, 10, 10)):
         super().setUp()
-        self.gen_npy()
+        self.gen_npy(shape)
 
     def test_typeerror(self):
         with self.assertRaises(TypeError):

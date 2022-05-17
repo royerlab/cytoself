@@ -40,3 +40,5 @@ jobs:
         fail_ci_if_error: true
         flags: unittests
         verbose: true
+        project: off
+        patch: off

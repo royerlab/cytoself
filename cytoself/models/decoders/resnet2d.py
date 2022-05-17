@@ -1,7 +1,6 @@
 from typing import Optional
 import numpy as np
-from torch import nn
-from torch import Tensor
+from torch import nn, Tensor
 from cytoself.components.blocks.conv_block import Conv2dBN
 from cytoself.components.blocks.residual_block import ResidualBlockRepeat
 
