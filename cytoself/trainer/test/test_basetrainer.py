@@ -10,12 +10,12 @@ from ..basetrainer import BaseTrainer
 class test_BaseTrainer(TestCase):
     def setUp(self):
         self._basepath = tempfile.mkdtemp()
-        self.trainer = BaseTrainer(self._basepath)
+        self.trainer = BaseTrainer({}, homepath=self._basepath)
 
     def test_init_(self):
         assert self.trainer.model is None
         assert self.trainer.best_model == []
-        assert self.trainer.losses is None
+        assert self.trainer.losses == {f'{p}_loss': [] for p in ['train', 'val', 'test']}
         assert self.trainer.lr == 0
         assert self.trainer.tb_writer is None
         assert self.trainer.optimizer is None
@@ -34,7 +34,7 @@ class test_BaseTrainer(TestCase):
         for key, val in args.items():
             assert self.trainer.train_args[key] == val
 
-    def test_calc_loss(self):
+    def calc_loss_one_batch(self):
         assert self.trainer.calc_loss(torch.ones(5) * 3, torch.ones(5)) == torch.ones(1) * 4
 
     def test_set_optimizer(self):
@@ -53,16 +53,20 @@ class test_BaseTrainer(TestCase):
             assert os.path.exists(val), key + ' path was not found.'
 
     def test_train_one_epoch(self):
-        with self.assertRaises(NotImplementedError):
-            self.trainer.train_one_epoch()
+        with self.assertRaises(ValueError):
+            self.trainer.train_one_epoch(None)
 
     def test_calc_val_loss(self):
-        with self.assertRaises(NotImplementedError):
-            self.trainer.calc_val_loss()
+        with self.assertRaises(ValueError):
+            self.trainer.calc_val_loss(None)
+
+    def test__reduce_lr_on_plateau(self):
+        with self.assertRaises(ValueError):
+            self.trainer._reduce_lr_on_plateau(2)
 
     def test_fit(self):
-        with self.assertRaises(NotImplementedError):
-            self.trainer.fit()
+        with self.assertRaises(ValueError):
+            self.trainer.fit(None)
 
     def tearDown(self):
         rmtree(self._basepath)

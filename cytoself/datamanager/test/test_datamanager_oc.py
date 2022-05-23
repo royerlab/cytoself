@@ -95,7 +95,7 @@ class test_DataManagerOpenCell(test_get_file_df):
         for d, s in zip(index_list, self.datamgr.data_split):
             data = test_label[d]
             assert (
-                min(1, floor(len(label_all) * s * 0.7)) <= len(data) <= ceil(len(label_all) * s * 1.4)
+                min(1, floor(len(label_all) * s * 0.68)) <= len(data) <= ceil(len(label_all) * s * 1.4)
             ), 'Split ratio deviates too far.'
 
     def test_split_data_notfov(self):
