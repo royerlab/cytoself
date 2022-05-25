@@ -10,6 +10,7 @@ from ..basetrainer import BaseTrainer
 class test_BaseTrainer(TestCase):
     def setUp(self):
         self._basepath = tempfile.mkdtemp()
+        self.trainer = BaseTrainer({}, homepath=self._basepath, device='cpu')
         self.trainer = BaseTrainer({}, homepath=self._basepath)
 
     def test_init_(self):
@@ -34,8 +35,12 @@ class test_BaseTrainer(TestCase):
         for key, val in args.items():
             assert self.trainer.train_args[key] == val
 
-    def calc_loss_one_batch(self):
-        assert self.trainer.calc_loss(torch.ones(5) * 3, torch.ones(5)) == torch.ones(1) * 4
+    def test_calc_loss_one_batch(self):
+        assert self.trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5)) == (torch.ones(1) * 4,)
+
+    def test_record_metrics(self):
+        self.trainer.record_metrics(1.0)
+        assert self.trainer.losses['train_loss'] == [1.0]
 
     def test_set_optimizer(self):
         with self.assertRaises(ValueError):
@@ -67,6 +72,10 @@ class test_BaseTrainer(TestCase):
     def test_fit(self):
         with self.assertRaises(ValueError):
             self.trainer.fit(None)
+
+    def test_infer_embeddings(self):
+        with self.assertRaises(ValueError):
+            self.trainer.infer_embeddings(None)
 
     def tearDown(self):
         rmtree(self._basepath)

@@ -25,7 +25,7 @@ class BaseTrainer:
         device: Optional[str] = None,
     ):
         if device is None:
-            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         else:
             self.device = torch.device(device)
 
@@ -372,6 +372,8 @@ class BaseTrainer:
             torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
 
     def infer_embeddings(self, data):
+        if data is None:
+            raise ValueError('The input to infer_embeddings cannot be None.')
         if isinstance(data, DataLoader):
             return self._infer_one_epoch(data, self.model.encoder)
         else:

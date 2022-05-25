@@ -32,10 +32,8 @@ class AnalysisOpenCell(BaseAnalysis):
             if embedding_data is None:
                 print('Computing embeddings from image...')
                 if data_loader is None:
-                    if image_data is None:
-                        raise ValueError('image_data is required.')
                     if label_data is None:
-                        raise ValueError('label_data is required.')
+                        raise ValueError('label_data cannot be None.')
                 embedding_data = self.trainer.infer_embeddings(
                     image_data if data_loader is None else data_loader,
                     **{a: kwargs[a] for a in inspect.getfullargspec(self.trainer.infer_embeddings).args if a in kwargs},
