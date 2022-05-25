@@ -3,11 +3,13 @@ import os
 from os.path import join
 from typing import Optional, Union, Collection
 from warnings import warn
+from tqdm import tqdm
+import numpy as np
 
 import torch
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import tqdm
+from torch.utils.data import DataLoader
 
 
 class BaseTrainer:
@@ -180,6 +182,19 @@ class BaseTrainer:
                 os.makedirs(self.savepath_dict[d])
 
     def train_one_epoch(self, data_loader, **kwargs):
+        """
+        Trains self.model for one epoch
+
+        Parameters
+        ----------
+        data_loader : DataLoader
+            A DataLoader object that handles data distribution and augmentation.
+
+        Returns
+        -------
+        None
+
+        """
         if self.model is None:
             raise ValueError('model is not defined.')
         else:
@@ -198,6 +213,33 @@ class BaseTrainer:
                 _metrics = [m + l.item() for m, l in zip(_metrics, loss)]
             _metrics = [m / i for m in _metrics]
             self.record_metrics(_metrics, phase='train')
+
+    def _infer_one_epoch(self, data_loader, _model):
+        """
+        Infers the output of a given model for one epoch
+
+        Parameters
+        ----------
+        data_loader : DataLoader
+            A DataLoader object that handles data distribution and augmentation.
+        _model : model
+            A model object
+        Returns
+        -------
+        Numpy array
+
+        """
+        output, output_label = [], []
+        for i, _batch in enumerate(data_loader):
+            timg = self._get_data_by_name(_batch, 'image')
+            output.append(_model(timg).detach().cpu().numpy())
+            if 'label' in _batch:
+                output_label.append(_batch['label'])
+        if len(output_label) == len(output):
+            output_label = np.vstack(output_label)
+        else:
+            output_label = np.array([])
+        return np.vstack(output), output_label
 
     def _get_data_by_name(self, data: dict, name: str):
         """
@@ -328,3 +370,9 @@ class BaseTrainer:
                     break
 
             torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
+
+    def infer_embeddings(self, data):
+        if isinstance(data, DataLoader):
+            return self._infer_one_epoch(data, self.model.encoder)
+        else:
+            return self.model.encoder(torch.from_numpy(data).float().to(self.device)).detach().cpu().numpy()

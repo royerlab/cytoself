@@ -127,6 +127,10 @@ class test_DataManagerOpenCell(test_get_file_df):
         self._assert_dataset(datamgr.test_dataset, keys=('labels',))
 
     def test_const_dataloader(self):
+        self.datamgr.const_dataset(label_format=None)
+        with self.assertRaises(TypeError):
+            self.datamgr.const_dataloader(shuffle=False)
+
         self.datamgr.const_dataset()
         self.datamgr.const_dataloader(shuffle=False)
         for train_data0 in self.datamgr.train_dataset:

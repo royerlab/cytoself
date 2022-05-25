@@ -294,6 +294,22 @@ class DataManagerOpenCell(DataManagerBase):
             self.test_dataset = PreloadedDataset(test_label, test_data, transform, self.unique_labels, label_format)
 
     def const_dataloader(self, shuffle: bool = True, **kwargs):
+        """
+        Constructs DataLoader
+
+        Parameters
+        ----------
+        shuffle : bool
+            Shuffle batch if True
+
+        Returns
+        -------
+        None
+
+        """
+        _assert_dtype(self.train_dataset.label, self.train_dataset.label_format)
+        _assert_dtype(self.val_dataset.label, self.val_dataset.label_format)
+        _assert_dtype(self.test_dataset.label, self.test_dataset.label_format)
         self.train_loader = DataLoader(
             self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
@@ -303,6 +319,30 @@ class DataManagerOpenCell(DataManagerBase):
         self.test_loader = DataLoader(
             self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
+
+
+def _assert_dtype(label, label_format):
+    """
+    Asserts dtype for DataLoader
+
+    Parameters
+    ----------
+    label : numpy array
+        Label data
+    label_format : str
+        label_format argument in const_dataset
+
+    Returns
+    -------
+    None
+
+    """
+    if (
+        label_format is None
+        and isinstance(label, np.ndarray)
+        and not (np.issubdtype(label, np.number) or np.issubdtype(label, bool))
+    ):
+        raise TypeError(f'label must be numerical to use dataloader, instead {label.dtype} is given.')
 
 
 def get_file_df(basepath: str, suffix: Union[str, Sequence] = 'label', extension: str = 'npy'):

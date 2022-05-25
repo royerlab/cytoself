@@ -1,5 +1,4 @@
 from typing import Optional, Callable
-
 from numpy.typing import ArrayLike
 from torch.utils.data import Dataset
 
@@ -35,19 +34,6 @@ class DataManagerBase:
         Construct DataSet objects.
         """
         pass
-
-
-# A potential class object to extract train, val and test data.
-# class Subset(Dataset):
-#     def __init__(self, dataset, indices):
-#         self._indices = indices
-#         self._dataset = dataset
-#
-#     def __len__(self):
-#         return len(self._indices)
-#
-#     def __getitem__(self, index):
-#         return self._dataset[self._indices[index]]
 
 
 class PreloadedDataset(Dataset):
