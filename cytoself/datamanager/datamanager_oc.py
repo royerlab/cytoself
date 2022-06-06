@@ -277,21 +277,27 @@ class DataManagerOpenCell(DataManagerBase):
                 train_data = image_all[train_ind]
             else:
                 train_data = []
-            self.train_dataset = PreloadedDataset(train_label, train_data, transform, self.unique_labels, label_format)
+            self.train_dataset = PreloadedDataset(
+                train_label, train_data, transform, self.unique_labels, label_format, self.label_col
+            )
         if len(val_ind) > 0:
             val_label = label_all[val_ind]
             if len(image_all) > 0:
                 val_data = image_all[val_ind]
             else:
                 val_data = []
-            self.val_dataset = PreloadedDataset(val_label, val_data, transform, self.unique_labels, label_format)
+            self.val_dataset = PreloadedDataset(
+                val_label, val_data, transform, self.unique_labels, label_format, self.label_col
+            )
         if len(test_ind) > 0:
             test_label = label_all[test_ind]
             if len(image_all) > 0:
                 test_data = image_all[test_ind]
             else:
                 test_data = []
-            self.test_dataset = PreloadedDataset(test_label, test_data, transform, self.unique_labels, label_format)
+            self.test_dataset = PreloadedDataset(
+                test_label, test_data, transform, self.unique_labels, label_format, self.label_col
+            )
 
     def const_dataloader(self, shuffle: bool = True, **kwargs):
         """

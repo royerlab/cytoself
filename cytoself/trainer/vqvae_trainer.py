@@ -39,7 +39,7 @@ class VQVAETrainer(BaseTrainer):
 
         Returns
         -------
-        tensor
+        tuple of tensor
 
         """
         reconstruction_loss = nn.MSELoss(**kwargs)(targets, inputs)

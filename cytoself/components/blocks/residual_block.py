@@ -3,6 +3,7 @@ from typing import Type, Optional
 from torch import nn
 from torch import Tensor
 from cytoself.components.blocks.conv_block import Conv2dBN
+from cytoself.components.utils.activation_selecter import act_layer
 
 
 class ResidualBlockUnit2d(nn.Module):
@@ -57,14 +58,7 @@ class ResidualBlockUnit2d(nn.Module):
             **kwargs,
         )
         self.bn2 = nn.BatchNorm2d(num_channels, affine=bn_affine)
-        if act == 'relu':
-            self.act2 = nn.ReLU()
-        elif act == 'lrelu':
-            self.act2 = nn.LeakyReLU(negative_slope=0.3)
-        elif act == 'swish':
-            self.act2 = nn.SiLU()
-        elif act == 'hswish':
-            self.act2 = nn.Hardswish()
+        self.act2 = act_layer(act)
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x

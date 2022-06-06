@@ -30,13 +30,3 @@ def test_Conv2dBN_conv_gp():
 def test_Conv2dBN_bn_affine():
     model = Conv2dBN(32, 16, bn_affine=True)
     assert model.bn.affine
-
-
-def test_Conv2dBN_act():
-    for key, val in {
-        'relu': nn.ReLU,
-        'lrelu': nn.LeakyReLU,
-        'hswish': nn.Hardswish,
-    }.items():
-        model = Conv2dBN(32, 16, act=key)
-        assert isinstance(model.act, val)

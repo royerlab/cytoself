@@ -232,7 +232,10 @@ class BaseTrainer:
         output, output_label = [], []
         for i, _batch in enumerate(data_loader):
             timg = self._get_data_by_name(_batch, 'image')
-            output.append(_model(timg).detach().cpu().numpy())
+            out = _model(timg)
+            if not torch.is_tensor(out):
+                out = out[0]
+            output.append(out.detach().cpu().numpy())
             if 'label' in _batch:
                 output_label.append(_batch['label'])
         if len(output_label) == len(output):
@@ -314,22 +317,23 @@ class BaseTrainer:
         datamanager,
         initial_epoch: int = 0,
         tensorboard_path: Optional[str] = None,
+        **kwargs,
     ):
         """
-            Fit pytorch model
+        Fit pytorch model
 
-            Parameters
-            ----------
-            datamanager : DataManager
-                DataManager object
-            initial_epoch : int
-                Epoch at which to start training (useful for resuming a previous training run).
+        Parameters
+        ----------
+        datamanager : DataManager
+            DataManager object
+        initial_epoch : int
+            Epoch at which to start training (useful for resuming a previous training run).
         tensorboard_path : str
-                Path for Tensorboard to load logs
+            Path for Tensorboard to load logs
 
-            Returns
-            -------
-            None
+        Returns
+        -------
+        None
 
         """
         if self.model is None:
@@ -343,7 +347,7 @@ class BaseTrainer:
 
                 # Train the model
                 self.model.train(True)
-                self.train_one_epoch(datamanager.train_loader)
+                self.train_one_epoch(datamanager.train_loader, **kwargs)
                 self.model.train(False)
 
                 # Validate the model

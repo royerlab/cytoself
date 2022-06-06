@@ -20,15 +20,37 @@ class VanillaAE(nn.Module):
         encoder: Optional = None,
         decoder: Optional = None,
     ):
+        """
+        Constructs simple encoder decoder model
+
+        Parameters
+        ----------
+        input_shape : tuple
+            Input tensor shape
+        emb_shape : tuple
+            Embedding tensor shape
+        output_shape : tuple
+            Output tensor shape
+        encoder_args : dict
+            Additional arguments for encoder
+        decoder_args : dict
+            Additional arguments for decoder
+        encoder : encoder module
+            (Optional) Custom encoder module
+        decoder : decoder module
+            (Optional) Custom decoder module
+        """
         super().__init__()
         if encoder is None:
             encoder = efficientenc_b0
         if decoder is None:
             decoder = DecoderResnet
         if encoder_args is None:
-            encoder_args = {'in_channels': input_shape[0], 'out_channels': emb_shape[0]}
+            encoder_args = {}
         if decoder_args is None:
-            decoder_args = {'input_shape': emb_shape, 'output_shape': output_shape}
+            decoder_args = {}
+        encoder_args.update({'in_channels': input_shape[0], 'out_channels': emb_shape[0]})
+        decoder_args.update({'input_shape': emb_shape, 'output_shape': output_shape})
         self.encoder = encoder(**encoder_args)
         self.decoder = decoder(**decoder_args)
 

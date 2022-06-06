@@ -5,7 +5,7 @@ import pytest
 
 import numpy as np
 from ..analysis_opencell import AnalysisOpenCell
-from cytoself.trainer.test.test_vanilla_trainer import test_VanillaAETrainer
+from cytoself.trainer.test.test_vanilla_trainer import setup_VanillaAETrainer
 
 
 @contextmanager
@@ -16,7 +16,7 @@ def assert_not_raises():
         raise pytest.fail(f'Did raise {e}')
 
 
-class test_BaseAnalysis(test_VanillaAETrainer):
+class test_BaseAnalysis(setup_VanillaAETrainer):
     def setUp(self):
         super().setUp()
         self.analysis = AnalysisOpenCell(self.datamgr, self.trainer)

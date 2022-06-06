@@ -48,6 +48,7 @@ class PreloadedDataset(Dataset):
         transform: Optional[Callable] = None,
         unique_labels: ArrayLike = None,
         label_format: Optional[str] = None,
+        label_col: int = 0,
     ):
         """
         Parameters
@@ -62,12 +63,15 @@ class PreloadedDataset(Dataset):
             Array of unique labels, serving as the canonical label book for classification tasks
         label_format : str or None
             Format of converted label: onehot, index or None (i.e. no conversion)
+        label_col : int
+            Column index to be used for label
         """
         self.data = data
         self.label = label
         self.transform = transform
         self.unique_labels = unique_labels
         self.label_format = label_format
+        self.label_col = label_col
 
     def __len__(self):
         return len(self.label)
@@ -78,12 +82,13 @@ class PreloadedDataset(Dataset):
         else:
             onehot = label[:, None] == self.unique_labels
             if self.label_format == 'onehot':
-                return onehot
+                return onehot[0]
             else:
                 return onehot.argmax(1)
 
     def __getitem__(self, idx):
-        label = self.label[idx]
+        label = self.label[idx].reshape(-1, self.label.shape[1])
+        label = label[:, self.label_col]
         if self.label_format:
             label = self.label_converter(label)
         if self.data is None or len(self.data) == 0:

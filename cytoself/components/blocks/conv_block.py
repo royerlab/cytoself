@@ -2,6 +2,8 @@ from typing import Union
 from torch import nn
 from warnings import warn
 
+from cytoself.components.utils.activation_selecter import act_layer
+
 
 def calc_groups(in_channels: int, out_channels: int, verbose: bool = True):
     """
@@ -93,17 +95,7 @@ class Conv2dBN(nn.Module):
             bias=use_bias,
         )
         self.bn = nn.BatchNorm2d(out_channels, affine=bn_affine)
-        act = act.lower()
-        if act == 'relu':
-            self.act = nn.ReLU()
-        elif act == 'lrelu':
-            self.act = nn.LeakyReLU(negative_slope=0.3)
-        elif act == 'swish':
-            self.act = nn.SiLU()
-        elif act == 'hswish':
-            self.act = nn.Hardswish()
-        else:
-            warn(f'{act} not found. No activation layer.', UserWarning)
+        self.act = act_layer(act)
 
     def forward(self, x):
         x = self.conv(x)

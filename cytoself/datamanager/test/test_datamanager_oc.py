@@ -63,7 +63,7 @@ class test_DataManagerOpenCell(test_get_file_df):
             if 'image' in keys:
                 assert d['image'].shape == (2, 10, 10)
             if 'label' in keys:
-                assert len(d['label']) == 2
+                assert len(d['label']) == 3
             break
 
     def test_intensity_adjustment(self):
@@ -95,7 +95,7 @@ class test_DataManagerOpenCell(test_get_file_df):
         for d, s in zip(index_list, self.datamgr.data_split):
             data = test_label[d]
             assert (
-                min(1, floor(len(label_all) * s * 0.66)) <= len(data) <= ceil(len(label_all) * s * 1.42)
+                min(1, floor(len(label_all) * s * 0.6)) <= len(data) <= ceil(len(label_all) * s * 1.42)
             ), 'Split ratio deviates too far.'
 
     def test_split_data_notfov(self):

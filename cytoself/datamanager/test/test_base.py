@@ -33,7 +33,7 @@ class test_PreloadedDataset(TestCase):
             for key, val in d.items():
                 assert key == 'label'
                 assert isinstance(val, np.ndarray)
-                assert len(val) == 2
+                assert len(val) == 1
             break
 
     def test_label_and_image(self):
@@ -45,7 +45,7 @@ class test_PreloadedDataset(TestCase):
             for key, val in d.items():
                 if key == 'label':
                     assert isinstance(val, np.ndarray)
-                    assert len(val) == 2
+                    assert len(val) == 1
                 else:
                     assert key == 'image'
                     assert val.shape == (2, 100, 100)
@@ -60,7 +60,7 @@ class test_PreloadedDataset(TestCase):
             for key, val in d.items():
                 if key == 'label':
                     assert isinstance(val, np.ndarray)
-                    assert len(val) == 2
+                    assert len(val) == 1
                 else:
                     assert key == 'image'
                     assert (val == test_data + 1).all()

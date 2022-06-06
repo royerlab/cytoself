@@ -1,12 +1,11 @@
 from typing import Optional
-from torch import nn, Tensor
+from torch import Tensor
 
-from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
-from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 from cytoself.components.layers.vq import VectorQuantizer
+from cytoself.trainer.autoencoder.vanilla import VanillaAE
 
 
-class VQVAE(nn.Module):
+class VQVAE(VanillaAE):
     """
     Vector Quantized Variational Autoencoder model
     """
@@ -22,17 +21,29 @@ class VQVAE(nn.Module):
         encoder: Optional = None,
         decoder: Optional = None,
     ):
-        super().__init__()
-        if encoder is None:
-            encoder = efficientenc_b0
-        if decoder is None:
-            decoder = DecoderResnet
-        if encoder_args is None:
-            encoder_args = {'in_channels': input_shape[0], 'out_channels': emb_shape[0]}
-        if decoder_args is None:
-            decoder_args = {'input_shape': emb_shape, 'output_shape': output_shape}
-        self.encoder = encoder(**encoder_args)
-        self.decoder = decoder(**decoder_args)
+        """
+        Constructs a VQVAE model
+
+        Parameters
+        ----------
+        input_shape : tuple
+            Input tensor shape
+        emb_shape : tuple
+            Embedding tensor shape
+        output_shape : tuple
+            Output tensor shape
+        vq_args : dict
+            Additional arguments for the Vector Quantization layer
+        encoder_args : dict
+            Additional arguments for encoder
+        decoder_args : dict
+            Additional arguments for decoder
+        encoder : encoder module
+            (Optional) Custom encoder module
+        decoder : decoder module
+            (Optional) Custom decoder module
+        """
+        super().__init__(input_shape, emb_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
         self.vq_layer = VectorQuantizer(embedding_dim=emb_shape[0], **vq_args)
         self.vq_loss = None
         self.perplexity = None

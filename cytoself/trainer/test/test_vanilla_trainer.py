@@ -7,13 +7,18 @@ from cytoself.datamanager.test.test_datamanager_oc import TmpDirTestCase
 from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 
-class test_VanillaAETrainer(TmpDirTestCase):
+class setup_VanillaAETrainer(TmpDirTestCase):
     def setUp(self):
         self.model_args = {
             'input_shape': (1, 32, 32),
             'emb_shape': (16, 16, 16),
             'output_shape': (1, 32, 32),
         }
+        self._setup1()
+        self.trainer = VanillaAETrainer(self.model_args, self.train_args, homepath=self._basepath)
+        self._setup_datamgr()
+
+    def _setup1(self):
         # Reduce model size to make test run fast
         self.model_args['encoder_args'] = {
             'in_channels': self.model_args['input_shape'][0],
@@ -37,12 +42,24 @@ class test_VanillaAETrainer(TmpDirTestCase):
         super().setUp()
         self.gen_npy(self.model_args['input_shape'])
         self.train_args = {'lr': 1e-6, 'max_epochs': 2}
-        self.trainer = VanillaAETrainer(self.model_args, self.train_args, homepath=self._basepath)
+
+    def _setup_datamgr(self):
         self.datamgr = DataManagerOpenCell(self._basepath, ['nuc'], batch_size=2)
         self.datamgr.const_dataset()
         self.datamgr.const_dataloader()
 
+
+class test_VanillaAETrainer(setup_VanillaAETrainer):
     def test_fit(self):
         self.trainer.fit(self.datamgr, tensorboard_path=join(self._basepath, 'tb_log'))
         assert len(self.trainer.losses['train_loss']) == self.train_args['max_epochs']
         assert min(self.trainer.losses['train_loss']) < torch.inf
+
+
+class test_VanillaAETrainer_on_plateau(setup_VanillaAETrainer):
+    def test__reduce_lr_on_plateau(self):
+        self.train_args = {'lr': 1e-7, 'max_epochs': 4, 'reducelr_patience': 1, 'min_lr': 1e-8, 'earlystop_patience': 3}
+        self.trainer = VanillaAETrainer(self.model_args, self.train_args, homepath=self._basepath)
+        self.trainer.fit(self.datamgr, tensorboard_path=join(self._basepath, 'tb_log'))
+        assert round(self.trainer.optimizer.param_groups[0]['lr'], 8) == 1e-8
+        assert len(self.trainer.losses) == 3
