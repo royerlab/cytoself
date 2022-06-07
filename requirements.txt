@@ -5,6 +5,7 @@ tqdm>=4.63
 pandas>=1.4
 joblib>=1.1
 tensorboard>=2.9
+protobuf==3.20
 matplotlib>=3.5
 umap-learn==0.5.2
 # colorcet>=3

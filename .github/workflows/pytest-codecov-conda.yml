@@ -30,7 +30,6 @@ jobs:
         flake8 cytoself --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
     - name: Generate coverage report
       run: |
-        pip install protobuf==3.20
         pip install pytest
         pip install pytest-cov
         pytest --cov=./cytoself --cov-report=xml
