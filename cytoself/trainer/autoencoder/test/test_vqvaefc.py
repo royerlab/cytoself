@@ -8,11 +8,11 @@ def test_VQVAEFC():
     input_shape, emb_shape = (2, 100, 100), (64, 4, 4)
     for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
         model = VQVAEFC(
-            input_shape,
             emb_shape,
-            input_shape,
             {'num_embeddings': 7},
             3,
+            input_shape,
+            input_shape,
             t,
             fc_args={'num_layers': 1, 'num_features': 10},
         )

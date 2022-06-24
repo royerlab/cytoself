@@ -12,11 +12,11 @@ class VQVAEFC(VQVAE):
 
     def __init__(
         self,
-        input_shape: tuple,
-        emb_shape: tuple,
-        output_shape: tuple,
+        emb_shape: tuple[int, int, int],
         vq_args: dict,
         num_class: int,
+        input_shape: Optional[tuple[int, int, int]] = None,
+        output_shape: Optional[tuple[int, int, int]] = None,
         fc_input_type: str = 'vqvec',
         encoder_args: Optional[dict] = None,
         decoder_args: Optional[dict] = None,
@@ -29,16 +29,16 @@ class VQVAEFC(VQVAE):
 
         Parameters
         ----------
-        input_shape : tuple
-            Input tensor shape
         emb_shape : tuple
             Embedding tensor shape
-        output_shape : tuple
-            Output tensor shape
         vq_args : dict
             Additional arguments for the Vector Quantization layer
         num_class : int
             Number of output classes for fc layers
+        input_shape : tuple
+            Input tensor shape
+        output_shape : tuple
+            Output tensor shape
         fc_input_type : str
             Input type for the fc layers;
             vqvec: quantized vector, vqind: quantized index, vqindhist: quantized index histogram
@@ -53,7 +53,7 @@ class VQVAEFC(VQVAE):
         decoder : decoder module
             (Optional) Custom decoder module
         """
-        super().__init__(input_shape, emb_shape, output_shape, vq_args, encoder_args, decoder_args, encoder, decoder)
+        super().__init__(emb_shape, vq_args, input_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
         if fc_args is None:
             fc_args = {'num_layers': 2, 'num_features': 1000}
         if fc_input_type == 'vqind':
@@ -65,7 +65,7 @@ class VQVAEFC(VQVAE):
         fc_args['out_channels'] = num_class
         self.fc_layer = FCblock(**fc_args)
         self.fc_loss = None
-        self.fc_connection = fc_input_type
+        self.fc_input_type = fc_input_type
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         encoded = self.encoder(x)
@@ -79,11 +79,11 @@ class VQVAEFC(VQVAE):
         ) = self.vq_layer(encoded)
         x = self.decoder(quantized)
 
-        if self.fc_connection == 'vqvec':
+        if self.fc_input_type == 'vqvec':
             fcout = self.fc_layer(quantized.view(quantized.size(0), -1))
-        elif self.fc_connection == 'vqind':
+        elif self.fc_input_type == 'vqind':
             fcout = self.fc_layer(self.encoding_indices.view(self.encoding_indices.size(0), -1))
-        elif self.fc_connection == 'vqindhist':
+        elif self.fc_input_type == 'vqindhist':
             fcout = self.fc_layer(self.index_histogram.view(self.index_histogram.size(0), -1))
         else:
             fcout = self.fc_layer(encoded.view(encoded.size(0), -1))

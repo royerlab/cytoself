@@ -264,6 +264,8 @@ class DataManagerOpenCell(DataManagerBase):
 
         # Load data
         image_all, label_all = self._load_data_multi(df_toload)
+        if len(image_all) > 0:
+            image_all = np.moveaxis(image_all, np.argmin(image_all.shape), 1)
 
         # Get unique labels
         self.const_label_book(label_all)
@@ -320,10 +322,10 @@ class DataManagerOpenCell(DataManagerBase):
             self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
         self.val_loader = DataLoader(
-            self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+            self.val_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
         self.test_loader = DataLoader(
-            self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+            self.test_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
 
 
@@ -371,9 +373,9 @@ def get_file_df(basepath: str, suffix: Union[str, Sequence] = 'label', extension
     """
     df = pd.DataFrame()
     if isinstance(suffix, str):
-        df[suffix] = glob(join(basepath, '*_' + suffix + '.' + extension))
+        df[suffix] = sorted(glob(join(basepath, '*_' + suffix + '.' + extension)))
     elif is_sequence(suffix):
-        filelist = glob(join(basepath, '*_' + suffix[0] + '.' + extension))
+        filelist = sorted(glob(join(basepath, '*_' + suffix[0] + '.' + extension)))
         df[suffix[0]] = filelist
         for sf in suffix[1:]:
             flist = []

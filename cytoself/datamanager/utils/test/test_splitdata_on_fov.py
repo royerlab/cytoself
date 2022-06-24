@@ -24,7 +24,7 @@ def assert_split_ratio(index_list, split_perc):
         data = test_label[d]
         data_list.append(data)
         assert (
-            min(1, floor(data_len * s * 0.7)) <= len(data) <= ceil(data_len * s * 1.4)
+            min(1, floor(data_len * s * 0.7)) <= len(data) <= ceil(data_len * s * 1.5)
         ), 'Split ratio deviates too far.'
     return data_list
 

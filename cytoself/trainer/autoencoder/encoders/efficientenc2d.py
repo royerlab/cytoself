@@ -212,6 +212,7 @@ class EfficientNet(nn.Module):
         stochastic_depth_prob: float = 0.2,
         block: Optional[Callable[..., nn.Module]] = None,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
+        first_layer_stride: int = 2,
     ) -> None:
         """
         EfficientNet main class
@@ -259,7 +260,7 @@ class EfficientNet(nn.Module):
                     in_channels,
                     firstconv_output_channels,
                     kernel_size=3,
-                    stride=2,
+                    stride=first_layer_stride,
                     norm_layer=norm_layer,
                     activation_layer=nn.SiLU,
                 )

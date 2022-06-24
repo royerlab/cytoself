@@ -16,7 +16,7 @@ class test_BaseTrainer(TestCase):
     def test_init_(self):
         assert self.trainer.model is None
         assert self.trainer.best_model == []
-        assert self.trainer.losses == {f'{p}_loss': [] for p in ['train', 'val', 'test']}
+        assert self.trainer.losses == {}
         assert self.trainer.lr == 0
         assert self.trainer.tb_writer is None
         assert self.trainer.optimizer is None
@@ -41,6 +41,9 @@ class test_BaseTrainer(TestCase):
     def test_record_metrics(self):
         self.trainer.record_metrics(1.0)
         assert self.trainer.losses['train_loss'] == [1.0]
+        self.trainer.record_metrics([[2.0, 3.0]])
+        assert self.trainer.losses['train_loss1'] == [2.0]
+        assert self.trainer.losses['train_loss2'] == [3.0]
 
     def test_set_optimizer(self):
         with self.assertRaises(ValueError):

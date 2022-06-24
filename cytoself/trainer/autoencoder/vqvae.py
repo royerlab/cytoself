@@ -12,10 +12,10 @@ class VQVAE(VanillaAE):
 
     def __init__(
         self,
-        input_shape: tuple,
-        emb_shape: tuple,
-        output_shape: tuple,
+        emb_shape: tuple[int, int, int],
         vq_args: dict,
+        input_shape: Optional[tuple[int, int, int]] = None,
+        output_shape: Optional[tuple[int, int, int]] = None,
         encoder_args: Optional[dict] = None,
         decoder_args: Optional[dict] = None,
         encoder: Optional = None,
@@ -26,14 +26,14 @@ class VQVAE(VanillaAE):
 
         Parameters
         ----------
-        input_shape : tuple
-            Input tensor shape
         emb_shape : tuple
             Embedding tensor shape
-        output_shape : tuple
-            Output tensor shape
         vq_args : dict
             Additional arguments for the Vector Quantization layer
+        input_shape : tuple
+            Input tensor shape
+        output_shape : tuple
+            Output tensor shape
         encoder_args : dict
             Additional arguments for encoder
         decoder_args : dict
@@ -43,7 +43,7 @@ class VQVAE(VanillaAE):
         decoder : decoder module
             (Optional) Custom decoder module
         """
-        super().__init__(input_shape, emb_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
+        super().__init__(emb_shape, input_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
         self.vq_layer = VectorQuantizer(embedding_dim=emb_shape[0], **vq_args)
         self.vq_loss = None
         self.perplexity = None

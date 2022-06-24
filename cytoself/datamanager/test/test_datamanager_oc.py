@@ -48,6 +48,8 @@ class test_get_file_df(TmpDirTestCase):
             assert df['label'].str.contains(join(self._basepath, f'protein{i}_label.npy')).any()
             assert df['nuc'].str.contains(join(self._basepath, f'protein{i}_nuc.npy')).any()
 
+    # TODO: test loading order
+
 
 class test_DataManagerOpenCell(test_get_file_df):
     def setUp(self):
@@ -95,7 +97,7 @@ class test_DataManagerOpenCell(test_get_file_df):
         for d, s in zip(index_list, self.datamgr.data_split):
             data = test_label[d]
             assert (
-                min(1, floor(len(label_all) * s * 0.6)) <= len(data) <= ceil(len(label_all) * s * 1.42)
+                min(1, floor(len(label_all) * s * 0.6)) <= len(data) <= ceil(len(label_all) * s * 1.5)
             ), 'Split ratio deviates too far.'
 
     def test_split_data_notfov(self):

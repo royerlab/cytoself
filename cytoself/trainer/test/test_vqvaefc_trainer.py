@@ -13,7 +13,7 @@ class test_VQVAEFCTrainer(test_VQVAETrainer):
             'vq_args': {'num_embeddings': 7},
             'num_class': 3,
         }
-        self._setup1()
+        self._setup_model_args()
         self.trainer = VQVAEFCTrainer(self.model_args, self.train_args, homepath=self._basepath)
         self._setup_datamgr()
 

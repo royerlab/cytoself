@@ -23,6 +23,8 @@ class BaseAnalysis:
             'homepath': join(trainer.savepath_dict['homepath'], 'analysis') if homepath is None else homepath
         }
         self._init_savepath()
+        self.fig = None
+        self.ax = None
 
     def _init_savepath(self):
         folders = ['umap_figures', 'umap_data', 'feature_spectra_figures', 'feature_spectra_data']

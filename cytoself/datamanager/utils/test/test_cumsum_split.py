@@ -29,4 +29,4 @@ def test_cumsum_split_arr():
     out = cumsum_split(counts, (8, 1, 1), np.arange(len(counts)))
     sums = [sum(counts[i]) for i in out]
     for i, d in enumerate(splits):
-        assert d * 0.8 * 0.1 < sums[i] / sum(sums) < d * 1.32 * 0.1
+        assert d * 0.75 * 0.1 < sums[i] / sum(sums) < d * 1.32 * 0.1

@@ -6,7 +6,7 @@ from cytoself.trainer.autoencoder.vqvae import VQVAE
 def test_VQVAE():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     input_shape, emb_shape = (2, 100, 100), (64, 4, 4)
-    model = VQVAE(input_shape, emb_shape, input_shape, {'num_embeddings': 7})
+    model = VQVAE(emb_shape, {'num_embeddings': 7}, input_shape, input_shape)
     model.to(device)
     input_data = torch.randn((1,) + input_shape).to(device)
     out = model(input_data)

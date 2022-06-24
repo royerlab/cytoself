@@ -38,7 +38,7 @@ class BaseTrainer:
         self.savepath_dict = {'homepath': homepath}
         self.current_epoch = 0
         self.metrics_names = metrics_names
-        self.losses = {f'{p}_{n}': [] for n in metrics_names for p in ['train', 'val', 'test']}
+        self.losses = {}
 
     def _init_model(self, model):
         """
@@ -58,6 +58,7 @@ class BaseTrainer:
         # optimizer should be set after model moved to other devices
         self._default_train_args()
         self.set_optimizer(**self.train_args)
+        self.init_savepath()
 
     def _default_train_args(self):
         """
@@ -99,11 +100,21 @@ class BaseTrainer:
         """
         return (nn.MSELoss(**kwargs)(targets, inputs),)
 
-    def record_metrics(self, metrics: Union[float, Collection[float]], phase: str = 'train'):
-        if isinstance(metrics, float):
+    def _adaptive_record_metrics(self, key: str, metrics: float):
+        if key in self.losses:
+            self.losses[key].append(metrics)
+        else:
+            self.losses[key] = [metrics]
+
+    def record_metrics(self, metrics: Union[float, list], phase: str = 'train'):
+        if not isinstance(metrics, list):
             metrics = [metrics]
         for n, l in zip(self.metrics_names, metrics):
-            self.losses[f'{phase}_{n}'].append(l)
+            if isinstance(l, list):
+                for i, _l in enumerate(l):
+                    self._adaptive_record_metrics(f'{phase}_{n}{i + 1}', _l)
+            else:
+                self._adaptive_record_metrics(f'{phase}_{n}', l)
 
     def set_optimizer(self, optimizer: Optional = None, **kwargs):
         """
@@ -282,7 +293,7 @@ class BaseTrainer:
             for i, _batch in enumerate(data_loader):
                 vimg = self._get_data_by_name(_batch, 'image')
                 _vloss = self.calc_loss_one_batch(self.model(vimg), vimg)
-                _metrics = [m + l for m, l in zip(_metrics, _vloss)]
+                _metrics = [m + l.item() for m, l in zip(_metrics, _vloss)]
             self.record_metrics(_metrics, phase='val')
 
     def _reduce_lr_on_plateau(self, count_lr_no_improve: int):
@@ -340,7 +351,7 @@ class BaseTrainer:
             raise ValueError('model is not defined.')
         else:
             self.current_epoch = initial_epoch
-            best_vloss = torch.inf if len(self.losses['val_loss']) == 0 else min(self.losses['val_loss'])
+            best_vloss = torch.inf if 'val_loss' not in self.losses else min(self.losses['val_loss'])
             count_lr_no_improve = 0
             count_early_stop = 0
             for _ in tqdm(range(self.current_epoch, self.train_args['max_epochs'])):
@@ -376,6 +387,19 @@ class BaseTrainer:
             torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
 
     def infer_embeddings(self, data):
+        """
+        Infers embeddings
+
+        Parameters
+        ----------
+        data : numpy array or DataLoader
+            Image data
+
+        Returns
+        -------
+        None
+
+        """
         if data is None:
             raise ValueError('The input to infer_embeddings cannot be None.')
         if isinstance(data, DataLoader):

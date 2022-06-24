@@ -14,11 +14,11 @@ class setup_VanillaAETrainer(TmpDirTestCase):
             'emb_shape': (16, 16, 16),
             'output_shape': (1, 32, 32),
         }
-        self._setup1()
+        self._setup_model_args()
         self.trainer = VanillaAETrainer(self.model_args, self.train_args, homepath=self._basepath)
         self._setup_datamgr()
 
-    def _setup1(self):
+    def _setup_model_args(self):
         # Reduce model size to make test run fast
         self.model_args['encoder_args'] = {
             'in_channels': self.model_args['input_shape'][0],
@@ -39,6 +39,9 @@ class setup_VanillaAETrainer(TmpDirTestCase):
             'num_residual_layers': 1,
             'output_shape': self.model_args['input_shape'],
         }
+        self._setup_env()
+
+    def _setup_env(self):
         super().setUp()
         self.gen_npy(self.model_args['input_shape'])
         self.train_args = {'lr': 1e-6, 'max_epochs': 2}
@@ -58,8 +61,8 @@ class test_VanillaAETrainer(setup_VanillaAETrainer):
 
 class test_VanillaAETrainer_on_plateau(setup_VanillaAETrainer):
     def test__reduce_lr_on_plateau(self):
-        self.train_args = {'lr': 1e-7, 'max_epochs': 4, 'reducelr_patience': 1, 'min_lr': 1e-8, 'earlystop_patience': 3}
+        self.train_args = {'lr': 1e-8, 'max_epochs': 5, 'reducelr_patience': 1, 'min_lr': 1e-9, 'earlystop_patience': 3}
         self.trainer = VanillaAETrainer(self.model_args, self.train_args, homepath=self._basepath)
         self.trainer.fit(self.datamgr, tensorboard_path=join(self._basepath, 'tb_log'))
-        assert round(self.trainer.optimizer.param_groups[0]['lr'], 8) == 1e-8
-        assert len(self.trainer.losses) == 3
+        assert round(self.trainer.optimizer.param_groups[0]['lr'], 9) == 1e-9
+        assert len(self.trainer.losses['train_loss']) == 4

@@ -12,7 +12,7 @@ class test_VQVAETrainer(test_VanillaAETrainer):
             'output_shape': (1, 32, 32),
             'vq_args': {'num_embeddings': 7},
         }
-        self._setup1()
+        self._setup_model_args()
         self.trainer = VQVAETrainer(self.model_args, self.train_args, homepath=self._basepath)
         self._setup_datamgr()
 

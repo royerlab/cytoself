@@ -29,56 +29,68 @@ class test_BaseAnalysis(setup_VanillaAETrainer):
             self.analysis.plot_umap_of_embedding_vector(label_data=self.label_data)
         with self.assertRaises(ValueError):
             self.analysis.plot_umap_of_embedding_vector(image_data=np.random.randn(100, 1, 32, 32))
+        with self.assertRaises(ValueError):
+            self.analysis.plot_umap_of_embedding_vector(embedding_data=np.random.randn(100, 10))
 
     def test_plot_umap_of_embedding_vector_umapdata(self):
         with assert_not_raises():
-            self.analysis.plot_umap_of_embedding_vector(
+            output = self.analysis.plot_umap_of_embedding_vector(
                 label_data=self.label_data,
                 umap_data=np.random.randn(100, 2),
                 savepath=self.file_name,
                 title='fig title',
                 xlabel='x axis',
                 ylabel='y axis',
+                show_legend=True,
+                figsize=(6, 5),
+                dpi=100,
             )
         assert exists(self.file_name)
+        assert output.shape == (100, 2)
         os.remove(self.file_name)
 
     def test_plot_umap_of_embedding_vector_embedding(self):
         with assert_not_raises():
-            self.analysis.plot_umap_of_embedding_vector(
+            output = self.analysis.plot_umap_of_embedding_vector(
                 label_data=self.label_data,
                 embedding_data=np.random.randn(100, 10),
                 savepath=self.file_name,
                 title='fig title',
                 xlabel='x axis',
                 ylabel='y axis',
+                show_legend=True,
             )
         assert exists(self.file_name)
+        assert output.shape == (100, 2)
         os.remove(self.file_name)
 
     def test_plot_umap_of_embedding_vector_image(self):
         with assert_not_raises():
-            self.analysis.plot_umap_of_embedding_vector(
+            output = self.analysis.plot_umap_of_embedding_vector(
                 label_data=self.datamgr.test_loader.dataset.label,
                 image_data=self.datamgr.test_loader.dataset.data,
                 savepath=self.file_name,
                 title='fig title',
                 xlabel='x axis',
                 ylabel='y axis',
+                show_legend=True,
             )
         assert exists(self.file_name)
+        assert output.shape == (len(self.datamgr.test_loader.dataset.label), 2)
         os.remove(self.file_name)
 
     def test_plot_umap_of_embedding_vector_dataloader(self):
         self.datamgr.const_dataset(label_format='index')
         self.datamgr.const_dataloader()
         with assert_not_raises():
-            self.analysis.plot_umap_of_embedding_vector(
+            output = self.analysis.plot_umap_of_embedding_vector(
                 data_loader=self.datamgr.test_loader,
                 savepath=self.file_name,
                 title='fig title',
                 xlabel='x axis',
                 ylabel='y axis',
+                show_legend=True,
             )
         assert exists(self.file_name)
+        assert output.shape == (len(self.datamgr.test_loader.dataset.label), 2)
         os.remove(self.file_name)
