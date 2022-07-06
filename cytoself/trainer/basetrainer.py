@@ -377,6 +377,8 @@ class BaseTrainer:
                 count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)
 
                 # Record logs for TensorBoard
+                if tensorboard_path is not None:
+                    tensorboard_path = join(self.savepath_dict['homepath'], tensorboard_path)
                 self.write_on_tensorboard(tensorboard_path)
                 self.current_epoch += 1
 
@@ -406,3 +408,28 @@ class BaseTrainer:
             return self._infer_one_epoch(data, self.model.encoder)
         else:
             return self.model.encoder(torch.from_numpy(data).float().to(self.device)).detach().cpu().numpy()
+
+    def infer_reconstruction(self, data):
+        """
+        Infers decoded images
+
+        Parameters
+        ----------
+        data : numpy array or DataLoader
+            Image data
+
+        Returns
+        -------
+        None
+
+        """
+        if data is None:
+            raise ValueError('The input to infer_embeddings cannot be None.')
+        if isinstance(data, DataLoader):
+            return self._infer_one_epoch(data, self.model)[0]
+        else:
+            output = self.model(torch.from_numpy(data).float().to(self.device))
+            if isinstance(output, tuple) or isinstance(output, list):
+                return output[0].detach().cpu().numpy()
+            else:
+                return output.detach().cpu().numpy()

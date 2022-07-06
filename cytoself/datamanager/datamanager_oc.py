@@ -3,6 +3,7 @@ from typing import Optional, Sequence, Union, List, Callable
 from os.path import join, basename, dirname
 import numpy as np
 import pandas as pd
+import torch
 from pandas import DataFrame
 from glob import glob
 from joblib import Parallel, delayed
@@ -10,6 +11,7 @@ from tqdm import tqdm
 from numpy.typing import ArrayLike
 from numpy.distutils.misc_util import is_sequence
 from torch.utils.data import DataLoader
+from torchvision import transforms
 
 from .utils.splitdata_on_fov import splitdata_on_fov
 from .base import PreloadedDataset, DataManagerBase
@@ -227,7 +229,14 @@ class DataManagerOpenCell(DataManagerBase):
 
     def const_dataset(
         self,
-        transform: Optional[Callable] = None,
+        transform: Optional[Callable] = transforms.Compose(
+            [
+                torch.from_numpy,
+                transforms.RandomRotation(180, interpolation=transforms.InterpolationMode.BILINEAR),
+                transforms.RandomVerticalFlip(),
+                transforms.RandomHorizontalFlip(),
+            ]
+        ),
         labels_toload: Optional[Sequence[str]] = None,
         labels_tohold: Optional[Sequence[str]] = None,
         num_labels: Optional[int] = None,
@@ -240,7 +249,7 @@ class DataManagerOpenCell(DataManagerBase):
         Parameters
         ----------
         transform : Callable
-            Data augmentation function
+            Data augmentation functions
         labels_toload : Sequence of str
             Label names to be loaded
         labels_tohold : Sequence of str
@@ -298,7 +307,7 @@ class DataManagerOpenCell(DataManagerBase):
             else:
                 test_data = []
             self.test_dataset = PreloadedDataset(
-                test_label, test_data, transform, self.unique_labels, label_format, self.label_col
+                test_label, test_data, None, self.unique_labels, label_format, self.label_col
             )
 
     def const_dataloader(self, shuffle: bool = True, **kwargs):

@@ -80,5 +80,9 @@ class test_BaseTrainer(TestCase):
         with self.assertRaises(ValueError):
             self.trainer.infer_embeddings(None)
 
+    def test_infer_reconstruction(self):
+        with self.assertRaises(ValueError):
+            self.trainer.infer_reconstruction(None)
+
     def tearDown(self):
         rmtree(self._basepath)

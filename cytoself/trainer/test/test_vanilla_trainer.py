@@ -58,6 +58,15 @@ class test_VanillaAETrainer(setup_VanillaAETrainer):
         assert len(self.trainer.losses['train_loss']) == self.train_args['max_epochs']
         assert min(self.trainer.losses['train_loss']) < torch.inf
 
+    def test_infer_reconstruction(self):
+        out = self.trainer.infer_reconstruction(self.datamgr.test_loader)
+        assert out.shape == self.datamgr.test_dataset.data.shape
+
+        for d in self.datamgr.test_loader:
+            out = self.trainer.infer_reconstruction(d['image'].numpy())
+            assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]
+            break
+
 
 class test_VanillaAETrainer_on_plateau(setup_VanillaAETrainer):
     def test__reduce_lr_on_plateau(self):

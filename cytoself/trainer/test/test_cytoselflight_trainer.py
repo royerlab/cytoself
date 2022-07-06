@@ -66,3 +66,15 @@ class test_CytoselfLightTrainer(setup_VanillaAETrainer):
             out = self.trainer.infer_embeddings(d['image'].numpy())
             assert out.shape == (self.datamgr.batch_size,) + self.model_args['emb_shapes'][1]
             break
+
+    def test_infer_reconstruction(self):
+        with self.assertRaises(ValueError):
+            self.trainer.infer_embeddings(None)
+
+        out = self.trainer.infer_reconstruction(self.datamgr.test_loader)
+        assert out.shape == self.datamgr.test_dataset.data.shape
+
+        for d in self.datamgr.test_loader:
+            out = self.trainer.infer_reconstruction(d['image'].numpy())
+            assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]
+            break
