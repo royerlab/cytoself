@@ -28,43 +28,40 @@ class test_PreloadedDataset(TestCase):
     def test_label_only(self):
         dataset = PreloadedDataset(test_label)
         assert_instance(dataset)
-        for d in dataset:
-            assert isinstance(d, dict)
-            for key, val in d.items():
-                assert key == 'label'
-                assert isinstance(val, np.ndarray)
-                assert len(val) == 1
-            break
+        d = next(iter(dataset))
+        assert isinstance(d, dict)
+        for key, val in d.items():
+            assert key == 'label'
+            assert isinstance(val, np.ndarray)
+            assert len(val) == 1
 
     def test_label_and_image(self):
         dataset = PreloadedDataset(test_label, test_data)
         assert_instance(dataset)
-        for d in dataset:
-            assert isinstance(d, dict)
-            assert len(d) == 2
-            for key, val in d.items():
-                if key == 'label':
-                    assert isinstance(val, np.ndarray)
-                    assert len(val) == 1
-                else:
-                    assert key == 'image'
-                    assert val.shape == (2, 100, 100)
-            break
+        d = next(iter(dataset))
+        assert isinstance(d, dict)
+        assert len(d) == 2
+        for key, val in d.items():
+            if key == 'label':
+                assert isinstance(val, np.ndarray)
+                assert len(val) == 1
+            else:
+                assert key == 'image'
+                assert val.shape == (2, 100, 100)
 
     def test_transform(self):
         dataset = PreloadedDataset(test_label, test_data, lambda x: x + 1)
         assert_instance(dataset)
-        for d in dataset:
-            assert isinstance(d, dict)
-            assert len(d) == 2
-            for key, val in d.items():
-                if key == 'label':
-                    assert isinstance(val, np.ndarray)
-                    assert len(val) == 1
-                else:
-                    assert key == 'image'
-                    assert (val == test_data + 1).all()
-            break
+        d = next(iter(dataset))
+        assert isinstance(d, dict)
+        assert len(d) == 2
+        for key, val in d.items():
+            if key == 'label':
+                assert isinstance(val, np.ndarray)
+                assert len(val) == 1
+            else:
+                assert key == 'image'
+                assert (val == test_data + 1).all()
 
 
 def test_DataManagerBase():

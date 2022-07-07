@@ -27,7 +27,12 @@ class CytoselfLiteTrainer(BaseTrainer):
         self._init_model(CytoselfLite(**model_args))
 
     def calc_loss_one_batch(
-        self, inputs, targets, vq_coeff: Union[int, float] = 1, fc_coeff: Union[int, float] = 1, **kwargs
+        self,
+        inputs,
+        targets,
+        vq_coeff: Union[int, float] = 1,
+        fc_coeff: Union[int, float] = 1,
+        **kwargs,
     ):
         """
         Computes loss
@@ -88,6 +93,10 @@ class CytoselfLiteTrainer(BaseTrainer):
             # Adjust learning weights
             self.optimizer.step()
 
+            # Clear graphs to save memory
+            self.model.fc_loss = self._detach_graph(self.model.fc_loss)
+            self.model.vq_loss = self._detach_graph(self.model.vq_loss)
+
             # Accumulate metrics
             _metrics = [
                 [_m + _l.item() for _m, _l in zip(m, l)] if isinstance(l, list) else m + l.item()
@@ -96,6 +105,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         _metrics = [[_m / i for _m in m] if isinstance(m, list) else m / i for m in _metrics]
         self.record_metrics(_metrics, phase='train')
 
+    @torch.inference_mode()
     def calc_val_loss(self, data_loader, **kwargs):
         """
         Compute validate loss
@@ -121,6 +131,7 @@ class CytoselfLiteTrainer(BaseTrainer):
             ]
         self.record_metrics(_metrics, phase='val')
 
+    @torch.inference_mode()
     def infer_embeddings(self, data, output_layer: str = 'vqvec1'):
         """
         Infers embeddings

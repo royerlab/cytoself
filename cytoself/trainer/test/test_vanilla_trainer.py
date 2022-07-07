@@ -58,14 +58,24 @@ class test_VanillaAETrainer(setup_VanillaAETrainer):
         assert len(self.trainer.losses['train_loss']) == self.train_args['max_epochs']
         assert min(self.trainer.losses['train_loss']) < torch.inf
 
+    def test__detach_graph(self):
+        _batch = next(iter(self.datamgr.test_loader))
+        timg = self.trainer._get_data_by_name(_batch, 'image')
+        out = self.trainer.model(timg)
+        if isinstance(out, tuple):
+            out = out[0]
+        loss = self.trainer.calc_loss_one_batch(out, torch.ones_like(timg).to(self.trainer.device))
+        assert loss[0].requires_grad
+        assert self.trainer._detach_graph(loss[0]).requires_grad is False
+        assert self.trainer._detach_graph(loss[:1])[0].requires_grad is False
+
     def test_infer_reconstruction(self):
         out = self.trainer.infer_reconstruction(self.datamgr.test_loader)
         assert out.shape == self.datamgr.test_dataset.data.shape
 
-        for d in self.datamgr.test_loader:
-            out = self.trainer.infer_reconstruction(d['image'].numpy())
-            assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]
-            break
+        d = next(iter(self.datamgr.test_loader))
+        out = self.trainer.infer_reconstruction(d['image'].numpy())
+        assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]
 
 
 class test_VanillaAETrainer_on_plateau(setup_VanillaAETrainer):

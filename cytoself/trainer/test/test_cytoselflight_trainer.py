@@ -54,6 +54,8 @@ class test_CytoselfLightTrainer(setup_VanillaAETrainer):
         assert min(self.trainer.losses['train_vq_loss2']) < torch.inf
         assert min(self.trainer.losses['train_fc_loss1']) < torch.inf
         assert min(self.trainer.losses['train_fc_loss2']) < torch.inf
+        assert all([loss.requires_grad is False for loss in self.trainer.model.vq_loss])
+        assert all([loss.requires_grad is False for loss in self.trainer.model.fc_loss])
 
     def test_infer_embeddings(self):
         with self.assertRaises(ValueError):
@@ -62,10 +64,9 @@ class test_CytoselfLightTrainer(setup_VanillaAETrainer):
         out = self.trainer.infer_embeddings(self.datamgr.test_loader)
         assert out[0].shape == (len(self.datamgr.test_dataset),) + self.model_args['emb_shapes'][1]
 
-        for d in self.datamgr.test_loader:
-            out = self.trainer.infer_embeddings(d['image'].numpy())
-            assert out.shape == (self.datamgr.batch_size,) + self.model_args['emb_shapes'][1]
-            break
+        d = next(iter(self.datamgr.test_loader))
+        out = self.trainer.infer_embeddings(d['image'].numpy())
+        assert out.shape == (self.datamgr.batch_size,) + self.model_args['emb_shapes'][1]
 
     def test_infer_reconstruction(self):
         with self.assertRaises(ValueError):
@@ -74,7 +75,6 @@ class test_CytoselfLightTrainer(setup_VanillaAETrainer):
         out = self.trainer.infer_reconstruction(self.datamgr.test_loader)
         assert out.shape == self.datamgr.test_dataset.data.shape
 
-        for d in self.datamgr.test_loader:
-            out = self.trainer.infer_reconstruction(d['image'].numpy())
-            assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]
-            break
+        d = next(iter(self.datamgr.test_loader))
+        out = self.trainer.infer_reconstruction(d['image'].numpy())
+        assert out.shape == (self.datamgr.batch_size,) + self.datamgr.test_dataset.data.shape[1:]

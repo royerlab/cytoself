@@ -60,13 +60,12 @@ class test_DataManagerOpenCell(test_get_file_df):
 
     def _assert_dataset(self, dataset, keys=('image', 'label')):
         assert isinstance(dataset, PreloadedDataset)
-        for d in dataset:
-            assert isinstance(d, dict)
-            if 'image' in keys:
-                assert d['image'].shape == (2, 10, 10)
-            if 'label' in keys:
-                assert len(d['label']) == 3
-            break
+        d = next(iter(dataset))
+        assert isinstance(d, dict)
+        if 'image' in keys:
+            assert d['image'].shape == (2, 10, 10)
+        if 'label' in keys:
+            assert len(d['label']) == 3
 
     def test_intensity_adjustment(self):
         datamgr = DataManagerOpenCell(
@@ -135,8 +134,7 @@ class test_DataManagerOpenCell(test_get_file_df):
 
         self.datamgr.const_dataset()
         self.datamgr.const_dataloader(shuffle=False)
-        for train_data0 in self.datamgr.train_dataset:
-            break
+        train_data0 = next(iter(self.datamgr.train_dataset))
         train_batch = next(iter(self.datamgr.train_loader))
         assert len(train_batch['label']) == self.datamgr.batch_size
         assert torch.is_tensor(train_batch['label'])

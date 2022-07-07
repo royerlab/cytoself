@@ -1,5 +1,7 @@
 import inspect
 from typing import Optional, Union, Collection
+
+import torch
 from torch import nn
 
 from cytoself.trainer.autoencoder.vqvaefc import VQVAEFC
@@ -23,7 +25,12 @@ class VQVAEFCTrainer(BaseTrainer):
         self._init_model(VQVAEFC(**model_args))
 
     def calc_loss_one_batch(
-        self, inputs, targets, vq_coeff: Union[int, float] = 1, fc_coeff: Union[int, float] = 1, **kwargs
+        self,
+        inputs,
+        targets,
+        vq_coeff: Union[int, float] = 1,
+        fc_coeff: Union[int, float] = 1,
+        **kwargs,
     ):
         """
         Computes loss
@@ -84,6 +91,7 @@ class VQVAEFCTrainer(BaseTrainer):
         _metrics = [m / i for m in _metrics]
         self.record_metrics(_metrics, phase='train')
 
+    @torch.inference_mode()
     def calc_val_loss(self, data_loader, **kwargs):
         """
         Compute validate loss

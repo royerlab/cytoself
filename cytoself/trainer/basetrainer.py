@@ -1,13 +1,13 @@
 import inspect
 import os
 from os.path import join
-from typing import Optional, Union, Collection
+from typing import Optional, Union, Collection, Sequence
 from warnings import warn
 from tqdm import tqdm
 import numpy as np
 
 import torch
-from torch import nn, optim
+from torch import nn, optim, Tensor
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 
@@ -225,6 +225,7 @@ class BaseTrainer:
             _metrics = [m / i for m in _metrics]
             self.record_metrics(_metrics, phase='train')
 
+    @torch.inference_mode()
     def _infer_one_epoch(self, data_loader, _model):
         """
         Infers the output of a given model for one epoch
@@ -272,6 +273,7 @@ class BaseTrainer:
         """
         return data[name].float().to(self.device)
 
+    @torch.inference_mode()
     def calc_val_loss(self, data_loader, **kwargs):
         """
         Compute validate loss
@@ -322,6 +324,24 @@ class BaseTrainer:
                     return count_lr_no_improve
             else:
                 return count_lr_no_improve
+
+    def _detach_graph(self, losses: Union[Sequence[Tensor], Tensor]):
+        """
+        Detach graph from loss object to save memory
+
+        Parameters
+        ----------
+        losses : list or loss object
+
+        Returns
+        -------
+        Tensor or list of Tensor
+
+        """
+        if isinstance(losses, Tensor):
+            return losses.detach()
+        else:
+            return [loss.detach() for loss in losses]
 
     def fit(
         self,
@@ -388,6 +408,7 @@ class BaseTrainer:
 
             torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
 
+    @torch.inference_mode()
     def infer_embeddings(self, data):
         """
         Infers embeddings
@@ -409,6 +430,7 @@ class BaseTrainer:
         else:
             return self.model.encoder(torch.from_numpy(data).float().to(self.device)).detach().cpu().numpy()
 
+    @torch.inference_mode()
     def infer_reconstruction(self, data):
         """
         Infers decoded images
