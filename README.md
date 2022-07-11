@@ -11,3 +11,14 @@ cytoself in pytorch implementation
 
 ![Alt Text](images/rotating_umap.gif)
 
+## How to install dependencies
+
+```bash
+pip install -r requirements/requirements.txt
+```
+
+## How to install development dependencies
+
+```bash
+pip install -r requirements/development.txt
+```

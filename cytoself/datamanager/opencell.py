@@ -14,7 +14,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from .utils.splitdata_on_fov import splitdata_on_fov
-from .base import PreloadedDataset, DataManagerBase
+from .base import DataManagerBase
+from .preloaded_dataset import PreloadedDataset
 
 
 class DataManagerOpenCell(DataManagerBase):

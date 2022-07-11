@@ -2,8 +2,8 @@ from os.path import join
 
 import torch
 
-from cytoself.datamanager.datamanager_oc import DataManagerOpenCell
-from cytoself.datamanager.test.test_datamanager_oc import TmpDirTestCase
+from cytoself.datamanager.opencell import DataManagerOpenCell
+from cytoself.datamanager.test.test_opencell import TmpDirTestCase
 from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 

@@ -1,7 +1,8 @@
-from unittest import TestCase
 import numpy as np
-from torch.utils.data import Dataset
-from cytoself.datamanager.base import PreloadedDataset, DataManagerBase
+import pytest
+from cytoself.datamanager.base import DataManagerBase
+from cytoself.datamanager.preloaded_dataset import PreloadedDataset
+from .util import assert_instance
 from ..utils.test.test_splitdata_on_fov import gen_label
 
 test_label = gen_label()
@@ -9,59 +10,56 @@ data_len = len(test_label)
 test_data = np.zeros((data_len, 2, 100, 100), dtype=np.uint8)
 
 
-def assert_instance(dataset):
-    assert len(dataset) == data_len
-    assert isinstance(dataset, Dataset)
+def test_label_only():
+    dataset = PreloadedDataset(test_label)
+    assert_instance(dataset, data_len)
+    d = next(iter(dataset))
+    assert isinstance(d, dict)
+    for key, val in d.items():
+        assert key == 'label'
+        assert isinstance(val, np.ndarray)
+        assert len(val) == 1
 
 
-class test_PreloadedDataset(TestCase):
-    def test_label_converter(self):
-        with self.assertRaises(ValueError):
-            dataset = PreloadedDataset(test_label, label_format='onehot')
-            dataset.label_converter(test_label[:10])
-        uniq = np.unique(test_data[:, 0])
-        dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format='onehot')
-        assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq)).all()
-        dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format='index')
-        assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq).argmax(1)).all()
+def test_label_converter():
+    with pytest.raises(ValueError):
+        dataset = PreloadedDataset(test_label, label_format='onehot')
+        dataset.label_converter(test_label[:10])
+    uniq = np.unique(test_data[:, 0])
+    dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format='onehot')
+    assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq)).all()
+    dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format='index')
+    assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq).argmax(1)).all()
 
-    def test_label_only(self):
-        dataset = PreloadedDataset(test_label)
-        assert_instance(dataset)
-        d = next(iter(dataset))
-        assert isinstance(d, dict)
-        for key, val in d.items():
-            assert key == 'label'
+
+def test_label_and_image():
+    dataset = PreloadedDataset(test_label, test_data)
+    assert_instance(dataset, data_len)
+    d = next(iter(dataset))
+    assert isinstance(d, dict)
+    assert len(d) == 2
+    for key, val in d.items():
+        if key == 'label':
             assert isinstance(val, np.ndarray)
             assert len(val) == 1
+        else:
+            assert key == 'image'
+            assert val.shape == (2, 100, 100)
 
-    def test_label_and_image(self):
-        dataset = PreloadedDataset(test_label, test_data)
-        assert_instance(dataset)
-        d = next(iter(dataset))
-        assert isinstance(d, dict)
-        assert len(d) == 2
-        for key, val in d.items():
-            if key == 'label':
-                assert isinstance(val, np.ndarray)
-                assert len(val) == 1
-            else:
-                assert key == 'image'
-                assert val.shape == (2, 100, 100)
 
-    def test_transform(self):
-        dataset = PreloadedDataset(test_label, test_data, lambda x: x + 1)
-        assert_instance(dataset)
-        d = next(iter(dataset))
-        assert isinstance(d, dict)
-        assert len(d) == 2
-        for key, val in d.items():
-            if key == 'label':
-                assert isinstance(val, np.ndarray)
-                assert len(val) == 1
-            else:
-                assert key == 'image'
-                assert (val == test_data + 1).all()
+def test_transform():
+    dataset = PreloadedDataset(test_label, test_data, lambda x: x + 1)
+    assert_instance(dataset, data_len)
+    d = next(iter(dataset))
+    assert isinstance(d, dict)
+    assert len(d) == 2
+    for key, val in d.items():
+        if key == 'label':
+            assert isinstance(val, np.ndarray)
+            assert len(val) == 1
+        else:
+            assert key == 'image'
+            assert (val == test_data + 1).all()
 
 
 def test_DataManagerBase():
