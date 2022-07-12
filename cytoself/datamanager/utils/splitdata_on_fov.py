@@ -5,7 +5,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from .cumsum_split import cumsum_split
+from cytoself.datamanager.utils.cumsum_split import cumsum_split
 
 
 def single_proc(label: Sequence, split_perc: tuple, fovpath_idx: int):

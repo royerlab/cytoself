@@ -13,9 +13,9 @@ from numpy.distutils.misc_util import is_sequence
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from .utils.splitdata_on_fov import splitdata_on_fov
-from .base import DataManagerBase
-from .preloaded_dataset import PreloadedDataset
+from cytoself.datamanager.utils.splitdata_on_fov import splitdata_on_fov
+from cytoself.datamanager.base import DataManagerBase
+from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 
 
 class DataManagerOpenCell(DataManagerBase):

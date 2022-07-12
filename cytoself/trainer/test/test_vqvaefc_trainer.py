@@ -1,22 +1,28 @@
+from os.path import join
+
+import pytest
 import torch
 
-from cytoself.trainer.test.test_vqvae_trainer import test_VQVAETrainer
+from cytoself.test_util.test_parameters import add_default_model_args
 from cytoself.trainer.vqvaefc_trainer import VQVAEFCTrainer
 
 
-class test_VQVAEFCTrainer(test_VQVAETrainer):
-    def setUp(self):
-        self.model_args = {
-            'input_shape': (1, 32, 32),
-            'emb_shape': (16, 16, 16),
-            'output_shape': (1, 32, 32),
-            'vq_args': {'num_embeddings': 7},
-            'num_class': 3,
-        }
-        self._setup_model_args()
-        self.trainer = VQVAEFCTrainer(self.model_args, self.train_args, homepath=self._basepath)
-        self._setup_datamgr()
+@pytest.fixture(scope='module')
+def vqvaefc_trainer(basepath):
+    model_args = {
+        'input_shape': (1, 32, 32),
+        'emb_shape': (16, 16, 16),
+        'output_shape': (1, 32, 32),
+        'vq_args': {'num_embeddings': 7},
+        'num_class': 3,
+    }
+    model_args = add_default_model_args(model_args)
+    train_args = {'lr': 1e-6, 'max_epochs': 2}
+    return VQVAEFCTrainer(model_args, train_args, homepath=basepath)
 
-    def test_fit(self):
-        super().test_fit()
-        assert min(self.trainer.losses['train_fc_loss']) < torch.inf
+
+def test_vqvaefc_trainer_fit(vqvaefc_trainer, opencell_datamgr_vanilla, basepath):
+    vqvaefc_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
+    assert len(vqvaefc_trainer.losses['train_loss']) == vqvaefc_trainer.train_args['max_epochs']
+    assert min(vqvaefc_trainer.losses['train_loss']) < torch.inf
+    assert min(vqvaefc_trainer.losses['train_vq_loss']) < torch.inf

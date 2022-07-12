@@ -4,8 +4,7 @@ from contextlib import contextmanager
 import pytest
 
 import numpy as np
-from ..analysis_opencell import AnalysisOpenCell
-from cytoself.trainer.test.test_vanilla_trainer import setup_VanillaAETrainer
+from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 
 
 @contextmanager
@@ -16,81 +15,96 @@ def assert_not_raises():
         raise pytest.fail(f'Did raise {e}')
 
 
-class test_BaseAnalysis(setup_VanillaAETrainer):
-    def setUp(self):
-        super().setUp()
-        self.analysis = AnalysisOpenCell(self.datamgr, self.trainer)
-        self.label_data = np.repeat(np.arange(10), 10).reshape(-1, 1)
-        np.random.shuffle(self.label_data)
-        self.file_name = join(self.analysis.savepath_dict['umap_figures'], 'test.png')
+@pytest.fixture(scope='module')
+def analysis_opencell(vanilla_ae_trainer, opencell_datamgr_vanilla):
+    return AnalysisOpenCell(opencell_datamgr_vanilla, vanilla_ae_trainer)
 
-    def test_plot_umap_of_embedding_vector_nullinput(self):
-        with self.assertRaises(ValueError):
-            self.analysis.plot_umap_of_embedding_vector(label_data=self.label_data)
-        with self.assertRaises(ValueError):
-            self.analysis.plot_umap_of_embedding_vector(image_data=np.random.randn(100, 1, 32, 32))
-        with self.assertRaises(ValueError):
-            self.analysis.plot_umap_of_embedding_vector(embedding_data=np.random.randn(100, 10))
 
-    def test_plot_umap_of_embedding_vector_umapdata(self):
-        with assert_not_raises():
-            output = self.analysis.plot_umap_of_embedding_vector(
-                label_data=self.label_data,
-                umap_data=np.random.randn(100, 2),
-                savepath=self.file_name,
-                title='fig title',
-                xlabel='x axis',
-                ylabel='y axis',
-                show_legend=True,
-                figsize=(6, 5),
-                dpi=100,
-            )
-        assert exists(self.file_name)
-        assert output.shape == (100, 2)
-        os.remove(self.file_name)
+@pytest.fixture(scope='module')
+def _file_name(analysis_opencell):
+    return join(analysis_opencell.savepath_dict['umap_figures'], 'test.png')
 
-    def test_plot_umap_of_embedding_vector_embedding(self):
-        with assert_not_raises():
-            output = self.analysis.plot_umap_of_embedding_vector(
-                label_data=self.label_data,
-                embedding_data=np.random.randn(100, 10),
-                savepath=self.file_name,
-                title='fig title',
-                xlabel='x axis',
-                ylabel='y axis',
-                show_legend=True,
-            )
-        assert exists(self.file_name)
-        assert output.shape == (100, 2)
-        os.remove(self.file_name)
 
-    def test_plot_umap_of_embedding_vector_image(self):
-        with assert_not_raises():
-            output = self.analysis.plot_umap_of_embedding_vector(
-                label_data=self.datamgr.test_loader.dataset.label,
-                image_data=self.datamgr.test_loader.dataset.data,
-                savepath=self.file_name,
-                title='fig title',
-                xlabel='x axis',
-                ylabel='y axis',
-                show_legend=True,
-            )
-        assert exists(self.file_name)
-        assert output.shape == (len(self.datamgr.test_loader.dataset.label), 2)
-        os.remove(self.file_name)
+@pytest.fixture(scope='module')
+def _label_data():
+    label_data = np.repeat(np.arange(10), 10).reshape(-1, 1)
+    np.random.shuffle(label_data)
+    return label_data
 
-    def test_plot_umap_of_embedding_vector_dataloader(self):
-        self.datamgr.const_dataset(label_format='index')
-        self.datamgr.const_dataloader()
-        with assert_not_raises():
-            output = self.analysis.plot_umap_of_embedding_vector(
-                data_loader=self.datamgr.test_loader,
-                savepath=self.file_name,
-                title='fig title',
-                xlabel='x axis',
-                ylabel='y axis',
-                show_legend=True,
-            )
-        assert exists(self.file_name)
-        assert output.shape == (len(self.datamgr.test_loader.dataset.label), 2)
-        os.remove(self.file_name)
+
+def test_plot_umap_of_embedding_vector_nullinput(analysis_opencell, _label_data):
+    with pytest.raises(ValueError):
+        analysis_opencell.plot_umap_of_embedding_vector(label_data=_label_data)
+    with pytest.raises(ValueError):
+        analysis_opencell.plot_umap_of_embedding_vector(image_data=np.random.randn(100, 1, 32, 32))
+    with pytest.raises(ValueError):
+        analysis_opencell.plot_umap_of_embedding_vector(embedding_data=np.random.randn(100, 10))
+
+
+def test_plot_umap_of_embedding_vector_umapdata(analysis_opencell, _file_name, _label_data):
+    with assert_not_raises():
+        output = analysis_opencell.plot_umap_of_embedding_vector(
+            label_data=_label_data,
+            umap_data=np.random.randn(100, 2),
+            savepath=_file_name,
+            title='fig title',
+            xlabel='x axis',
+            ylabel='y axis',
+            show_legend=True,
+            figsize=(6, 5),
+            dpi=100,
+        )
+    assert exists(_file_name)
+    assert output.shape == (100, 2)
+    os.remove(_file_name)
+
+
+def test_plot_umap_of_embedding_vector_embedding(analysis_opencell, _file_name, _label_data):
+    with assert_not_raises():
+        output = analysis_opencell.plot_umap_of_embedding_vector(
+            label_data=_label_data,
+            embedding_data=np.random.randn(100, 10),
+            savepath=_file_name,
+            title='fig title',
+            xlabel='x axis',
+            ylabel='y axis',
+            show_legend=True,
+        )
+    assert exists(_file_name)
+    assert output.shape == (100, 2)
+    os.remove(_file_name)
+
+
+def test_plot_umap_of_embedding_vector_image(analysis_opencell, _file_name, opencell_datamgr_vanilla):
+    analysis_opencell.reset_umap()
+    with assert_not_raises():
+        output = analysis_opencell.plot_umap_of_embedding_vector(
+            label_data=opencell_datamgr_vanilla.test_loader.dataset.label,
+            image_data=opencell_datamgr_vanilla.test_loader.dataset.data,
+            savepath=_file_name,
+            title='fig title',
+            xlabel='x axis',
+            ylabel='y axis',
+            show_legend=True,
+        )
+    assert exists(_file_name)
+    assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
+    os.remove(_file_name)
+
+
+def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name, opencell_datamgr_vanilla):
+    analysis_opencell.reset_umap()
+    opencell_datamgr_vanilla.const_dataset(label_format='index')
+    opencell_datamgr_vanilla.const_dataloader()
+    with assert_not_raises():
+        output = analysis_opencell.plot_umap_of_embedding_vector(
+            data_loader=opencell_datamgr_vanilla.test_loader,
+            savepath=_file_name,
+            title='fig title',
+            xlabel='x axis',
+            ylabel='y axis',
+            show_legend=True,
+        )
+    assert exists(_file_name)
+    assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
+    os.remove(_file_name)

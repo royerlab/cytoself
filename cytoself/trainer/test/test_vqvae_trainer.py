@@ -1,21 +1,27 @@
+from os.path import join
+
+import pytest
 import torch
 
-from cytoself.trainer.test.test_vanilla_trainer import test_VanillaAETrainer
+from cytoself.test_util.test_parameters import add_default_model_args
 from cytoself.trainer.vqvae_trainer import VQVAETrainer
 
 
-class test_VQVAETrainer(test_VanillaAETrainer):
-    def setUp(self):
-        self.model_args = {
-            'input_shape': (1, 32, 32),
-            'emb_shape': (16, 16, 16),
-            'output_shape': (1, 32, 32),
-            'vq_args': {'num_embeddings': 7},
-        }
-        self._setup_model_args()
-        self.trainer = VQVAETrainer(self.model_args, self.train_args, homepath=self._basepath)
-        self._setup_datamgr()
+@pytest.fixture(scope='module')
+def vqvae_trainer(basepath):
+    model_args = {
+        'input_shape': (1, 32, 32),
+        'emb_shape': (16, 16, 16),
+        'output_shape': (1, 32, 32),
+        'vq_args': {'num_embeddings': 7},
+    }
+    model_args = add_default_model_args(model_args)
+    train_args = {'lr': 1e-6, 'max_epochs': 2}
+    return VQVAETrainer(model_args, train_args, homepath=basepath)
 
-    def test_fit(self):
-        super().test_fit()
-        assert min(self.trainer.losses['train_vq_loss']) < torch.inf
+
+def test_vqvae_trainer_fit(vqvae_trainer, opencell_datamgr_vanilla, basepath):
+    vqvae_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
+    assert len(vqvae_trainer.losses['train_loss']) == vqvae_trainer.train_args['max_epochs']
+    assert min(vqvae_trainer.losses['train_loss']) < torch.inf
+    assert min(vqvae_trainer.losses['train_vq_loss']) < torch.inf

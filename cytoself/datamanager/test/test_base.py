@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from cytoself.datamanager.base import DataManagerBase
 from cytoself.datamanager.preloaded_dataset import PreloadedDataset
-from .util import assert_instance
-from ..utils.test.test_splitdata_on_fov import gen_label
+from cytoself.datamanager.test.util import assert_instance
+from cytoself.datamanager.utils.test.test_splitdata_on_fov import gen_label
 
 test_label = gen_label()
 data_len = len(test_label)

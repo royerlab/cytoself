@@ -1,8 +1,8 @@
 import torch
 
-from ..vanilla import VanillaAE
-from ..encoders.efficientenc2d import efficientenc_b0
-from ..decoders.resnet2d import DecoderResnet
+from cytoself.trainer.autoencoder.vanilla import VanillaAE
+from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
+from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 
 
 def test_VanillaAE():

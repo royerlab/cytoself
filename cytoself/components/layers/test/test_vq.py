@@ -1,5 +1,5 @@
 import torch
-from ..vq import VectorQuantizer
+from cytoself.components.layers.vq import VectorQuantizer
 
 
 def test_VectorQuantizer():

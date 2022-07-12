@@ -41,4 +41,14 @@ class BaseAnalysis:
     def _transform_umap(self, data, n_neighbors=15, min_dist=0.1, metric='euclidean', verbose=True, **kwargs):
         if self.reducer is None:
             self._fit_umap(data, n_neighbors, min_dist, metric, verbose, **kwargs)
-        return self.reducer.transform(data.reshape(data.shape[0], -1))
+        try:
+            return self.reducer.transform(data.reshape(data.shape[0], -1))
+        except Exception as e:
+            raise ValueError(
+                'Error at reducer.transform \n' + str(e),
+                '\n\nThe input data dimension may be incompatible with pre-computed UMAP.'
+                'Try to reset the pre-computed UMAP by running Analysis.reset_umap().',
+            )
+
+    def reset_umap(self):
+        self.reducer = None

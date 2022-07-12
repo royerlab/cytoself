@@ -1,88 +1,97 @@
-import os.path
-import tempfile
-from shutil import rmtree
-from unittest import TestCase
+from os.path import exists
+
+import pytest
 import torch
 
-from ..basetrainer import BaseTrainer
+from cytoself.trainer.basetrainer import BaseTrainer
 
 
-class test_BaseTrainer(TestCase):
-    def setUp(self):
-        self._basepath = tempfile.mkdtemp()
-        self.trainer = BaseTrainer({}, homepath=self._basepath, device='cpu')
-        self.trainer = BaseTrainer({}, homepath=self._basepath)
+@pytest.fixture(scope='module')
+def base_trainer(basepath):
+    BaseTrainer({}, homepath=basepath, device='cpu')
+    # Run second time without device input to cover the specific case
+    return BaseTrainer({}, homepath=basepath)
 
-    def test_init_(self):
-        assert self.trainer.model is None
-        assert self.trainer.best_model == []
-        assert self.trainer.losses == {}
-        assert self.trainer.lr == 0
-        assert self.trainer.tb_writer is None
-        assert self.trainer.optimizer is None
-        assert self.trainer.savepath_dict['homepath'] == self._basepath
-        assert self.trainer.current_epoch == 0
 
-    def test__default_train_args(self):
-        self.trainer._default_train_args()
-        args = {
-            'reducelr_patience': 4,
-            'reducelr_increment': 0.1,
-            'earlystop_patience': 12,
-            'min_lr': 1e-8,
-            'max_epochs': 100,
-        }
-        for key, val in args.items():
-            assert self.trainer.train_args[key] == val
+def test_base_trainer_init_(base_trainer, basepath):
+    assert base_trainer.model is None
+    assert base_trainer.best_model == []
+    assert base_trainer.losses == {}
+    assert base_trainer.lr == 0
+    assert base_trainer.tb_writer is None
+    assert base_trainer.optimizer is None
+    assert base_trainer.savepath_dict['homepath'] == basepath
+    assert base_trainer.current_epoch == 0
 
-    def test_calc_loss_one_batch(self):
-        assert self.trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5)) == (torch.ones(1) * 4,)
 
-    def test_record_metrics(self):
-        self.trainer.record_metrics(1.0)
-        assert self.trainer.losses['train_loss'] == [1.0]
-        self.trainer.record_metrics([[2.0, 3.0]])
-        assert self.trainer.losses['train_loss1'] == [2.0]
-        assert self.trainer.losses['train_loss2'] == [3.0]
+def test_base_trainer__default_train_args(base_trainer):
+    base_trainer._default_train_args()
+    args = {
+        'reducelr_patience': 4,
+        'reducelr_increment': 0.1,
+        'earlystop_patience': 12,
+        'min_lr': 1e-8,
+        'max_epochs': 100,
+    }
+    for key, val in args.items():
+        assert base_trainer.train_args[key] == val
 
-    def test_set_optimizer(self):
-        with self.assertRaises(ValueError):
-            self.trainer.set_optimizer()
 
-    def test_enable_tensorboard(self):
-        self.trainer.savepath_dict['tb_logs'] = 'dummy'
-        with self.assertWarns(UserWarning):
-            self.trainer.enable_tensorboard()
-        assert os.path.exists(self.trainer.savepath_dict['tb_logs'])
+def test_calc_loss_one_batch(base_trainer):
+    assert base_trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5)) == (torch.ones(1) * 4,)
 
-    def test_init_savepath(self):
-        self.trainer.init_savepath()
-        for key, val in self.trainer.savepath_dict.items():
-            assert os.path.exists(val), key + ' path was not found.'
 
-    def test_train_one_epoch(self):
-        with self.assertRaises(ValueError):
-            self.trainer.train_one_epoch(None)
+def test_record_metrics(base_trainer):
+    base_trainer.record_metrics(1.0)
+    assert base_trainer.losses['train_loss'] == [1.0]
+    base_trainer.record_metrics([[2.0, 3.0]])
+    assert base_trainer.losses['train_loss1'] == [2.0]
+    assert base_trainer.losses['train_loss2'] == [3.0]
 
-    def test_calc_val_loss(self):
-        with self.assertRaises(ValueError):
-            self.trainer.calc_val_loss(None)
 
-    def test__reduce_lr_on_plateau(self):
-        with self.assertRaises(ValueError):
-            self.trainer._reduce_lr_on_plateau(2)
+def test_set_optimizer(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.set_optimizer()
 
-    def test_fit(self):
-        with self.assertRaises(ValueError):
-            self.trainer.fit(None)
 
-    def test_infer_embeddings(self):
-        with self.assertRaises(ValueError):
-            self.trainer.infer_embeddings(None)
+def test_enable_tensorboard(base_trainer):
+    base_trainer.savepath_dict['tb_logs'] = 'dummy'
+    with pytest.warns(UserWarning):
+        base_trainer.enable_tensorboard()
+    assert exists(base_trainer.savepath_dict['tb_logs'])
 
-    def test_infer_reconstruction(self):
-        with self.assertRaises(ValueError):
-            self.trainer.infer_reconstruction(None)
 
-    def tearDown(self):
-        rmtree(self._basepath)
+def test_init_savepath(base_trainer):
+    base_trainer.init_savepath()
+    for key, val in base_trainer.savepath_dict.items():
+        assert exists(val), key + ' path was not found.'
+
+
+def test_train_one_epoch(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.train_one_epoch(None)
+
+
+def test_calc_val_loss(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.calc_val_loss(None)
+
+
+def test__reduce_lr_on_plateau(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer._reduce_lr_on_plateau(2)
+
+
+def test_fit(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.fit(None)
+
+
+def test_infer_embeddings(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.infer_embeddings(None)
+
+
+def test_infer_reconstruction(base_trainer):
+    with pytest.raises(ValueError):
+        base_trainer.infer_reconstruction(None)

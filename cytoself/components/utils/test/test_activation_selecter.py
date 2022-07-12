@@ -1,3 +1,4 @@
+import pytest
 from torch import nn
 from cytoself.components.utils.activation_selecter import act_layer
 
@@ -14,3 +15,6 @@ def test_act_layer():
     }.items():
         act = act_layer(key)
         assert isinstance(act, val)
+
+    with pytest.raises(ValueError):
+        act_layer('unknown')
