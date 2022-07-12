@@ -1,6 +1,6 @@
 from typing import Optional, Collection
 
-from cytoself.trainer.autoencoder.vanilla import VanillaAE
+from cytoself.trainer.autoencoder.base import BaseAE
 from cytoself.trainer.basetrainer import BaseTrainer
 
 
@@ -18,4 +18,4 @@ class VanillaAETrainer(BaseTrainer):
         device: Optional[str] = None,
     ):
         super().__init__(train_args, metrics_names, homepath, device)
-        self._init_model(VanillaAE(**model_args))
+        self._init_model(BaseAE(**model_args))

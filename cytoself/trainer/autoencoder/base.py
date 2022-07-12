@@ -5,7 +5,7 @@ from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
 from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 
 
-class VanillaAE(nn.Module):
+class BaseAE(nn.Module):
     """
     Vanilla Autoencoder model
     """

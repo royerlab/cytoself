@@ -2,10 +2,10 @@ from typing import Optional
 from torch import Tensor
 
 from cytoself.components.layers.vq import VectorQuantizer
-from cytoself.trainer.autoencoder.vanilla import VanillaAE
+from cytoself.trainer.autoencoder.base import BaseAE
 
 
-class VQVAE(VanillaAE):
+class VQVAE(BaseAE):
     """
     Vector Quantized Variational Autoencoder model
     """
