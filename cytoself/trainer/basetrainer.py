@@ -210,7 +210,7 @@ class BaseTrainer:
             raise ValueError('model is not defined.')
         else:
             _metrics = [0] * len(self.metrics_names)
-            for i, _batch in tqdm(enumerate(data_loader, desc='Train')):
+            for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
                 timg = self._get_data_by_name(_batch, 'image')
                 self.optimizer.zero_grad()
 
@@ -242,7 +242,7 @@ class BaseTrainer:
 
         """
         output, output_label = [], []
-        for i, _batch in enumerate(data_loader, desc='Infer'):
+        for i, _batch in enumerate(tqdm(data_loader, desc='Infer')):
             timg = self._get_data_by_name(_batch, 'image')
             out = _model(timg)
             if not torch.is_tensor(out):
