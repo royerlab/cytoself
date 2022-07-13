@@ -4,6 +4,7 @@ repos:
     hooks:
     -   id: black
         args: [cytoself, -t, py39, -S, -l, "120"]
+        additional_dependencies: ['click==8.0.4']
 -   repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:

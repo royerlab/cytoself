@@ -5,6 +5,7 @@ from typing import Optional, Union
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 from cytoself.trainer.autoencoder.cytoselflite import CytoselfLite
 from cytoself.trainer.basetrainer import BaseTrainer
@@ -82,7 +83,7 @@ class CytoselfLiteTrainer(BaseTrainer):
 
         """
         _metrics = [0, [0, 0], [0, 0], [0, 0]]
-        for i, _batch in enumerate(data_loader):
+        for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
             timg = self._get_data_by_name(_batch, 'image')
             tlab = self._get_data_by_name(_batch, 'label')
             self.optimizer.zero_grad()
@@ -121,7 +122,7 @@ class CytoselfLiteTrainer(BaseTrainer):
 
         """
         _metrics = [0, [0, 0], [0, 0], [0, 0]]
-        for i, _batch in enumerate(data_loader):
+        for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
             vimg = self._get_data_by_name(_batch, 'image')
             vlab = self._get_data_by_name(_batch, 'label')
             _vloss = self.calc_loss_one_batch(self.model(vimg), [vimg, vlab, vlab])

@@ -210,7 +210,7 @@ class BaseTrainer:
             raise ValueError('model is not defined.')
         else:
             _metrics = [0] * len(self.metrics_names)
-            for i, _batch in enumerate(data_loader):
+            for i, _batch in tqdm(enumerate(data_loader, desc='Train')):
                 timg = self._get_data_by_name(_batch, 'image')
                 self.optimizer.zero_grad()
 
@@ -242,7 +242,7 @@ class BaseTrainer:
 
         """
         output, output_label = [], []
-        for i, _batch in enumerate(data_loader):
+        for i, _batch in enumerate(data_loader, desc='Infer'):
             timg = self._get_data_by_name(_batch, 'image')
             out = _model(timg)
             if not torch.is_tensor(out):
@@ -292,7 +292,7 @@ class BaseTrainer:
             raise ValueError('model is not defined.')
         else:
             _metrics = [0] * len(self.metrics_names)
-            for i, _batch in enumerate(data_loader):
+            for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
                 vimg = self._get_data_by_name(_batch, 'image')
                 _vloss = self.calc_loss_one_batch(self.model(vimg), vimg)
                 _metrics = [m + l.item() for m, l in zip(_metrics, _vloss)]
@@ -374,8 +374,8 @@ class BaseTrainer:
             best_vloss = torch.inf if 'val_loss' not in self.losses else min(self.losses['val_loss'])
             count_lr_no_improve = 0
             count_early_stop = 0
-            for _ in tqdm(range(self.current_epoch, self.train_args['max_epochs'])):
-
+            for current_epoch in range(self.current_epoch, self.train_args['max_epochs']):
+                print(f'Epoch {current_epoch}/{self.train_args["max_epochs"]}')
                 # Train the model
                 self.model.train(True)
                 self.train_one_epoch(datamanager.train_loader, **kwargs)
@@ -404,6 +404,7 @@ class BaseTrainer:
 
                 # Check for early stopping
                 if count_early_stop >= self.train_args['earlystop_patience']:
+                    print('Early stopping.')
                     break
 
             torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
