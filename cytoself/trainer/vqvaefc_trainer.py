@@ -17,7 +17,7 @@ class VQVAEFCTrainer(BaseTrainer):
         self,
         model_args: dict,
         train_args: dict,
-        metrics_names: Collection[str] = ('loss', 'vq_loss', 'perplexity', 'fc_loss'),
+        metrics_names: Collection[str] = ('loss', 'mse', 'vq_loss', 'perplexity', 'fc_loss'),
         homepath: str = './',
         device: Optional[str] = None,
     ):
@@ -58,7 +58,7 @@ class VQVAEFCTrainer(BaseTrainer):
         reconstruction_loss = nn.MSELoss(**mse_kwargs)(targets[0], inputs[0])
         self.model.fc_loss = nn.CrossEntropyLoss(**ce_kwargs)(targets[1], inputs[1])
         loss = reconstruction_loss + vq_coeff * self.model.vq_loss + fc_coeff * self.model.fc_loss
-        return loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
+        return loss, reconstruction_loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
 
     def train_one_epoch(self, data_loader, **kwargs):
         """

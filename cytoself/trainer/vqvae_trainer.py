@@ -15,7 +15,7 @@ class VQVAETrainer(BaseTrainer):
         self,
         model_args: dict,
         train_args: dict,
-        metrics_names: Collection[str] = ('loss', 'vq_loss', 'perplexity'),
+        metrics_names: Collection[str] = ('loss', 'mse', 'vq_loss', 'perplexity'),
         homepath: str = './',
         device: Optional[str] = None,
     ):
@@ -44,4 +44,4 @@ class VQVAETrainer(BaseTrainer):
         """
         reconstruction_loss = nn.MSELoss(**kwargs)(targets, inputs)
         loss = reconstruction_loss + vq_coeff * self.model.vq_loss
-        return loss, self.model.vq_loss, self.model.perplexity
+        return loss, reconstruction_loss, self.model.vq_loss, self.model.perplexity

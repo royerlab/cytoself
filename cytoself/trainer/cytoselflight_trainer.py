@@ -23,7 +23,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         homepath: str = './',
         device: Optional[str] = None,
     ):
-        metrics_names = ('loss', 'vq_loss', 'perplexity', 'fc_loss')
+        metrics_names = ('loss', 'mse', 'vq_loss', 'perplexity', 'fc_loss')
         super().__init__(train_args, metrics_names, homepath, device)
         self._init_model(CytoselfLite(**model_args))
 
@@ -66,7 +66,8 @@ class CytoselfLiteTrainer(BaseTrainer):
             + vq_coeff * torch.stack(self.model.vq_loss).sum()
             + fc_coeff * torch.stack(self.model.fc_loss).sum()
         )
-        return loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
+        # TODO How to equalize losses?
+        return loss, reconstruction_loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
 
     def train_one_epoch(self, data_loader, **kwargs):
         """
@@ -82,7 +83,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         None
 
         """
-        _metrics = [0, [0, 0], [0, 0], [0, 0]]
+        _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
         for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
             timg = self._get_data_by_name(_batch, 'image')
             tlab = self._get_data_by_name(_batch, 'label')
@@ -121,7 +122,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         Validation loss
 
         """
-        _metrics = [0, [0, 0], [0, 0], [0, 0]]
+        _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
         for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
             vimg = self._get_data_by_name(_batch, 'image')
             vlab = self._get_data_by_name(_batch, 'label')
