@@ -1,5 +1,5 @@
 numpy>=1.21
-torch>=1.10
+torch>=1.11
 torchvision>=0.12
 tqdm>=4.63
 pandas>=1.4
@@ -7,6 +7,6 @@ joblib>=1.1
 tensorboard>=2.9
 protobuf==3.20
 matplotlib>=3.5
-umap-learn==0.5.2
+umap-learn==0.5.3
 # colorcet>=3
 # seaborn>=0.11
