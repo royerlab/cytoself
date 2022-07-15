@@ -39,7 +39,7 @@ Download one set of the image and label data from [Data Availability](##Data Ava
 ### 1. Prepare Data
 ```python
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
-from cytoself.datamanager.datamanager_oc import DataManagerOpenCell
+from cytoself.datamanager.opencell import DataManagerOpenCell
 from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
 
 datapath = 'path/to/the/data'

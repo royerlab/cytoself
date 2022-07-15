@@ -55,8 +55,8 @@ class VQVAEFCTrainer(BaseTrainer):
         """
         mse_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.MSELoss).args if a in kwargs}
         ce_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.CrossEntropyLoss).args if a in kwargs}
-        reconstruction_loss = nn.MSELoss(**mse_kwargs)(targets[0], inputs[0])
-        self.model.fc_loss = nn.CrossEntropyLoss(**ce_kwargs)(targets[1], inputs[1])
+        reconstruction_loss = nn.MSELoss(**mse_kwargs)(inputs[0], targets[0])
+        self.model.fc_loss = nn.CrossEntropyLoss(**ce_kwargs)(inputs[1], targets[1])
         loss = reconstruction_loss + vq_coeff * self.model.vq_loss + fc_coeff * self.model.fc_loss
         return loss, reconstruction_loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
 
@@ -77,7 +77,7 @@ class VQVAEFCTrainer(BaseTrainer):
         _metrics = [0] * len(self.metrics_names)
         for i, _batch in enumerate(data_loader):
             timg = self._get_data_by_name(_batch, 'image')
-            tlab = self._get_data_by_name(_batch, 'label')
+            tlab = self._get_data_by_name(_batch, 'label', force_float=False)
             self.optimizer.zero_grad()
 
             loss = self.calc_loss_one_batch(self.model(timg), [timg, tlab], **kwargs)
@@ -109,7 +109,7 @@ class VQVAEFCTrainer(BaseTrainer):
         _metrics = [0] * len(self.metrics_names)
         for i, _batch in enumerate(data_loader):
             vimg = self._get_data_by_name(_batch, 'image')
-            vlab = self._get_data_by_name(_batch, 'label')
+            vlab = self._get_data_by_name(_batch, 'label', force_float=False)
             _vloss = self.calc_loss_one_batch(self.model(vimg), [vimg, vlab])
             _metrics = [m + l.item() for m, l in zip(_metrics, _vloss)]
         self.record_metrics(_metrics, phase='val')

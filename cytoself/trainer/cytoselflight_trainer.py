@@ -59,8 +59,8 @@ class CytoselfLiteTrainer(BaseTrainer):
         mse_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.MSELoss).args if a in kwargs}
         ce_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.CrossEntropyLoss).args if a in kwargs}
         mse_loss_fn, ce_loss_fn = nn.MSELoss(**mse_kwargs), nn.CrossEntropyLoss(**ce_kwargs)
-        reconstruction_loss = mse_loss_fn(targets[0], inputs[0])
-        self.model.fc_loss = [ce_loss_fn(t, i) for t, i in zip(targets[1:], inputs[1:])]
+        reconstruction_loss = mse_loss_fn(inputs[0], targets[0])
+        self.model.fc_loss = [ce_loss_fn(t, i) for t, i in zip(inputs[1:], targets[1:])]
         loss = (
             reconstruction_loss
             + vq_coeff * torch.stack(self.model.vq_loss).sum()
@@ -86,7 +86,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
         for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
             timg = self._get_data_by_name(_batch, 'image')
-            tlab = self._get_data_by_name(_batch, 'label')
+            tlab = self._get_data_by_name(_batch, 'label', force_float=False)
             self.optimizer.zero_grad()
 
             loss = self.calc_loss_one_batch(self.model(timg), [timg, tlab, tlab], **kwargs)
@@ -125,7 +125,7 @@ class CytoselfLiteTrainer(BaseTrainer):
         _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
         for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
             vimg = self._get_data_by_name(_batch, 'image')
-            vlab = self._get_data_by_name(_batch, 'label')
+            vlab = self._get_data_by_name(_batch, 'label', force_float=False)
             _vloss = self.calc_loss_one_batch(self.model(vimg), [vimg, vlab, vlab])
             _metrics = [
                 [_m + _l.item() for _m, _l in zip(m, l)] if isinstance(l, list) else m + l.item()

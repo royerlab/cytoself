@@ -88,14 +88,18 @@ def test_const_dataset(opencell_datamgr_2x10x10):
     assert_dataset(opencell_datamgr_2x10x10.train_dataset)
     assert_dataset(opencell_datamgr_2x10x10.val_dataset)
     assert_dataset(opencell_datamgr_2x10x10.test_dataset)
+    opencell_datamgr_2x10x10.const_dataset(label_format='onehot')
+    assert_dataset(opencell_datamgr_2x10x10.train_dataset, label_len=3)
+    assert_dataset(opencell_datamgr_2x10x10.val_dataset, label_len=3)
+    assert_dataset(opencell_datamgr_2x10x10.test_dataset, label_len=3)
 
 
 def test_const_dataset_labelonly(gen_data_2x10x10):
     datamgr = DataManagerOpenCell(gen_data_2x10x10, ['label'])
     datamgr.const_dataset()
-    assert_dataset(datamgr.train_dataset, keys=('labels',))
-    assert_dataset(datamgr.val_dataset, keys=('labels',))
-    assert_dataset(datamgr.test_dataset, keys=('labels',))
+    assert_dataset(datamgr.train_dataset)
+    assert_dataset(datamgr.val_dataset)
+    assert_dataset(datamgr.test_dataset)
 
 
 def test_const_dataloader(opencell_datamgr_2x10x10):
@@ -110,5 +114,5 @@ def test_const_dataloader(opencell_datamgr_2x10x10):
     assert len(train_batch['label']) == opencell_datamgr_2x10x10.batch_size
     assert torch.is_tensor(train_batch['label'])
     assert torch.is_tensor(train_batch['image'])
-    assert tuple(train_batch['label'].shape)[1:] == train_data0['label'].shape
+    assert train_batch['label'].shape == train_batch['image'].shape[:1]
     assert tuple(train_batch['image'].shape)[1:] == train_data0['image'].shape

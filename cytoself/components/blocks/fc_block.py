@@ -17,7 +17,7 @@ class FCblock(nn.Module):
         num_layers: int,
         dropout_rate: float = 0.5,
         act: str = 'relu',
-        last_act: str = 'softmax',
+        last_activation: str = 'softmax',
     ):
         """
         A block of fully connected layers
@@ -36,25 +36,26 @@ class FCblock(nn.Module):
             Dropout rate
         act : str
             Activation name for the intermediate layers
-        last_act : str
+        last_activation : str
             Activation name as the output layer
         """
         super().__init__()
+        self.last_activation = last_activation
         self.fc_list = nn.ModuleList()
         for i in range(num_layers):
             self.fc_list.append(
                 nn.Linear(in_channels if i == 0 else num_features, num_features if i < num_layers - 1 else out_channels)
             )
-            self.fc_list.append(act_layer(act))
             if i < num_layers - 1:
+                self.fc_list.append(act_layer(act))
                 self.fc_list.append(nn.Dropout(dropout_rate))
-            else:
-                local_kwargs = {'dim': 1} if last_act == 'softmax' else {}
-                self.fc_list.append(act_layer(last_act, **local_kwargs))
 
     def forward(self, x):
         if not torch.is_floating_point(x):
             x = x.type(torch.float32)
         for lyr in self.fc_list:
             x = lyr(x)
+        if not self.training:
+            local_kwargs = {'dim': 1} if self.last_activation == 'softmax' else {}
+            x = act_layer(self.last_activation, **local_kwargs)(x)
         return x

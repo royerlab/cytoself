@@ -30,6 +30,8 @@ def test_label_converter():
     assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq)).all()
     dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format='index')
     assert (dataset.label_converter(test_label[:10]) == (test_label[:10, None] == uniq).argmax(1)).all()
+    dataset = PreloadedDataset(test_label, unique_labels=uniq, label_format=None)
+    assert (dataset.label_converter(test_label[:10]) == test_label[:10]).all()
 
 
 def test_label_and_image():

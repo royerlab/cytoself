@@ -1,3 +1,4 @@
+import pytest
 from torch import nn
 from cytoself.components.blocks.conv_block import calc_groups, Conv2dBN
 
@@ -7,9 +8,10 @@ def test_calc_groups():
     for i in (16, 2, 1):
         assert calc_groups(32, i, verbose=False) == i
         assert calc_groups(i, 32, verbose=False) == 1
-    for i in (30, 14):
-        assert calc_groups(32, i, verbose=False) == 1
-        assert calc_groups(i, 32, verbose=False) == 1
+    with pytest.warns(UserWarning):
+        for i in (30, 14):
+            assert calc_groups(32, i, verbose=True) == 1
+            assert calc_groups(i, 32, verbose=True) == 1
 
 
 def test_Conv2dBN(model=None):

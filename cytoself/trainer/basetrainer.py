@@ -98,7 +98,7 @@ class BaseTrainer:
         Tuple of tensors
 
         """
-        return (nn.MSELoss(**kwargs)(targets, inputs),)
+        return (nn.MSELoss(**kwargs)(inputs, targets),)
 
     def _adaptive_record_metrics(self, key: str, metrics: float):
         if key in self.losses:
@@ -250,13 +250,18 @@ class BaseTrainer:
             output.append(out.detach().cpu().numpy())
             if 'label' in _batch:
                 output_label.append(_batch['label'])
+        output = np.vstack(output)
         if len(output_label) == len(output):
             output_label = np.vstack(output_label)
         else:
-            output_label = np.array([])
-        return np.vstack(output), output_label
+            _output_label = np.hstack(output_label)
+            if len(_output_label) == len(output):
+                output_label = _output_label
+            else:
+                output_label = np.array([])
+        return output, output_label
 
-    def _get_data_by_name(self, data: dict, name: str):
+    def _get_data_by_name(self, data: dict, name: str, force_float=True):
         """
         Get tensor by name when the output of dataloader is dict.
 
@@ -266,12 +271,17 @@ class BaseTrainer:
             Dictionary of tensor
         name : str
             Key of dict
+        force_float : bool
+            Force the output to be float if True
 
         Returns
         -------
 
         """
-        return data[name].float().to(self.device)
+        output = data[name]
+        if force_float:
+            output = output.float()
+        return output.to(self.device)
 
     @torch.inference_mode()
     def calc_val_loss(self, data_loader, **kwargs):

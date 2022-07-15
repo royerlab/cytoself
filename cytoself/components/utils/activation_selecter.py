@@ -1,5 +1,17 @@
 from torch import nn
 
+_ACT_DICT = {
+    'relu': nn.ReLU,
+    'lrelu': nn.LeakyReLU,
+    'swish': nn.SiLU,
+    'hswish': nn.Hardswish,
+    'mish': nn.Mish,
+    'sigmoid': nn.Sigmoid,
+    'logsigmoid': nn.LogSigmoid,
+    'softmax': nn.Softmax,
+    'logsoftmax': nn.LogSoftmax,
+}
+
 
 def act_layer(act: str, **kwargs) -> nn.Module:
     """
@@ -16,19 +28,7 @@ def act_layer(act: str, **kwargs) -> nn.Module:
 
     """
     act = act.lower()
-    if act == 'relu':
-        return nn.ReLU(**kwargs)
-    elif act == 'lrelu':
-        return nn.LeakyReLU(**kwargs)
-    elif act == 'swish':
-        return nn.SiLU(**kwargs)
-    elif act == 'hswish':
-        return nn.Hardswish(**kwargs)
-    elif act == 'mish':
-        return nn.Mish(**kwargs)
-    elif act == 'sigmoid':
-        return nn.Sigmoid()
-    elif act == 'softmax':
-        return nn.Softmax(**kwargs)
+    if act in _ACT_DICT:
+        return _ACT_DICT[act](**kwargs)
     else:
         raise ValueError(f'{act} is not implemented.')

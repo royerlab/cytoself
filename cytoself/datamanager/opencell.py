@@ -241,7 +241,7 @@ class DataManagerOpenCell(DataManagerBase):
         labels_toload: Optional[Sequence[str]] = None,
         labels_tohold: Optional[Sequence[str]] = None,
         num_labels: Optional[int] = None,
-        label_format: Optional[str] = 'onehot',
+        label_format: Optional[str] = 'index',
         label_name_position: int = -2,
     ):
         """

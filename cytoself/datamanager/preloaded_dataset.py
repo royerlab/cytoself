@@ -50,8 +50,10 @@ class PreloadedDataset(Dataset):
             onehot = label[:, None] == self.unique_labels
             if self.label_format == 'onehot':
                 return onehot[0]
+            elif self.label_format == 'index':
+                return onehot.argmax(1)[0]
             else:
-                return onehot.argmax(1)
+                return label
 
     def __getitem__(self, idx):
         label = self.label[idx].reshape(-1, self.label.shape[1])
