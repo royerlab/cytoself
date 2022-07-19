@@ -221,10 +221,6 @@ class DataManagerOpenCell(DataManagerBase):
         label_data : ArrayLike
             Label array
 
-        Returns
-        -------
-        None
-
         """
         self.unique_labels = np.unique(label_data[:, self.label_col])
 
@@ -261,10 +257,6 @@ class DataManagerOpenCell(DataManagerBase):
             Format of converted label: onehot, index or None (i.e. no conversion)
         label_name_position : int
             Relative position of label name from suffix in the npy file name
-
-        Returns
-        -------
-        None
 
         """
         # Determine which npy files to load.
@@ -321,10 +313,6 @@ class DataManagerOpenCell(DataManagerBase):
             Shuffle train & val batches if True
         shuffle_test : bool
             Shuffle test batch if True.
-
-        Returns
-        -------
-        None
 
         """
         _assert_dtype(self.train_dataset.label, self.train_dataset.label_format)

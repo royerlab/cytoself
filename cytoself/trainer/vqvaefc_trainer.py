@@ -69,10 +69,6 @@ class VQVAEFCTrainer(BaseTrainer):
         data_loader : DataLoader
             A DataLoader object that handles data distribution and augmentation.
 
-        Returns
-        -------
-        None
-
         """
         _metrics = [0] * len(self.metrics_names)
         for i, _batch in enumerate(data_loader):

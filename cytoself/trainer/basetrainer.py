@@ -48,9 +48,6 @@ class BaseTrainer:
         ----------
         model : model object
             The autoencoder model
-        Returns
-        -------
-        None
 
         """
         self.model = model
@@ -63,11 +60,6 @@ class BaseTrainer:
     def _default_train_args(self):
         """
         Sets default training arguments to make sure the model trainer has at least the following arguments.
-
-        Returns
-        -------
-        None
-
         """
         args = {
             'reducelr_patience': 4,
@@ -125,10 +117,6 @@ class BaseTrainer:
         optimizer : pytorch optimizer
             optimizer
 
-        Returns
-        -------
-        None
-
         """
         if self.model:
             local_optimizer = optim.Adam if optimizer is None else optimizer
@@ -145,10 +133,6 @@ class BaseTrainer:
         ----------
         savepath : str
             save path for tensorboard log
-
-        Returns
-        -------
-        None
 
         """
         if 'tb_logs' in self.savepath_dict:
@@ -181,10 +165,6 @@ class BaseTrainer:
         makedirs : bool
             make directories if True
 
-        Returns
-        -------
-        None
-
         """
         directories = ['checkpoints', 'embeddings', 'ft_analysis', 'umaps', 'visualization']
         for d in directories:
@@ -200,10 +180,6 @@ class BaseTrainer:
         ----------
         data_loader : DataLoader
             A DataLoader object that handles data distribution and augmentation.
-
-        Returns
-        -------
-        None
 
         """
         if self.model is None:
@@ -276,6 +252,7 @@ class BaseTrainer:
 
         Returns
         -------
+        Tensor
 
         """
         output = data[name]
@@ -372,10 +349,6 @@ class BaseTrainer:
         tensorboard_path : str
             Path for Tensorboard to load logs
 
-        Returns
-        -------
-        None
-
         """
         if self.model is None:
             raise ValueError('model is not defined.')
@@ -433,10 +406,6 @@ class BaseTrainer:
         model : nn.Module
             Pytorch model
 
-        Returns
-        -------
-        None
-
         """
         if model is None:
             model = self.model
@@ -451,10 +420,6 @@ class BaseTrainer:
         path : str
             Path to the pytorch model
 
-        Returns
-        -------
-        None
-
         """
         self.model = torch.load(path)
         print(f'A model was loaded from {path}')
@@ -468,10 +433,6 @@ class BaseTrainer:
         ----------
         data : numpy array or DataLoader
             Image data
-
-        Returns
-        -------
-        None
 
         """
         if data is None:
@@ -490,10 +451,6 @@ class BaseTrainer:
         ----------
         data : numpy array or DataLoader
             Image data
-
-        Returns
-        -------
-        None
 
         """
         if data is None:

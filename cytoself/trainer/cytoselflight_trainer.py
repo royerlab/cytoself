@@ -78,10 +78,6 @@ class CytoselfLiteTrainer(BaseTrainer):
         data_loader : DataLoader
             A DataLoader object that handles data distribution and augmentation.
 
-        Returns
-        -------
-        None
-
         """
         _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
         for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
@@ -144,10 +140,6 @@ class CytoselfLiteTrainer(BaseTrainer):
             Image data
         output_layer : str
             Name & index of output layer
-
-        Returns
-        -------
-        None
 
         """
         if data is None:
