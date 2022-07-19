@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import join, exists
 
 import torch
 
@@ -26,3 +26,12 @@ def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):
     d = next(iter(opencell_datamgr_vanilla.test_loader))
     out = vanilla_ae_trainer.infer_reconstruction(d['image'].numpy())
     assert out.shape == (opencell_datamgr_vanilla.batch_size,) + opencell_datamgr_vanilla.test_dataset.data.shape[1:]
+
+
+def test_save_load_model(vanilla_ae_trainer):
+    vanilla_ae_trainer.save_model(vanilla_ae_trainer.savepath_dict['homepath'], 'test.pt')
+    assert exists(join(vanilla_ae_trainer.savepath_dict['homepath'], 'test.pt')), 'pytorch model was not found.'
+    w = vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight
+    vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight = torch.nn.Parameter(torch.zeros_like(w))
+    vanilla_ae_trainer.load_model(join(vanilla_ae_trainer.savepath_dict['homepath'], 'test.pt'))
+    assert (vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight == w).all()

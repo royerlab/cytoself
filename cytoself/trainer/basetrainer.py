@@ -398,10 +398,11 @@ class BaseTrainer:
                 # Track the best performance, and save the model's state
                 if _vloss < best_vloss:
                     best_vloss = _vloss
-                    self.best_model = self.model.state_dict()
+                    self.best_model = self.model
                 else:
                     count_lr_no_improve += 1
                     count_early_stop += 1
+                    self.model = self.best_model
 
                 # Reduce learn rate on plateau
                 count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)
@@ -417,7 +418,46 @@ class BaseTrainer:
                     print('Early stopping.')
                     break
 
-            torch.save(self.best_model, join(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt'))
+            self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt')
+
+    def save_model(self, path: str, filename: str = 'pytorch_model.pt', model: Optional[nn.Module] = None):
+        """
+        Save a pytorch model
+
+        Parameters
+        ----------
+        path : str
+            Path to save the model
+        filename : str
+            File name
+        model : nn.Module
+            Pytorch model
+
+        Returns
+        -------
+        None
+
+        """
+        if model is None:
+            model = self.model
+        torch.save(model, join(path, filename))
+
+    def load_model(self, path: str):
+        """
+        Load a pytorch model
+
+        Parameters
+        ----------
+        path : str
+            Path to the pytorch model
+
+        Returns
+        -------
+        None
+
+        """
+        self.model = torch.load(path)
+        print(f'A model was loaded from {path}')
 
     @torch.inference_mode()
     def infer_embeddings(self, data):

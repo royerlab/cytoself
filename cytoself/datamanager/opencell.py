@@ -311,14 +311,16 @@ class DataManagerOpenCell(DataManagerBase):
                 test_label, test_data, None, self.unique_labels, label_format, self.label_col
             )
 
-    def const_dataloader(self, shuffle: bool = True, **kwargs):
+    def const_dataloader(self, shuffle: bool = True, shuffle_test: bool = False, **kwargs):
         """
         Constructs DataLoader
 
         Parameters
         ----------
         shuffle : bool
-            Shuffle batch if True
+            Shuffle train & val batches if True
+        shuffle_test : bool
+            Shuffle test batch if True.
 
         Returns
         -------
@@ -335,7 +337,7 @@ class DataManagerOpenCell(DataManagerBase):
             self.val_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
         self.test_loader = DataLoader(
-            self.test_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+            self.test_dataset, self.batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
         )
 
 
