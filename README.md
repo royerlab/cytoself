@@ -10,19 +10,20 @@
 ![Alt Text](images/3DUMAP.gif)
 
 cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from microscopy images. 
-This model is described in detail in our recent preprint [[2]](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
+This model is described in detail in our paper [[1]](https://www.nature.com/articles/s41592-022-01541-z).
 The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
 proteins on the sole basis of their localization.
 
 Applying cytoself to images of endogenously labeled proteins from the recently released 
 [OpenCell](https://opencell.czbiohub.org) database creates a highly resolved protein localization atlas
-[[1]](https://www.biorxiv.org/content/10.1101/2021.03.29.437450v1). 
+[[2]](https://www.science.org/doi/10.1126/science.abi6983). 
 
-[1] Cho, Nathan H., et al. "OpenCell: Endogenous tagging for the cartography of human cellular organization." _Science_ 375.6585 (2022): eabi6983.
-https://www.science.org/doi/10.1126/science.abi6983 <br />
-[2] Kobayashi, Hirofumi, et al. "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
+[1] Kobayashi, Hirofumi, _et al._ "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
 Subcellular Localization." _Nature Methods_ (2022).
-https://www.nature.com/articles/s41592-022-01541-z
+https://www.nature.com/articles/s41592-022-01541-z <br />
+[2] Cho, Nathan H., _et al._ "OpenCell: Endogenous tagging for the cartography of human cellular organization." 
+_Science_ 375.6585 (2022): eabi6983.
+https://www.science.org/doi/10.1126/science.abi6983
 
 
 ## How cytoself works
