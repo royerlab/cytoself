@@ -21,7 +21,7 @@ Applying cytoself to images of endogenously labeled proteins from the recently r
 [1] Cho, Nathan H., et al. "OpenCell: Endogenous tagging for the cartography of human cellular organization." _Science_ 375.6585 (2022): eabi6983.
 https://www.science.org/doi/10.1126/science.abi6983?cookieSet=1 <br />
 [2] Kobayashi, Hirofumi, et al. "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
-Subcellular Localization." _Nature Methods_ (2021).
+Subcellular Localization." _Nature Methods_ (2022).
 https://www.nature.com/articles/s41592-022-01541-z
 
 
@@ -61,7 +61,7 @@ https://github.com/royerlab/cytoself/blob/02b52fd4c2ab0db12fbd9d68314252e63d73e2
 ).
 
 ```diff
-Note: Cytoself will migrate to pytorch implementation in the near future.
+- Note: Cytoself will migrate to pytorch implementation in the near future.
 ```
 
 
