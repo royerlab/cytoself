@@ -60,9 +60,7 @@ Pre-trained model weights are included in the [example script](
 https://github.com/royerlab/cytoself/blob/02b52fd4c2ab0db12fbd9d68314252e63d73e2e4/examples/simple_example.py#L16-L20
 ).
 
-```diff
-- Note: Cytoself will migrate to pytorch implementation in the near future.
-```
+**Note: Cytoself will migrate to pytorch implementation in the near future.**
 
 
 ## Installation
