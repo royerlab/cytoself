@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 
-![Alt Text](images/rotating_umap.gif)
+![Alt Text](images/3DUMAP.gif)
 
 cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from microscopy images. 
 This model is described in detail in our recent preprint [[2]](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
@@ -18,10 +18,11 @@ Applying cytoself to images of endogenously labeled proteins from the recently r
 [OpenCell](https://opencell.czbiohub.org) database creates a highly resolved protein localization atlas
 [[1]](https://www.biorxiv.org/content/10.1101/2021.03.29.437450v1). 
 
-[1] Cho, Nathan H., et al. "OpenCell: proteome-scale endogenous tagging enables the cartography of human cellular organization." bioRxiv (2021).
-https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1 <br />
-[2] Kobayashi, Hirofumi, et al. "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein Subcellular Localization." bioRxiv (2021).
-https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1
+[1] Cho, Nathan H., et al. "OpenCell: Endogenous tagging for the cartography of human cellular organization." _Science_ 375.6585 (2022): eabi6983.
+https://www.science.org/doi/10.1126/science.abi6983?cookieSet=1 <br />
+[2] Kobayashi, Hirofumi, et al. "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
+Subcellular Localization." _Nature Methods_ (2021).
+https://www.nature.com/articles/s41592-022-01541-z
 
 
 ## How cytoself works
@@ -54,6 +55,14 @@ There is a submodule for each model variant that provides methods for constructi
 You may want to modify it too to perform your own analysis. This module is in 
 [`cytoself.analysis.analytics`](https://github.com/royerlab/cytoself/blob/main/cytoself/analysis/analytics.py). 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
+
+Pre-trained model weights are included in the [example script](
+https://github.com/royerlab/cytoself/blob/02b52fd4c2ab0db12fbd9d68314252e63d73e2e4/examples/simple_example.py#L16-L20
+).
+
+```diff
+Note: Cytoself will migrate to pytorch implementation in the near future.
+```
 
 
 ## Installation
