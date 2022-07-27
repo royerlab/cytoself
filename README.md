@@ -102,9 +102,11 @@ As a reference for a complete dependency, a snapshot of a working environment ca
 [`environment.yml`](https://github.com/royerlab/cytoself/blob/main/environment.yml)
 
 
-## Example script
+## Example script (How to use cytoself)
 A minimal example script is in 
 [`example/simple_training.py`](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py).
+Learn how to use cytoself through 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
 
 Test if this package runs in your computer with command 
 ```shell script
@@ -114,7 +116,7 @@ python examples/simple_example.py
 
 ## Computation resources
 It is highly recommended to use GPU to run cytoself. 
-A full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
+For a reference, a full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
 
 
 ## Tested Environment
@@ -128,7 +130,19 @@ Ubuntu 18.04.6 LTS, RTX 2080Ti, CUDA 11.2 (CPU/GPU)
 
 
 ## Data Availability
-The full data used in this work can be found here.
+Pre-trained models used in the [paper](https://www.nature.com/articles/s41592-022-01541-z). 
+Please follow the [example script](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py) 
+or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
+to lean how to use a pre-trained model.
+
+[model_protein_nucleardistance.h5](https://drive.google.com/file/d/1gkiEMKdadOel4Xh6KoS2U603JTkZhgDw/view?usp=sharing)
+: The model trained on target protein and nuclear distance. <br/>
+[model_protein.h5](https://drive.google.com/file/d/1mgfWlqcS0gWtu7FrAywcwmdvme856d4v/view?usp=sharing)
+: The model trained on target protein alone.  <br/>
+[model_protein_nucleus.h5](https://drive.google.com/file/d/1p69hDlIw4DKeNIFhuwoLRWoOeoLDsLoB/view?usp=sharing)
+: The model trained on target protein and nucleus.
+
+The full data of image and protein label used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
 protein, nucleus, nuclear distance, nuclear segmentation]`.
 
