@@ -2,14 +2,39 @@
 cytoself in pytorch implementation
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
-[![DOI](http://img.shields.io/badge/DOI-10.1101/2021.03.29.437595-B31B1B.svg)](https://doi.org/10.1101/2021.03.29.437595)
+[![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs41592--022--01541--z-%23403075)](https://doi.org/10.1038/s41592-022-01541-z)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself_pytorch)
 [![Tests](https://github.com/royerlab/cytoself_pytorch/actions/workflows/pytest-codecov-conda.yml/badge.svg)](https://github.com/royerlab/cytoself_pytorch/actions/workflows/pytest-codecov-conda.yml)
 
 
-![Alt Text](images/rotating_umap.gif)
+![Rotating_3DUMAP](images/3DUMAP.gif)
+
+cytoself is a self-supervised platform for learning features of protein subcellular localization from microscopy 
+images [[1]](https://www.nature.com/articles/s41592-022-01541-z).
+The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
+proteins on the sole basis of their localization.
+
+Applying cytoself to images of endogenously labeled proteins from the recently released 
+[OpenCell](https://opencell.czbiohub.org) database creates a highly resolved protein localization atlas
+[[2]](https://www.science.org/doi/10.1126/science.abi6983). 
+
+[1] Kobayashi, Hirofumi, _et al._ "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
+Subcellular Localization." _Nature Methods_ (2022).
+https://www.nature.com/articles/s41592-022-01541-z <br />
+[2] Cho, Nathan H., _et al._ "OpenCell: Endogenous tagging for the cartography of human cellular organization." 
+_Science_ 375.6585 (2022): eabi6983.
+https://www.science.org/doi/10.1126/science.abi6983
+
+
+## How cytoself works
+cytoself uses images (cell images where only single type of protein is fluorescently labeled) and its identity 
+information (protein ID) as a label to learn the localization patterns of proteins.
+
+
+![Workflow_diagram](images/workflow.jpg)
+
 
 ## Installation
 Recommended: create a new environment and install cytoself on the environment from pypi
@@ -19,47 +44,68 @@ conda activate cytoself
 pip install cytoself
 ```
 
-### (For the developers)
-### How to install dependencies
+### (For the developers) Install from this repository
+Make sure you are in the root directory of the repository.
 
 ```bash
-pip install -r requirements/requirements.txt
+pip install -e .
 ```
 
-### How to install development dependencies
+Install development dependencies
 
 ```bash
 pip install -r requirements/development.txt
 ```
 
-## How to use on the example data 
+
+## How to use cytoself on the sample data 
 Download one set of the image and label data from [Data Availability](##Data Availability)
 
 
 ### 1. Prepare Data
 ```python
-from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 from cytoself.datamanager.opencell import DataManagerOpenCell
-from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
 
-datapath = 'path/to/the/data'
-datamanager = DataManagerOpenCell(datapath, ['gfp'], batch_size=32)
-datamanager.const_dataset(num_labels=3)
+datapath = 'sample_data'  # path to download sample data
+DataManagerOpenCell.download_sample_data(datapath)  # donwload data
+datamanager = DataManagerOpenCell(datapath, ['pro'], batch_size=32, fov_col=None)
+datamanager.const_dataset(label_name_position=1)
 datamanager.const_dataloader()
 ```
+A folder, `sample_data`, will be created and sample data will be downloaded to this folder.
+The `sample_data` folder will be created in the "current working directory," which is where you are running the code. 
+Use `os.getcwd()` to check where the current working directory is.
+
+9 sets of data with 4 files for each protein (in total 36 files) will be downloaded. 
+The file name is in the form of `<protein_name>_<channel or label>.npy`.  
+
+* **`*_label.npy` file**:
+Contains label information in 3 columns, i.e. Ensembl ID, protein name and localization.
+* **`*_pro.npy` file**:
+Image data of protein channel. Size 100x100. Images were cropped with nucleus being centered 
+(see details in [paper](https://doi.org/10.1038/s41592-022-01541-z)).
+* **`*_nuc.npy` file**:
+Image data of nucleus channel. Size 100x100. Images were cropped with nucleus being centered 
+(see details in [paper](https://doi.org/10.1038/s41592-022-01541-z)).
+* **`*_nucdist.npy` file**:
+Data of nucleus distance map. Size 100x100. Images were cropped with nucleus being centered 
+(see details in [paper](https://doi.org/10.1038/s41592-022-01541-z)).
+
 
 ### 2. Create and train a cytoself model
 ```python
+from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
+
 model_args = {
     'input_shape': (1, 100, 100),
     'emb_shapes': ((64, 25, 25), (64, 4, 4)),
     'output_shape': (1, 100, 100),
     'vq_args': {'num_embeddings': 512},
-    'num_class': 3,
+    'num_class': len(datamanager.unique_labels),
 }
 train_args = {
     'lr': 1e-3,
-    'max_epochs': 90,
+    'max_epochs': 10,
     'reducelr_patience': 3,
     'reducelr_increment': 0.1,
     'earlystop_patience': 6,
@@ -70,25 +116,27 @@ trainer.fit(datamanager, tensorboard_path='tb_logs')
 
 ### 3. Plot UMAP
 ```python
-from os.path import join
+from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 
 analysis = AnalysisOpenCell(datamanager, trainer)
 umap_data = analysis.plot_umap_of_embedding_vector(
     data_loader=datamanager.test_loader,
-    savepath='path/to/save/fig/umap_vqvec2.png',
+#     savepath='demo_output/analysis/umap_figures/UMAP_vqvec2.png',
     group_col=1,
-    output_layer=f'vqvec2',
-    title=f'UMAP vqvec2',
-    xlabel='x axis',
-    ylabel='y axis',
-    s=0.3,
-    alpha=0.5,
+    output_layer='vqvec2',
+    title='UMAP_vqvec2',
+    xlabel='UMAP1',
+    ylabel='UMAP2',
+    s=2,
+    alpha=1,
     show_legend=True,
 )
 ```
+The output UMAP plot will be saved at `demo_output/analysis/umap_figures/UMAP_vqvec2.png` by default.
 
+![Result_UMAP](images/UMAP_vqvec2.png)
 
-## Tested Environment
+## Tested Environments
 ~~Google Colab (CPU/GPU/TPU)~~
 
 ~~macOS 10.14.6, RAM 32GB (CPU)~~

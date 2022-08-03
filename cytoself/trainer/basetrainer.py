@@ -166,7 +166,7 @@ class BaseTrainer:
             make directories if True
 
         """
-        directories = ['checkpoints', 'embeddings', 'ft_analysis', 'umaps', 'visualization']
+        directories = ['checkpoints', 'embeddings', 'visualization']
         for d in directories:
             self.savepath_dict[d] = join(self.savepath_dict['homepath'], d)
             if makedirs and not os.path.exists(self.savepath_dict[d]):

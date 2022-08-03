@@ -70,3 +70,16 @@ def vanilla_ae_trainer(basepath):
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epochs': 2}
     return VanillaAETrainer(model_args, train_args, homepath=basepath)
+
+
+def pytest_addoption(parser):
+    parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
+
+
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption("--runslow"):
+        # --runslow given in cli: do not skip slow tests
+        skip_heavy = pytest.mark.skip(reason="need --runslow option to run")
+        for item in items:
+            if "slow" in item.keywords:
+                item.add_marker(skip_heavy)

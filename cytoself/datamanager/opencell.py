@@ -75,7 +75,7 @@ class DataManagerOpenCell(DataManagerBase):
         self.channel_list = channel_list
 
         # Intensity adjustment is needed when using nucdist.
-        intensity_adjustment_default = {'gfp': 1, 'nuc': 1, 'nucdist': 0.01}
+        intensity_adjustment_default = {'pro': 1, 'nuc': 1, 'nucdist': 0.01}
         if isinstance(intensity_adjustment, dict):
             self.intensity_adjustment = intensity_adjustment
         else:
@@ -193,7 +193,14 @@ class DataManagerOpenCell(DataManagerBase):
         """
         # Split data
         print('Splitting data...')
-        if self.fov_col:
+        if self.fov_col is None:
+            np.random.seed(self.shuffle_seed)
+            ind = np.random.choice(len(label_data), size=len(label_data), replace=False)
+            split_ind = list(np.cumsum([int(len(label_data) * i) for i in self.data_split[:-1]]))
+            train_ind = ind[0 : split_ind[0]]
+            val_ind = ind[split_ind[0] : split_ind[1]]
+            test_ind = ind[split_ind[1] : len(label_data)]
+        else:
             train_ind, val_ind, test_ind = splitdata_on_fov(
                 label_data,
                 split_perc=self.data_split,
@@ -202,13 +209,6 @@ class DataManagerOpenCell(DataManagerBase):
                 num_workers=self.num_workers,
                 shuffle_seed=self.shuffle_seed,
             )
-        else:
-            np.random.seed(self.shuffle_seed)
-            ind = np.random.choice(len(label_data), size=len(label_data), replace=False)
-            split_ind = list(np.cumsum([int(len(label_data) * i) for i in self.data_split[:-1]]))
-            train_ind = ind[0 : split_ind[0]]
-            val_ind = ind[split_ind[0] : split_ind[1]]
-            test_ind = ind[split_ind[1] : len(label_data)]
         return train_ind, val_ind, test_ind
 
     def const_label_book(self, label_data: ArrayLike):
@@ -326,6 +326,25 @@ class DataManagerOpenCell(DataManagerBase):
         )
         self.test_loader = DataLoader(
             self.test_dataset, self.batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
+        )
+
+    @staticmethod
+    def download_sample_data(output: Optional[str] = 'sample_data'):
+        """
+        Download sample data
+
+        Parameters
+        ----------
+        output : str
+            Destination path
+        ----------
+        """
+        import gdown
+
+        gdown.download_folder(
+            url='https://drive.google.com/drive/folders/1tCgFlcyBg8p7241eowlDi7EsUmiR42h9',
+            output=output,
+            quiet=False,
         )
 
 

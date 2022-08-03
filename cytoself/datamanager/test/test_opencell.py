@@ -1,5 +1,6 @@
 from math import floor, ceil
-from os.path import join
+import os
+from os.path import join, exists
 import numpy as np
 import pytest
 import torch
@@ -32,9 +33,9 @@ def test_label_image(gen_data_2x10x10):
 
 def test_intensity_adjustment(gen_data_2x10x10):
     datamgr = DataManagerOpenCell(
-        gen_data_2x10x10, ['nuc'], intensity_adjustment={'gfp': 20, 'nuc': 5, 'nucdist': 0.02}
+        gen_data_2x10x10, ['nuc'], intensity_adjustment={'pro': 20, 'nuc': 5, 'nucdist': 0.02}
     )
-    assert datamgr.intensity_adjustment['gfp'] == 20
+    assert datamgr.intensity_adjustment['pro'] == 20
     assert datamgr.intensity_adjustment['nuc'] == 5
     assert datamgr.intensity_adjustment['nucdist'] == 0.02
 
@@ -116,3 +117,11 @@ def test_const_dataloader(opencell_datamgr_2x10x10):
     assert torch.is_tensor(train_batch['image'])
     assert train_batch['label'].shape == train_batch['image'].shape[:1]
     assert tuple(train_batch['image'].shape)[1:] == train_data0['image'].shape
+
+
+@pytest.mark.slow
+def test_download_sample_data(opencell_datamgr_2x10x10):
+    dest = join(opencell_datamgr_2x10x10.basepath, 'example_data')
+    opencell_datamgr_2x10x10.download_sample_data(output=dest)
+    assert exists(dest)
+    assert len(os.listdir(dest)) == 36

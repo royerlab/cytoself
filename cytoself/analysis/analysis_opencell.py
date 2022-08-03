@@ -60,8 +60,8 @@ class AnalysisOpenCell(BaseAnalysis):
             else:
                 unique_groups = np.unique(group_annotation[:, 1])
         label_converted = label_data[:, group_col].astype(object)
-        label_converted[:] = 'others'
         if group_annotation is not None:
+            label_converted[:] = 'others'
             for gp in unique_groups:
                 label_converted[np.isin(label_data, group_annotation[group_annotation[:, 1] == gp, 0])[:, 0]] = gp
 
@@ -141,7 +141,13 @@ class AnalysisOpenCell(BaseAnalysis):
         ax.spines['right'].set_visible(False)
         hndls, names = ax.get_legend_handles_labels()
         leg = ax.legend(
-            hndls, names, prop={'size': 6}, bbox_to_anchor=(1, 1), loc='upper left', ncol=1 + len(names) // 15
+            hndls,
+            names,
+            prop={'size': 6},
+            bbox_to_anchor=(1, 1),
+            loc='upper left',
+            ncol=1 + len(names) // 15,
+            frameon=False,
         )
         for ll in leg.legendHandles:
             ll._sizes = [6]
