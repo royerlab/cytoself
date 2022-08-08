@@ -319,9 +319,15 @@ class CytoselfLite(nn.Module):
             if out_layer_name == 'encoder' and i == int(out_layer_idx):
                 return encoded
 
-            (vq_loss, quantized, perplexity, encoding_onehot, encoding_indices, index_histogram) = self.vq_layers[i](
-                encoded
-            )
+            (
+                vq_loss,
+                quantized,
+                perplexity,
+                encoding_onehot,
+                encoding_indices,
+                index_histogram,
+                softmax_histogram,
+            ) = self.vq_layers[i](encoded)
             if i == int(out_layer_idx):
                 if out_layer_name == 'vqvec':
                     return quantized
@@ -335,7 +341,7 @@ class CytoselfLite(nn.Module):
             elif self.fc_input_type == 'vqind':
                 fcout = self.fc_layers[i](encoding_indices.view(encoding_indices.size(0), -1))
             elif self.fc_input_type == 'vqindhist':
-                fcout = self.fc_layers[i](index_histogram.view(index_histogram.size(0), -1))
+                fcout = self.fc_layers[i](softmax_histogram)
             else:
                 fcout = self.fc_layers[i](encoded.view(encoded.size(0), -1))
 

@@ -60,6 +60,7 @@ class VQVAE(BaseAE):
             self.encoding_onehot,
             self.encoding_indices,
             self.index_histogram,
+            _,
         ) = self.vq_layer(x)
         x = self.decoder(x)
         return x

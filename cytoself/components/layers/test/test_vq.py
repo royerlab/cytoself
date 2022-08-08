@@ -8,7 +8,7 @@ def test_VectorQuantizer():
     vq = VectorQuantizer(embedding_dim, num_embeddings, 1.0)
     assert vq.codebook.weight.shape == (num_embeddings, embedding_dim)
 
-    data = torch.randn((5, 10, 4, 4), dtype=torch.float32)
+    data = torch.randn((5, embedding_dim, 4, 4), dtype=torch.float32)
     out = vq(data)
     assert len(out[0].shape) == 0
     assert out[1].shape == data.shape
@@ -17,4 +17,6 @@ def test_VectorQuantizer():
     assert out[3].shape == (data.shape[0], num_embeddings) + data.shape[2:]
     assert out[4].shape == data.shape[:1] + data.shape[2:]
     assert out[5].shape == (data.shape[0], num_embeddings)
+    assert out[6].shape == (data.shape[0], num_embeddings)
     assert all(torch.round(out[5].sum(axis=1), decimals=3) == 16)
+    assert (out[5].int() == out[5]).all()

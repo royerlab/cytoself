@@ -76,6 +76,7 @@ class VQVAEFC(VQVAE):
             self.encoding_onehot,
             self.encoding_indices,
             self.index_histogram,
+            softmax_histogram,
         ) = self.vq_layer(encoded)
         x = self.decoder(quantized)
 
@@ -84,7 +85,7 @@ class VQVAEFC(VQVAE):
         elif self.fc_input_type == 'vqind':
             fcout = self.fc_layer(self.encoding_indices.view(self.encoding_indices.size(0), -1))
         elif self.fc_input_type == 'vqindhist':
-            fcout = self.fc_layer(self.index_histogram.view(self.index_histogram.size(0), -1))
+            fcout = self.fc_layer(softmax_histogram)
         else:
             fcout = self.fc_layer(encoded.view(encoded.size(0), -1))
         return x, fcout
