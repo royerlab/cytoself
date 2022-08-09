@@ -1,5 +1,6 @@
 # cytoself
 
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![PyPI](https://img.shields.io/pypi/v/cytoself.svg)](https://pypi.org/project/cytoself)
 [![Python Version](https://img.shields.io/pypi/pyversions/cytoself.svg)](https://python.org)
@@ -9,9 +10,11 @@
 
 ![Alt Text](images/3DUMAP.gif)
 
-cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from microscopy images. 
+### Self-supervised deep learning encodes high-resolution features of protein subcellular localization
+
+cytoself is a self-supervised model that we developed for learning features of protein subcellular localization from microscopy images. 
 This model is described in detail in our paper [[1]](https://www.nature.com/articles/s41592-022-01541-z).
-The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
+The image representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
 proteins on the sole basis of their localization.
 
 Applying cytoself to images of endogenously labeled proteins from the recently released 
@@ -27,9 +30,12 @@ https://www.science.org/doi/10.1126/science.abi6983
 
 
 ## How cytoself works
-cytoself uses images and its identity information as a label to learn the localization patterns of proteins.
-We used cell images where single protein is labeled and the ID of labeled protein as 
-identity information.
+cytoself uses images and an associated identity information (ID) as a label to learn the localization patterns of proteins.
+When applied to OpenCell we used cell images where individual proteins are endogenously tagged per image. For each image we know which 
+protein is tagged and that is the ID used. Our model implicitely learns to ignore image differences for images that 
+are associated to the same ID, and tries its best to tell images apart if they are associated to different IDs. In practice cytoself
+can resolve very fine textural differences between image classes but also can ignore very complex sources of image variability 
+such as cell shapes, states, etc...
 
 ![Alt Text](images/workflow.jpg)
 
@@ -80,7 +86,7 @@ again with conda.
 conda install -y h5py=2.10.0 tensorflow-gpu=1.15
 ```
 
-### For the developers
+### For developers
 
 You can also install cytoself from this GitHub repository.
 
@@ -114,9 +120,9 @@ python examples/simple_example.py
 ```
 
 
-## Computation resources
-It is highly recommended to use GPU to run cytoself. 
-For a reference, a full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
+## Computational resources
+It is highly recommended to use a GPU to run cytoself. 
+For example, a full model with image shape of (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
 
 
 ## Tested Environment
@@ -148,10 +154,11 @@ The full data of image and protein label used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
 protein, nucleus, nuclear distance, nuclear segmentation]`.
 
+
 ### Embeddings
 
 The embedding vectors of global representations and their labels are available from the following links.
-Due to the large size, only test data is provided.
+Due to their large size, only embeddings extracted from test data are provided.
 
 [Global_representation.npy](https://drive.google.com/file/d/1s9TL72912HH947SFWcO6tClF91xDOEEi/view?usp=sharing)  In the shape of 114,806 images x 9,216 latent dimensions. (3.9 GB) <br/>
 [label.csv](https://drive.google.com/file/d/1fl0lcrZCOkdN2vwXQSHe7i1MC04RXCiE/view?usp=sharing)  114,806 rows x 7 columns. (6.2 MB)
