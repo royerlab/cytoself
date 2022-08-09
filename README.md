@@ -1,5 +1,6 @@
 # cytoself
 
+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![PyPI](https://img.shields.io/pypi/v/cytoself.svg)](https://pypi.org/project/cytoself)
 [![Python Version](https://img.shields.io/pypi/pyversions/cytoself.svg)](https://python.org)
@@ -7,27 +8,34 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 
-![Alt Text](images/rotating_umap.gif)
+![Alt Text](images/3DUMAP.gif)
 
-cytoself is a self-supervised platform that we developed for learning features of protein subcellular localization from microscopy images. 
-This model is described in detail in our recent preprint [[2]](https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1).
-The representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
+### Self-supervised deep learning encodes high-resolution features of protein subcellular localization
+
+cytoself is a self-supervised model that we developed for learning features of protein subcellular localization from microscopy images. 
+This model is described in detail in our paper [[1]](https://www.nature.com/articles/s41592-022-01541-z).
+The image representations derived from cytoself encapsulate highly specific features that can derive functional insights for 
 proteins on the sole basis of their localization.
 
 Applying cytoself to images of endogenously labeled proteins from the recently released 
 [OpenCell](https://opencell.czbiohub.org) database creates a highly resolved protein localization atlas
-[[1]](https://www.biorxiv.org/content/10.1101/2021.03.29.437450v1). 
+[[2]](https://www.science.org/doi/10.1126/science.abi6983). 
 
-[1] Cho, Nathan H., et al. "OpenCell: proteome-scale endogenous tagging enables the cartography of human cellular organization." bioRxiv (2021).
-https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1 <br />
-[2] Kobayashi, Hirofumi, et al. "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein Subcellular Localization." bioRxiv (2021).
-https://www.biorxiv.org/content/10.1101/2021.03.29.437595v1
+[1] Kobayashi, Hirofumi, _et al._ "Self-Supervised Deep-Learning Encodes High-Resolution Features of Protein 
+Subcellular Localization." _Nature Methods_ (2022).
+https://www.nature.com/articles/s41592-022-01541-z <br />
+[2] Cho, Nathan H., _et al._ "OpenCell: Endogenous tagging for the cartography of human cellular organization." 
+_Science_ 375.6585 (2022): eabi6983.
+https://www.science.org/doi/10.1126/science.abi6983
 
 
 ## How cytoself works
-cytoself uses images and its identity information as a label to learn the localization patterns of proteins.
-We used cell images where single protein is labeled and the ID of labeled protein as 
-identity information.
+cytoself uses images and an associated identity information (ID) as a label to learn the localization patterns of proteins.
+When applied to OpenCell we used cell images where individual proteins are endogenously tagged per image. For each image we know which 
+protein is tagged and that is the ID used. Our model implicitely learns to ignore image differences for images that 
+are associated to the same ID, and tries its best to tell images apart if they are associated to different IDs. In practice cytoself
+can resolve very fine textural differences between image classes but also can ignore very complex sources of image variability 
+such as cell shapes, states, etc...
 
 ![Alt Text](images/workflow.jpg)
 
@@ -55,6 +63,12 @@ You may want to modify it too to perform your own analysis. This module is in
 [`cytoself.analysis.analytics`](https://github.com/royerlab/cytoself/blob/main/cytoself/analysis/analytics.py). 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
 
+Pre-trained model weights are included in the [example script](
+https://github.com/royerlab/cytoself/blob/02b52fd4c2ab0db12fbd9d68314252e63d73e2e4/examples/simple_example.py#L16-L20
+).
+
+**Note: Cytoself will migrate to pytorch implementation in the near future.**
+
 
 ## Installation
 Recommended: create a new environment and install cytoself on the environment from pypi
@@ -72,7 +86,7 @@ again with conda.
 conda install -y h5py=2.10.0 tensorflow-gpu=1.15
 ```
 
-### For the developers
+### For developers
 
 You can also install cytoself from this GitHub repository.
 
@@ -94,9 +108,11 @@ As a reference for a complete dependency, a snapshot of a working environment ca
 [`environment.yml`](https://github.com/royerlab/cytoself/blob/main/environment.yml)
 
 
-## Example script
+## Example script (How to use cytoself)
 A minimal example script is in 
 [`example/simple_training.py`](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py).
+Learn how to use cytoself through 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
 
 Test if this package runs in your computer with command 
 ```shell script
@@ -104,9 +120,9 @@ python examples/simple_example.py
 ```
 
 
-## Computation resources
-It is highly recommended to use GPU to run cytoself. 
-A full model with image shape (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
+## Computational resources
+It is highly recommended to use a GPU to run cytoself. 
+For example, a full model with image shape of (100, 100, 2) and batch size 64 can take ~9GB of GPU memory.
 
 
 ## Tested Environment
@@ -120,9 +136,34 @@ Ubuntu 18.04.6 LTS, RTX 2080Ti, CUDA 11.2 (CPU/GPU)
 
 
 ## Data Availability
-The full data used in this work can be found here.
+
+### Pretrained model
+Pre-trained models used in the [paper](https://www.nature.com/articles/s41592-022-01541-z). 
+Please follow the [example script](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py) 
+or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
+to lean how to use a pre-trained model.
+
+[model_protein_nucleardistance.h5](https://drive.google.com/file/d/1gkiEMKdadOel4Xh6KoS2U603JTkZhgDw/view?usp=sharing)
+: The model trained on target protein and nuclear distance. <br/>
+[model_protein.h5](https://drive.google.com/file/d/1mgfWlqcS0gWtu7FrAywcwmdvme856d4v/view?usp=sharing)
+: The model trained on target protein alone.  <br/>
+[model_protein_nucleus.h5](https://drive.google.com/file/d/1p69hDlIw4DKeNIFhuwoLRWoOeoLDsLoB/view?usp=sharing)
+: The model trained on target protein and nucleus.
+
+The full data of image and protein label used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
 protein, nucleus, nuclear distance, nuclear segmentation]`.
+
+
+### Embeddings
+
+The embedding vectors of global representations and their labels are available from the following links.
+Due to their large size, only embeddings extracted from test data are provided.
+
+[Global_representation.npy](https://drive.google.com/file/d/1s9TL72912HH947SFWcO6tClF91xDOEEi/view?usp=sharing)  In the shape of 114,806 images x 9,216 latent dimensions. (3.9 GB) <br/>
+[label.csv](https://drive.google.com/file/d/1fl0lcrZCOkdN2vwXQSHe7i1MC04RXCiE/view?usp=sharing)  114,806 rows x 7 columns. (6.2 MB)
+
+### Image and label data
 
 Due to the large size, the whole data is split to 10 files. The files are intended to be concatenated together to 
 form one large numpy file or one large csv.
