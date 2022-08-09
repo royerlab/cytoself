@@ -130,6 +130,8 @@ Ubuntu 18.04.6 LTS, RTX 2080Ti, CUDA 11.2 (CPU/GPU)
 
 
 ## Data Availability
+
+### Pretrained model
 Pre-trained models used in the [paper](https://www.nature.com/articles/s41592-022-01541-z). 
 Please follow the [example script](https://github.com/royerlab/cytoself/blob/main/examples/simple_example.py) 
 or [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/examples/simple_example.ipynb)
@@ -145,6 +147,16 @@ to lean how to use a pre-trained model.
 The full data of image and protein label used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
 protein, nucleus, nuclear distance, nuclear segmentation]`.
+
+### Embeddings
+
+The embedding vectors of global representations and their labels are available from the following links.
+Due to the large size, only test data is provided.
+
+[Global_representation.npy](https://drive.google.com/file/d/1s9TL72912HH947SFWcO6tClF91xDOEEi/view?usp=sharing)  In the shape of 114,806 images x 9,216 latent dimensions. (3.9 GB) <br/>
+[label.csv](https://drive.google.com/file/d/1fl0lcrZCOkdN2vwXQSHe7i1MC04RXCiE/view?usp=sharing)  114,806 rows x 7 columns. (6.2 MB)
+
+### Image and label data
 
 Due to the large size, the whole data is split to 10 files. The files are intended to be concatenated together to 
 form one large numpy file or one large csv.
