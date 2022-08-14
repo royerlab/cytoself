@@ -9,13 +9,13 @@ from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
 
 @pytest.fixture(scope='module')
 def cytoselflight_trainer(basepath):
-    train_args = {'lr': 1e-6, 'max_epochs': 2}
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
     return CytoselfLiteTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)
 
 
 def test_cytoselflight_trainer_fit(cytoselflight_trainer, opencell_datamgr_vanilla, basepath):
     cytoselflight_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
-    assert len(cytoselflight_trainer.losses['train_loss']) == cytoselflight_trainer.train_args['max_epochs']
+    assert len(cytoselflight_trainer.losses['train_loss']) == cytoselflight_trainer.train_args['max_epoch']
     assert min(cytoselflight_trainer.losses['train_loss']) < torch.inf
     assert min(cytoselflight_trainer.losses['train_vq_loss1']) < torch.inf
     assert min(cytoselflight_trainer.losses['train_vq_loss2']) < torch.inf

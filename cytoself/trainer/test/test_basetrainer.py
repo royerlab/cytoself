@@ -31,7 +31,7 @@ def test_base_trainer__default_train_args(base_trainer):
         'reducelr_increment': 0.1,
         'earlystop_patience': 12,
         'min_lr': 1e-8,
-        'max_epochs': 100,
+        'max_epoch': 100,
     }
     for key, val in args.items():
         assert base_trainer.train_args[key] == val

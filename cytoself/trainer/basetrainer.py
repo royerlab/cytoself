@@ -1,8 +1,11 @@
 import inspect
 import os
+from copy import deepcopy
 from os.path import join
 from typing import Optional, Union, Collection, Sequence
 from warnings import warn
+
+from natsort import natsorted
 from tqdm import tqdm
 import numpy as np
 
@@ -66,7 +69,7 @@ class BaseTrainer:
             'reducelr_increment': 0.1,
             'earlystop_patience': 12,
             'min_lr': 1e-8,
-            'max_epochs': 100,
+            'max_epoch': 100,
         }
         for key, val in args.items():
             if key not in self.train_args:
@@ -357,8 +360,8 @@ class BaseTrainer:
             best_vloss = torch.inf if 'val_loss' not in self.losses else min(self.losses['val_loss'])
             count_lr_no_improve = 0
             count_early_stop = 0
-            for current_epoch in range(self.current_epoch, self.train_args['max_epochs']):
-                print(f'Epoch {current_epoch}/{self.train_args["max_epochs"]}')
+            for current_epoch in range(self.current_epoch, self.train_args['max_epoch']):
+                print(f'Epoch {current_epoch}/{self.train_args["max_epoch"]}')
                 # Train the model
                 self.model.train(True)
                 self.train_one_epoch(datamanager.train_loader, **kwargs)
@@ -371,11 +374,13 @@ class BaseTrainer:
                 # Track the best performance, and save the model's state
                 if _vloss < best_vloss:
                     best_vloss = _vloss
-                    self.best_model = self.model
+                    self.best_model = deepcopy(self.model)
+                    # Save the best model checkpoint
+                    self.save_checkpoint()
                 else:
                     count_lr_no_improve += 1
                     count_early_stop += 1
-                    self.model = self.best_model
+                    self.model = deepcopy(self.best_model)
 
                 # Reduce learn rate on plateau
                 count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)
@@ -384,7 +389,7 @@ class BaseTrainer:
                 if tensorboard_path is not None:
                     tensorboard_path = join(self.savepath_dict['homepath'], tensorboard_path)
                 self.write_on_tensorboard(tensorboard_path)
-                self.current_epoch += 1
+                self.current_epoch = current_epoch
 
                 # Check for early stopping
                 if count_early_stop >= self.train_args['earlystop_patience']:
@@ -393,7 +398,48 @@ class BaseTrainer:
 
             self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt')
 
-    def save_model(self, path: str, filename: str = 'pytorch_model.pt', model: Optional[nn.Module] = None):
+    def save_checkpoint(self, path: Optional[str] = None):
+        """
+        Save a model checkpoint
+
+        Parameters
+        ----------
+        path : str
+            Path to save model checkpoints
+
+        """
+        if path is None:
+            path = self.savepath_dict['checkpoints']
+        fpath = join(path, f'checkpoint_ep{self.current_epoch + 1}.chkp')
+        torch.save(
+            {
+                'epoch': self.current_epoch,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'loss': self.losses,
+            },
+            fpath,
+        )
+        print('A model checkpoint has been saved at ' + fpath)
+
+    def load_checkpoint(self, path: Optional[str] = None, epoch: Optional[int] = None):
+        if path is None:
+            path = self.savepath_dict['checkpoints']
+        if epoch is None:
+            fpath = join(path, natsorted([f for f in os.listdir(path) if f.endswith('.chkp')])[-1])
+        else:
+            fpath = join(path, f'checkpoint_ep{epoch}.chkp')
+
+        checkpoint = torch.load(fpath)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.current_epoch = checkpoint['epoch']
+        self.losses = checkpoint['loss']
+        print(fpath + ' has been loaded.')
+
+    def save_model(
+        self, path: str, filename: str = 'pytorch_model.pt', model: Optional[nn.Module] = None, by_weights: bool = False
+    ):
         """
         Save a pytorch model
 
@@ -405,13 +451,17 @@ class BaseTrainer:
             File name
         model : nn.Module
             Pytorch model
+        by_weights : bool
+            Only save weights in dict if True.
 
         """
         if model is None:
             model = self.model
-        torch.save(model, join(path, filename))
+        fpath = join(path, filename)
+        torch.save(model.state_dict() if by_weights else model, fpath)
+        print('A model has been saved at ' + fpath)
 
-    def load_model(self, path: str):
+    def load_model(self, path: str, by_weights: bool = True):
         """
         Load a pytorch model
 
@@ -419,10 +469,20 @@ class BaseTrainer:
         ----------
         path : str
             Path to the pytorch model
+        by_weights : bool
+            Load model by weights if True.
+            Loading by weights is safer in case some logic has been changed from when the model was saved.
 
         """
-        self.model = torch.load(path)
-        print(f'A model was loaded from {path}')
+        _model = torch.load(path)
+        if isinstance(_model, dict):
+            self.model.load_state_dict(_model)
+        else:
+            if by_weights:
+                self.model.load_state_dict(_model.state_dict())
+            else:
+                self.model = _model
+        print(f'A model has been loaded from {path}')
 
     @torch.inference_mode()
     def infer_embeddings(self, data):

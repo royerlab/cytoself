@@ -17,12 +17,12 @@ def vqvaefc_trainer(basepath):
         'num_class': 3,
     }
     model_args = add_default_model_args(model_args)
-    train_args = {'lr': 1e-6, 'max_epochs': 2}
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
     return VQVAEFCTrainer(model_args, train_args, homepath=basepath)
 
 
 def test_vqvaefc_trainer_fit(vqvaefc_trainer, opencell_datamgr_vanilla, basepath):
     vqvaefc_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
-    assert len(vqvaefc_trainer.losses['train_loss']) == vqvaefc_trainer.train_args['max_epochs']
+    assert len(vqvaefc_trainer.losses['train_loss']) == vqvaefc_trainer.train_args['max_epoch']
     assert min(vqvaefc_trainer.losses['train_loss']) < torch.inf
     assert min(vqvaefc_trainer.losses['train_vq_loss']) < torch.inf

@@ -31,7 +31,7 @@ def vanilla_ae_trainer_plateau(basepath):
         'num_residual_layers': 1,
         'output_shape': model_args['input_shape'],
     }
-    train_args = {'lr': 1e-8, 'max_epochs': 5, 'reducelr_patience': 1, 'min_lr': 1e-9, 'earlystop_patience': 3}
+    train_args = {'lr': 1e-8, 'max_epoch': 5, 'reducelr_patience': 1, 'min_lr': 1e-9, 'earlystop_patience': 3}
     return VanillaAETrainer(model_args, train_args, homepath=basepath)
 
 

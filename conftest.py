@@ -68,7 +68,7 @@ def vanilla_ae_trainer(basepath):
         'output_shape': (1, 32, 32),
     }
     model_args = add_default_model_args(model_args)
-    train_args = {'lr': 1e-6, 'max_epochs': 2}
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
     return VanillaAETrainer(model_args, train_args, homepath=basepath)
 
 
