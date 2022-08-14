@@ -29,31 +29,109 @@ class AnalysisOpenCell(BaseAnalysis):
         group_annotation: Optional = None,
         **kwargs,
     ):
+        """
+        Generate a UMAP plotting from embeddings
+
+        Parameters
+        ----------
+        data_loader : DataLoader
+            Pytorch DataLoader that will provide both images and labels
+        label_data : Numpy array
+            Label data (required except when data_loader is used)
+        umap_data : Numpy array
+            UMAP coordinates (will simply generate a scatter plot from these coordinates)
+        embedding_data : Numpy array
+            Embedding data (will compute UMAP from the embedding data)
+        image_data : Numpy array
+            Image data (will compute embeddings, UMAP before generating a scatter plot)
+        group_col : int
+            The index to be used to group labels
+        unique_groups : list or tuple
+            The unique groups to be plotted
+        group_annotation : Numpy array
+            A numpy array that has the same length with the data to be plotted having the group annotation.
+
+        """
+        if data_loader is None:
+            if label_data is None:
+                raise ValueError('label_data cannot be None. Provide a 2D-array to label_data.')
+        else:
+            label_data = data_loader.dataset.label
+
         # Get compute umap data from embedding_data
         if umap_data is None:
-            if embedding_data is None:
-                print('Computing embeddings from image...')
-                if data_loader is None:
-                    if label_data is None:
-                        raise ValueError('label_data cannot be None. Provide a 2D-array to label_data.')
-                else:
-                    label_data = data_loader.dataset.label
-                embedding_data = self.trainer.infer_embeddings(
-                    image_data if data_loader is None else data_loader,
-                    **{a: kwargs[a] for a in inspect.getfullargspec(self.trainer.infer_embeddings).args if a in kwargs},
-                )
-                if isinstance(embedding_data, tuple) and len(embedding_data) > 1:
-                    embedding_data = embedding_data[0]
-            print('Computing UMAP coordinates from embeddings...')
-            umap_data = self._transform_umap(
-                embedding_data,
-                **{a: kwargs[a] for a in inspect.getfullargspec(self._transform_umap).args if a in kwargs},
-            )
-
-        if label_data is None:
-            raise ValueError('label_data cannot be None. Provide a 2D-array to label_data.')
+            umap_data = self._compute_umap(data_loader, embedding_data, image_data)
 
         # Construct group annotation
+        label_converted, unique_groups = self._group_labels(label_data, group_col, unique_groups, group_annotation)
+
+        # Making the plot
+        scatter_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(self.plot_umap_by_group).args if a in kwargs}
+        self.fig, self.ax = self.plot_umap_by_group(umap_data, label_converted, unique_groups, **scatter_kwargs)
+
+        return umap_data
+
+    def _compute_umap(
+        self, data_loader: Optional = None, embedding_data: Optional = None, image_data: Optional = None, **kwargs
+    ):
+        """
+        Compute UMAP
+
+        Parameters
+        ----------
+        data_loader : DataLoader
+            Pytorch DataLoader that will provide both images and labels
+        embedding_data : Numpy array
+            Embedding data (will compute UMAP from the embedding data)
+        image_data : Numpy array
+            Image data (will compute embeddings, UMAP before generating a scatter plot)
+
+        Returns
+        -------
+        Numpy array of UMAP coordinates
+
+        """
+        if embedding_data is None:
+            print('Computing embeddings from image...')
+            embedding_data = self.trainer.infer_embeddings(
+                image_data if data_loader is None else data_loader,
+                **{a: kwargs[a] for a in inspect.getfullargspec(self.trainer.infer_embeddings).args if a in kwargs},
+            )
+            if isinstance(embedding_data, tuple) and len(embedding_data) > 1:
+                embedding_data = embedding_data[0]
+        print('Computing UMAP coordinates from embeddings...')
+        umap_data = self._transform_umap(
+            embedding_data,
+            **{a: kwargs[a] for a in inspect.getfullargspec(self._transform_umap).args if a in kwargs},
+        )
+        return umap_data
+
+    def _group_labels(
+        self,
+        label_data: Optional = None,
+        group_col: int = 1,
+        unique_groups: Optional = None,
+        group_annotation: Optional = None,
+    ):
+        """
+        Generate labels that has group annotation
+
+        Parameters
+        ----------
+        label_data : Numpy array
+            Label data for each data point
+        group_col : int
+            The index to be used to group labels
+        unique_groups : list or tuple
+            The unique groups to be plotted
+        group_annotation : Numpy array
+            A numpy array that has the same length with the data to be plotted having the group annotation.
+
+        Returns
+        -------
+        A tuple of numpy array
+
+        """
         if unique_groups is None:
             if group_annotation is None:
                 unique_groups = np.unique(label_data[:, group_col])
@@ -63,13 +141,11 @@ class AnalysisOpenCell(BaseAnalysis):
         if group_annotation is not None:
             label_converted[:] = 'others'
             for gp in unique_groups:
-                label_converted[np.isin(label_data, group_annotation[group_annotation[:, 1] == gp, 0])[:, 0]] = gp
-
-        # Making the plot
-        scatter_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(self.plot_umap_by_group).args if a in kwargs}
-        self.fig, self.ax = self.plot_umap_by_group(umap_data, label_converted, unique_groups, **scatter_kwargs)
-
-        return umap_data
+                label_converted[
+                    np.isin(label_data[:, group_col], group_annotation[group_annotation[:, 1] == gp, 0])
+                ] = gp
+            unique_groups = np.hstack([unique_groups, 'others'])
+        return label_converted, unique_groups
 
     def plot_umap_by_group(
         self,
