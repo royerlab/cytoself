@@ -12,7 +12,7 @@ class VQVAEFC(VQVAE):
 
     def __init__(
         self,
-        emb_shape: tuple[int, int, int],
+        emb_shape: tuple[int, int],
         vq_args: dict,
         num_class: int,
         input_shape: Optional[tuple[int, int, int]] = None,
@@ -57,11 +57,11 @@ class VQVAEFC(VQVAE):
         if fc_args is None:
             fc_args = {'num_layers': 2, 'num_features': 1000}
         if fc_input_type == 'vqind':
-            fc_args['in_channels'] = np.prod(emb_shape[1:])
+            fc_args['in_channels'] = np.prod(self.emb_shape[1:])
         elif fc_input_type == 'vqindhist':
-            fc_args['in_channels'] = vq_args['num_embeddings']
+            fc_args['in_channels'] = self.vq_args['num_embeddings']
         else:
-            fc_args['in_channels'] = np.prod(emb_shape)
+            fc_args['in_channels'] = np.prod(self.emb_shape) * self.vq_args['channel_split']
         fc_args['out_channels'] = num_class
         self.fc_layer = FCblock(**fc_args)
         self.fc_loss = None

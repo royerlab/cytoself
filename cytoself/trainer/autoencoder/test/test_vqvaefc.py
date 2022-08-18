@@ -5,11 +5,11 @@ from cytoself.trainer.autoencoder.vqvaefc import VQVAEFC
 
 def test_VQVAEFC():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    input_shape, emb_shape = (2, 100, 100), (64, 4, 4)
+    input_shape, emb_shape = (2, 100, 100), (4, 4)
     for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
         model = VQVAEFC(
             emb_shape,
-            {'num_embeddings': 7},
+            {'num_embeddings': 7, 'embedding_dim': 64},
             3,
             input_shape,
             input_shape,

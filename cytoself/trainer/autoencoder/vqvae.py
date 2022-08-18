@@ -3,6 +3,7 @@ from torch import Tensor
 
 from cytoself.components.layers.vq import VectorQuantizer
 from cytoself.trainer.autoencoder.base import BaseAE
+from cytoself.trainer.autoencoder.cytoselflite import calc_emb_dim
 
 
 class VQVAE(BaseAE):
@@ -12,7 +13,7 @@ class VQVAE(BaseAE):
 
     def __init__(
         self,
-        emb_shape: tuple[int, int, int],
+        emb_shape: tuple[int, int],
         vq_args: dict,
         input_shape: Optional[tuple[int, int, int]] = None,
         output_shape: Optional[tuple[int, int, int]] = None,
@@ -43,8 +44,11 @@ class VQVAE(BaseAE):
         decoder : decoder module
             (Optional) Custom decoder module
         """
-        super().__init__(emb_shape, input_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
-        self.vq_layer = VectorQuantizer(embedding_dim=emb_shape[0], **vq_args)
+        vq_args, emb_shape = calc_emb_dim([vq_args], [emb_shape])
+        self.vq_args, self.emb_shape = vq_args[0], emb_shape[0]
+        super().__init__(self.emb_shape, input_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
+
+        self.vq_layer = VectorQuantizer(**self.vq_args)
         self.vq_loss = None
         self.perplexity = None
         self.encoding_onehot = None

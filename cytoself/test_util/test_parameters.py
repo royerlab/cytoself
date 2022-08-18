@@ -29,9 +29,9 @@ def add_default_model_args(model_args):
 
 CYTOSELF_MODEL_ARGS = {
     'input_shape': (1, 32, 32),
-    'emb_shapes': ((16, 16, 16), (16, 16, 16)),
+    'emb_shapes': ((16, 16), (16, 16)),
     'output_shape': (1, 32, 32),
-    'vq_args': {'num_embeddings': 7},
+    'vq_args': {'num_embeddings': 7, 'embedding_dim': 16},
     'num_class': 3,
     'encoder_args': [
         {

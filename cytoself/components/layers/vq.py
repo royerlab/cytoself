@@ -5,6 +5,58 @@ import torch
 from torch import nn, Tensor
 
 
+def split_channel(z, channel_split, embedding_dim):
+    """
+    Split channel
+
+    Parameters
+    ----------
+    z : tensor
+        Pytorch tensor
+    channel_split : int
+        Number to be split
+    embedding_dim : int
+        Target embedding dimension
+
+    Returns
+    -------
+    tensor
+
+    """
+    if z.shape[1] / channel_split == embedding_dim:
+        z_t = torch.movedim(z, 1, -1)
+        return torch.movedim(
+            torch.reshape(z_t, z_t.shape[:-2] + (z_t.shape[-2] * channel_split, z_t.shape[-1] // channel_split)), -1, 1
+        )
+    else:
+        raise ValueError(
+            f'The channel dim in z (i.e. {z.shape[1]}) must be a multiple of channel_split (i.e. {channel_split} '
+            f'of embedding_dim (i.e. {embedding_dim}).'
+        )
+
+
+def unsplit_channel(z, channel_split):
+    """
+    Undo channel splitting
+
+    Parameters
+    ----------
+    z : tensor
+        Pytorch tensor
+    channel_split : int
+        Number to be split
+
+    Returns
+    -------
+    tensor
+
+    """
+    z_t = torch.movedim(z, 1, -1)
+    return torch.movedim(
+        torch.reshape(z_t, z_t.shape[:-2] + (z_t.shape[-2] // channel_split, z_t.shape[-1] * channel_split)), -1, 1
+    )
+
+
 class VectorQuantizer(nn.Module):
     """
     Vector Quantization layer
@@ -15,8 +67,9 @@ class VectorQuantizer(nn.Module):
         self,
         embedding_dim: int,
         num_embeddings: int,
+        channel_split: int = 1,
         commitment_cost: float = 0.25,
-        softmaxloss_cost: float = 1,
+        softmaxloss_cost: float = 0,
         padding_idx: Optional[int] = None,
         initializer: str = 'uniform',
         **kwargs,
@@ -30,6 +83,8 @@ class VectorQuantizer(nn.Module):
             Embedding dimension
         num_embeddings : int
             Number of embeddings
+        channel_split : int
+            Number of split in the channel dimension of input tensor
         commitment_cost : float
             Commitment cost
         softmaxloss_cost : float
@@ -44,6 +99,7 @@ class VectorQuantizer(nn.Module):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
+        self.channel_split = channel_split
         self.commitment_cost = commitment_cost
         self.softmaxloss_cost = softmaxloss_cost
         self.padding_idx = padding_idx
@@ -130,14 +186,19 @@ class VectorQuantizer(nn.Module):
 
         Returns
         -------
-        loss : length of 0
+        A tuple of dict & tensors
+        loss : a dict of losses
         quantized embeddings : same shape as z
         perplexity : length of 0
-        encoding_onehot : shape of (Batch, Code, Width, Height)
-        encoding_indices : shape of (Batch, Width, Height)
+        encoding_onehot : shape of (Batch, Code * channel_split, Width, Height)
+        encoding_indices : shape of (Batch, channel_split, Width, Height)
         index_histogram : shape of (Batch, Code index)
+        softmax_histogram : shape of (Batch, Code index)
 
         """
+        if self.channel_split > 1:
+            z = split_channel(z, self.channel_split, self.embedding_dim)
+
         distances = self._calc_dist(z)
         # Use softmax as argmax so that loss can propagate through "histogram" process.
         softmax_histogram = torch.sum(nn.Softmax(-1)(-distances).view((z.shape[0], -1, self.num_embeddings)), dim=1)
@@ -187,10 +248,10 @@ class VectorQuantizer(nn.Module):
                 'quantization_loss': quantization_loss,
                 'softmax_loss': softmax_loss,
             },
-            z_quantized,
+            unsplit_channel(z_quantized, self.channel_split),
             perplexity,
-            encoding_onehot,
-            encoding_indices.view((-1,) + z.shape[2:]),
+            unsplit_channel(encoding_onehot, self.channel_split),
+            unsplit_channel(encoding_indices.view((-1, 1) + z.shape[2:]), self.channel_split),
             index_histogram,
             softmax_histogram,
         )

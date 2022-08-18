@@ -25,11 +25,19 @@ def test_cytoselflite_trainer_embeddings(cytoselflite_trainer, opencell_datamgr_
         cytoselflite_trainer.infer_embeddings(None)
 
     out = cytoselflite_trainer.infer_embeddings(opencell_datamgr_vanilla.test_loader)
-    assert out[0].shape == (len(opencell_datamgr_vanilla.test_dataset),) + CYTOSELF_MODEL_ARGS['emb_shapes'][1]
+    assert (
+        out[0].shape
+        == (len(opencell_datamgr_vanilla.test_dataset), CYTOSELF_MODEL_ARGS['vq_args']['embedding_dim'])
+        + CYTOSELF_MODEL_ARGS['emb_shapes'][1]
+    )
 
     d = next(iter(opencell_datamgr_vanilla.test_loader))
     out = cytoselflite_trainer.infer_embeddings(d['image'].numpy())
-    assert out.shape == (opencell_datamgr_vanilla.batch_size,) + CYTOSELF_MODEL_ARGS['emb_shapes'][1]
+    assert (
+        out.shape
+        == (opencell_datamgr_vanilla.batch_size, CYTOSELF_MODEL_ARGS['vq_args']['embedding_dim'])
+        + CYTOSELF_MODEL_ARGS['emb_shapes'][1]
+    )
 
 
 def test_cytoselflite_trainer_reconstruction(cytoselflite_trainer, opencell_datamgr_vanilla, basepath):

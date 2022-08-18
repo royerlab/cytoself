@@ -11,9 +11,9 @@ from cytoself.trainer.vqvae_trainer import VQVAETrainer
 def vqvae_trainer(basepath):
     model_args = {
         'input_shape': (1, 32, 32),
-        'emb_shape': (16, 16, 16),
+        'emb_shape': (16, 16),
         'output_shape': (1, 32, 32),
-        'vq_args': {'num_embeddings': 7},
+        'vq_args': {'num_embeddings': 7, 'embedding_dim': 16},
     }
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epoch': 2}

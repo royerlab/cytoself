@@ -11,9 +11,9 @@ from cytoself.trainer.vqvaefc_trainer import VQVAEFCTrainer
 def vqvaefc_trainer(basepath):
     model_args = {
         'input_shape': (1, 32, 32),
-        'emb_shape': (16, 16, 16),
+        'emb_shape': (16, 16),
         'output_shape': (1, 32, 32),
-        'vq_args': {'num_embeddings': 7},
+        'vq_args': {'num_embeddings': 7, 'embedding_dim': 16},
         'num_class': 3,
     }
     model_args = add_default_model_args(model_args)

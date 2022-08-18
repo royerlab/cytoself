@@ -1,17 +1,47 @@
 import torch
+import pytest
 
-from cytoself.trainer.autoencoder.cytoselflite import CytoselfLite
+from cytoself.trainer.autoencoder.cytoselflite import CytoselfLite, duplicate_kwargs, calc_emb_dim, length_checker
 from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
 from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 
 
+def test_duplicate_kwargs():
+    arg1, arg2 = {'a': 1, 'b': 2}, (64, 64)
+    arg_out = duplicate_kwargs(arg1, arg2)
+    assert len(arg_out) == len(arg2)
+    assert all([a == arg1 for a in arg_out])
+
+
+def test_calc_emb_dim():
+    vq_args = [{'num_embeddings': 7}]
+    emb_shapes = [[4, 4]]
+    with pytest.raises(ValueError):
+        _, _ = calc_emb_dim(vq_args, emb_shapes)
+
+    vq_args = [{'num_embeddings': 7, 'embedding_dim': 64}]
+    vq_args_out, emb_shapes_out = calc_emb_dim(vq_args, emb_shapes)
+    assert 'channel_split' in vq_args_out[0]
+    assert vq_args_out[0]['channel_split'] == 1
+    assert emb_shapes_out == ((64, 4, 4),)
+
+    vq_args = [{'num_embeddings': 7, 'embedding_dim': 64, 'channel_split': 2}]
+    vq_args_out, emb_shapes_out = calc_emb_dim(vq_args, emb_shapes)
+    assert emb_shapes_out == ((64 * 2, 4, 4),)
+
+
+def test_length_checker():
+    with pytest.raises(ValueError):
+        length_checker([(4, 4)], [{'a': 1}, {'a': 1}])
+
+
 def test_cytoselflite():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    input_shape, emb_shape = (2, 100, 100), ((64, 25, 25), (64, 4, 4))
+    input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
         model = CytoselfLite(
             emb_shape,
-            {'num_embeddings': 7},
+            {'num_embeddings': 7, 'embedding_dim': 64},
             3,
             input_shape,
             input_shape,
@@ -29,10 +59,10 @@ def test_cytoselflite():
 
 def test_cytoselflite_encoding():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    input_shape, emb_shape = (2, 100, 100), ((64, 25, 25), (64, 4, 4))
+    input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     model = CytoselfLite(
         emb_shape,
-        {'num_embeddings': 7},
+        {'num_embeddings': 7, 'embedding_dim': 64},
         3,
         input_shape,
         input_shape,
@@ -43,17 +73,17 @@ def test_cytoselflite_encoding():
     input_data = torch.randn((1,) + input_shape).to(device)
     for i in range(2):
         out = model(input_data, f'encoder{i + 1}')
-        assert out.shape == (1,) + emb_shape[i]
+        assert out.shape == (1, 64) + emb_shape[i]
         out = model(input_data, f'vqvec{i + 1}')
-        assert out.shape == (1,) + emb_shape[i]
+        assert out.shape == (1, 64) + emb_shape[i]
         out = model(input_data, f'vqind{i + 1}')
-        assert out.shape == (1,) + emb_shape[i][1:]
+        assert out.shape == (1, 1) + emb_shape[i]
         out = model(input_data, f'vqindhist{i + 1}')
         assert out.shape == (1, 7)
 
 
 def test_cytoselflite_custom():
-    input_shape, emb_shape = (2, 100, 100), ((64, 25, 25), (64, 4, 4))
+    input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     encoders = [
         efficientenc_b0(in_channels=input_shape[0], out_channels=emb_shape[0][0]),
         efficientenc_b0(in_channels=emb_shape[0][0], out_channels=emb_shape[1][0]),
@@ -62,7 +92,7 @@ def test_cytoselflite_custom():
         DecoderResnet(input_shape=emb_shape[0], output_shape=input_shape),
         DecoderResnet(input_shape=emb_shape[1], output_shape=emb_shape[0]),
     ]
-    model = CytoselfLite(emb_shape, {'num_embeddings': 7}, 3, encoders=encoders, decoders=decoders)
+    model = CytoselfLite(emb_shape, {'num_embeddings': 7, 'embedding_dim': 64}, 3, encoders=encoders, decoders=decoders)
     for i in range(2):
         assert model.encoders[i] == encoders[i]
         assert model.decoders[i] == decoders[i]

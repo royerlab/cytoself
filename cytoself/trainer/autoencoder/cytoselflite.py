@@ -1,4 +1,5 @@
-# import re
+import inspect
+from copy import copy
 from typing import Optional, Union
 from collections.abc import Collection
 
@@ -108,28 +109,40 @@ def length_checker(var1: Collection, var2: Collection):
         raise ValueError(f'{var1=}'.split('=')[0] + ' and ' + f'{var2=}'.split('=')[0] + ' must be the same length.')
 
 
-def match_length(var1: Collection, var2: Collection, type1: Optional = None):
+def duplicate_kwargs(arg1: Collection, arg2: Collection):
     """
-    Multiply var1 by the length of var2.
+    Duplicate arg1 by the length of arg2.
 
     Parameters
     ----------
-    var1 : Collection of arguments
+    arg1 : Collection of arguments
         Encoder dependent argument whose number should match with the number of encoders
-    var2 : Collection of arguments
+    arg2 : Collection of arguments
         Encoder dependent argument whose number should match with the number of encoders
-    type1 : Instance type
-        tuple or dict or list
 
     Returns
     -------
     list
 
     """
-    if type1:
-        if isinstance(var1, type1):
-            var1 = [var1] * len(var2)
-    return var1
+    if isinstance(arg1, dict):
+        arg1 = [arg1] * len(arg2)
+    else:
+        if len(arg1) != len(arg2):
+            raise ValueError(f'The length of arg1 {len(arg1)} must match with that of arg2 {len(arg2)}.')
+    return arg1
+
+
+def calc_emb_dim(vq_args, emb_shapes):
+    vq_args = copy(vq_args)
+    emb_shapes_out = []
+    for i, varg in enumerate(vq_args):
+        if 'embedding_dim' not in varg:
+            raise ValueError('embedding_dim is required for vq_args.')
+        if 'channel_split' not in varg:
+            varg['channel_split'] = inspect.signature(VectorQuantizer).parameters['channel_split'].default
+        emb_shapes_out.append((varg['embedding_dim'] * varg['channel_split'],) + tuple(emb_shapes[i]))
+    return vq_args, tuple(emb_shapes_out)
 
 
 class CytoselfLite(nn.Module):
@@ -140,7 +153,7 @@ class CytoselfLite(nn.Module):
 
     def __init__(
         self,
-        emb_shapes: Collection[tuple[int, int, int]],
+        emb_shapes: Collection[tuple[int, int]],
         vq_args: Union[dict, Collection[dict]],
         num_class: int,
         input_shape: Optional[tuple[int, int, int]] = None,
@@ -158,15 +171,15 @@ class CytoselfLite(nn.Module):
         Parameters
         ----------
         emb_shapes : tuple or list of tuples
-            Embedding tensor shape
+            Embedding tensor shape except for channel dim
         vq_args : dict
             Additional arguments for the Vector Quantization layer
         num_class : int
             Number of output classes for fc layers
-        input_shape : tuple
+        input_shape : tuple of int
             Input tensor shape
-        output_shape : tuple
-            Output tensor shape
+        output_shape : tuple of int
+            Output tensor shape; will be same as input_shape if None.
         fc_input_type : str
             Input type for the fc layers;
             vqvec: quantized vector, vqind: quantized index, vqindhist: quantized index histogram
@@ -182,8 +195,12 @@ class CytoselfLite(nn.Module):
             (Optional) Custom decoder module
         """
         super().__init__()
+        # Check vq_args and emb_shapes and compute emb_ch_splits
+        vq_args = duplicate_kwargs(vq_args, emb_shapes)
+        vq_args, emb_shapes = calc_emb_dim(vq_args, emb_shapes)
         self.emb_shapes = emb_shapes
-        # Construct encoders (shallow to deep)
+
+        # Construct encoders (from the one close to input data to the one to far from)
         if encoders is None:
             self.encoders = self._const_encoders(input_shape, encoder_args)
         else:
@@ -191,15 +208,16 @@ class CytoselfLite(nn.Module):
 
         # Construct decoders (shallow to deep)
         if decoders is None:
+            if output_shape is None:
+                output_shape = input_shape
             self.decoders = self._const_decoders(output_shape, decoder_args)
         else:
             self.decoders = decoders
 
         # Construct VQ layers (same order as encoders)
-        vq_args = match_length(vq_args, emb_shapes, dict)
         self.vq_layers = nn.ModuleList()
-        for i, a in enumerate(vq_args):
-            self.vq_layers.append(VectorQuantizer(embedding_dim=emb_shapes[i][0], **a))
+        for i, varg in enumerate(vq_args):
+            self.vq_layers.append(VectorQuantizer(**varg))
         self.vq_loss = None
         self.perplexity = None
         self.encoding_onehot = None
@@ -209,7 +227,7 @@ class CytoselfLite(nn.Module):
         # Construct fc blocks (same order as encoders)
         if fc_args is None:
             fc_args = {'num_layers': 2, 'num_features': 1000}
-        fc_args = match_length(fc_args, emb_shapes, dict)
+        fc_args = duplicate_kwargs(fc_args, emb_shapes)
 
         self.fc_layers = nn.ModuleList()
         for i, shp in enumerate(emb_shapes):
@@ -363,6 +381,5 @@ class CytoselfLite(nn.Module):
                 decoded_final = dec(torch.cat(decoded_list, 1))
 
         # TODO: implement mse_layer for decoder2 and encoded1
-        # TODO: implement channel split
 
         return tuple([decoded_final] + fc_outs)
