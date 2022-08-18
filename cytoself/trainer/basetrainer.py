@@ -22,6 +22,18 @@ class BaseTrainer:
     """
 
     def __init__(self, train_args: dict, homepath: str = './', device: Optional[str] = None):
+        """
+        Base class for trainer
+
+        Parameters
+        ----------
+        train_args : dict
+            Training arguments
+        homepath : str
+            Path where training results will be saved
+        device : str
+            Specify device; e.g. cpu, cuda, cuda:0 etc.
+        """
         if device is None:
             self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         else:
@@ -200,12 +212,13 @@ class BaseTrainer:
         if tensorboard_path is not None:
             if self.tb_writer is None:
                 self.enable_tensorboard(tensorboard_path)
-            for tag in ['Train', 'Val', 'Test']:
-                self.tb_writer.add_scalars(
-                    tag,
-                    self.losses.filter(regex=tag.lower(), axis=1).to_dict('index')[len(self.losses) - 1],
-                    len(self.losses) - 1,
-                )
+            m_names = self.losses.columns.to_frame().iloc[:, 0].str.split('_', expand=True).iloc[:, 1].unique()
+            for tag in m_names:
+                if tag == 'loss':
+                    df = self.losses.filter(items=[f'{i}_loss' for i in ['train', 'val', 'test']], axis=1)
+                else:
+                    df = self.losses.filter(regex=tag.lower(), axis=1)
+                self.tb_writer.add_scalars(tag, df.to_dict('index')[len(self.losses) - 1], len(self.losses) - 1)
             self.tb_writer.flush()
 
     def init_savepath(self, makedirs: bool = True, **kwargs):

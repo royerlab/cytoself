@@ -23,6 +23,20 @@ class CytoselfLiteTrainer(BaseTrainer):
         homepath: str = './',
         device: Optional[str] = None,
     ):
+        """
+        Initializes cytoself lite trainer
+
+        Parameters
+        ----------
+        model_args : dict
+            Arguments for model construction
+        train_args : dict
+            Arguments for training
+        homepath : str
+            Path where training results will be saved
+        device : str
+            Specify device; e.g. cpu, cuda, cuda:0 etc.
+        """
         super().__init__(train_args, homepath, device)
         self._init_model(CytoselfLite(**model_args))
 
