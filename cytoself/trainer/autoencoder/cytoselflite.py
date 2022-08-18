@@ -289,8 +289,8 @@ class CytoselfLite(nn.Module):
     def forward(self, x: Tensor, output_layer: str = 'decoder0') -> tuple[Tensor, Tensor]:
         """
         Cytoselflite model consists of encoders & decoders such as:
-        encoder0 -> vq layer0 -> encoder1 -> vq layer1 -> ... -> decoder1 -> decoder0
-        The order in the Module list of encoders and decoders is always 0 -> 1 -> ...
+        encoder1 -> vq layer1 -> encoder2 -> vq layer2 -> ... -> decoder2 -> decoder1
+        The order in the Module list of encoders and decoders is always 1 -> 2 -> ...
 
         Parameters
         ----------
@@ -305,18 +305,18 @@ class CytoselfLite(nn.Module):
         A list of Tensors
 
         """
-        self.vq_loss = []
-        self.perplexity = []
+        self.vq_loss = {}
+        self.perplexity = {}
         self.encoding_onehot = []
         self.encoding_indices = []
         self.index_histogram = []
-        out_layer_name, out_layer_idx = output_layer[:-1], output_layer[-1]
+        out_layer_name, out_layer_idx = output_layer[:-1], int(output_layer[-1]) - 1
 
         fc_outs = []
         encoded_list = []
         for i, enc in enumerate(self.encoders):
             encoded = enc(x)
-            if out_layer_name == 'encoder' and i == int(out_layer_idx):
+            if out_layer_name == 'encoder' and i == out_layer_idx:
                 return encoded
 
             (
@@ -328,7 +328,7 @@ class CytoselfLite(nn.Module):
                 index_histogram,
                 softmax_histogram,
             ) = self.vq_layers[i](encoded)
-            if i == int(out_layer_idx):
+            if i == out_layer_idx:
                 if out_layer_name == 'vqvec':
                     return quantized
                 elif out_layer_name == 'vqind':
@@ -350,8 +350,8 @@ class CytoselfLite(nn.Module):
             self.encoding_onehot.append(encoding_onehot)
             self.encoding_indices.append(encoding_indices)
             self.index_histogram.append(index_histogram)
-            self.vq_loss.append(vq_loss)
-            self.perplexity.append(perplexity)
+            self.vq_loss[f'vq{i + 1}'] = vq_loss
+            self.perplexity[f'perplexity{i + 1}'] = perplexity
             x = encoded
 
         decoded_list = []

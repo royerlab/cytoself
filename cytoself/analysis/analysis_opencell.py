@@ -1,6 +1,6 @@
 import inspect
 from os.path import join
-from typing import Optional, Union
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,6 +27,7 @@ class AnalysisOpenCell(BaseAnalysis):
         group_col: int = 1,
         unique_groups: Optional = None,
         group_annotation: Optional = None,
+        savepath_embeddings: Optional[str] = 'default',
         **kwargs,
     ):
         """
@@ -50,6 +51,8 @@ class AnalysisOpenCell(BaseAnalysis):
             The unique groups to be plotted
         group_annotation : Numpy array
             A numpy array that has the same length with the data to be plotted having the group annotation.
+        savepath_embeddings : str or None
+            The path to save the computed embeddings in the embeddings folder
 
         """
         if data_loader is None:
@@ -60,10 +63,10 @@ class AnalysisOpenCell(BaseAnalysis):
 
         # Get compute umap data from embedding_data
         if umap_data is None:
-            umap_data = self._compute_umap(data_loader, embedding_data, image_data)
+            umap_data = self.compute_umap(data_loader, embedding_data, image_data, savepath_embeddings, **kwargs)
 
         # Construct group annotation
-        label_converted, unique_groups = self._group_labels(label_data, group_col, unique_groups, group_annotation)
+        label_converted, unique_groups = self.group_labels(label_data, group_col, unique_groups, group_annotation)
 
         # Making the plot
         scatter_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(self.plot_umap_by_group).args if a in kwargs}
@@ -71,8 +74,13 @@ class AnalysisOpenCell(BaseAnalysis):
 
         return umap_data
 
-    def _compute_umap(
-        self, data_loader: Optional = None, embedding_data: Optional = None, image_data: Optional = None, **kwargs
+    def compute_umap(
+        self,
+        data_loader: Optional = None,
+        embedding_data: Optional = None,
+        image_data: Optional = None,
+        savepath_embeddings: Optional[str] = 'default',
+        **kwargs,
     ):
         """
         Compute UMAP
@@ -85,6 +93,8 @@ class AnalysisOpenCell(BaseAnalysis):
             Embedding data (will compute UMAP from the embedding data)
         image_data : Numpy array
             Image data (will compute embeddings, UMAP before generating a scatter plot)
+        savepath_embeddings : str or None
+            The path to save the computed embeddings in the embeddings folder
 
         Returns
         -------
@@ -99,6 +109,19 @@ class AnalysisOpenCell(BaseAnalysis):
             )
             if isinstance(embedding_data, tuple) and len(embedding_data) > 1:
                 embedding_data = embedding_data[0]
+            if savepath_embeddings is not None:
+                if savepath_embeddings == 'default':
+                    savepath_embeddings = self.trainer.savepath_dict['embeddings']
+                if 'output_layer' in kwargs:
+                    fname = kwargs['output_layer']
+                else:
+                    if 'output_layer' in inspect.signature(self.trainer.infer_embeddings).parameters:
+                        fname = inspect.signature(self.trainer.infer_embeddings).parameters['output_layer'].default
+                    else:
+                        fname = 'embeddings_for_umap'
+                np.save(join(savepath_embeddings, fname + '.npy'), embedding_data)
+                print(f'embeddings {fname} have been saved at ' + savepath_embeddings)
+
         print('Computing UMAP coordinates from embeddings...')
         umap_data = self._transform_umap(
             embedding_data,
@@ -106,7 +129,7 @@ class AnalysisOpenCell(BaseAnalysis):
         )
         return umap_data
 
-    def _group_labels(
+    def group_labels(
         self,
         label_data: Optional = None,
         group_col: int = 1,
@@ -114,7 +137,7 @@ class AnalysisOpenCell(BaseAnalysis):
         group_annotation: Optional = None,
     ):
         """
-        Generate labels that has group annotation
+        Generate labels that have group annotations
 
         Parameters
         ----------
@@ -153,14 +176,14 @@ class AnalysisOpenCell(BaseAnalysis):
         label_data,
         unique_groups: Optional = None,
         colormap: str = 'tab20',
-        s: Union[float, int] = 0.2,
-        alpha: Union[float, int] = 0.1,
+        s: float = 0.2,
+        alpha: float = 0.1,
         title: str = 'UMAP',
         xlabel: str = 'umap1',
         ylabel: str = 'umap2',
         savepath: str = 'default',
         dpi: int = 300,
-        figsize: tuple[Union[float, int], Union[float, int]] = (6, 5),
+        figsize: tuple[float, float] = (6, 5),
     ):
         """
         Plot a UMAP by annotating groups in different colors

@@ -11,7 +11,7 @@ def test_VQVAE():
     input_data = torch.randn((1,) + input_shape).to(device)
     out = model(input_data)
     assert out.shape == input_data.shape
-    assert len(model.vq_loss.shape) == 0
+    assert len(model.vq_loss['loss'].shape) == 0
     assert len(model.perplexity.shape) == 0
     assert model.encoding_onehot.max() == 1
     assert model.encoding_indices.shape == input_data.shape[:1] + emb_shape[1:]

@@ -1,5 +1,6 @@
 from os.path import exists
 
+import pandas as pd
 import pytest
 import torch
 
@@ -16,7 +17,8 @@ def base_trainer(basepath):
 def test_base_trainer_init_(base_trainer, basepath):
     assert base_trainer.model is None
     assert base_trainer.best_model == []
-    assert base_trainer.losses == {}
+    assert isinstance(base_trainer.losses, pd.DataFrame)
+    assert base_trainer.losses.empty
     assert base_trainer.lr == 0
     assert base_trainer.tb_writer is None
     assert base_trainer.optimizer is None
@@ -38,15 +40,24 @@ def test_base_trainer__default_train_args(base_trainer):
 
 
 def test_calc_loss_one_batch(base_trainer):
-    assert base_trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5)) == (torch.ones(1) * 4,)
+    assert base_trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5))['loss'] == torch.ones(1) * 4
 
 
 def test_record_metrics(base_trainer):
-    base_trainer.record_metrics(1.0)
-    assert base_trainer.losses['train_loss'] == [1.0]
-    base_trainer.record_metrics([[2.0, 3.0]])
-    assert base_trainer.losses['train_loss1'] == [2.0]
-    assert base_trainer.losses['train_loss2'] == [3.0]
+    base_trainer.record_metrics(pd.DataFrame([{'train_loss': 1.0}]))
+    assert (base_trainer.losses['train_loss'] == [1.0]).all()
+    base_trainer.record_metrics([pd.DataFrame([{'train_loss': 2.0}]), pd.DataFrame([{'val_loss': 3.0}])])
+    assert base_trainer.losses['train_loss'].to_list() == [1.0, 2.0]
+    assert base_trainer.losses['val_loss'].to_list() == [0, 3.0]
+
+
+def test__aggregate_metrics(base_trainer):
+    dict_list = [{f'loss{i}': j for i in range(3)} for j in range(10)]
+    output = base_trainer._aggregate_metrics(dict_list, 'test')
+    assert isinstance(output, pd.DataFrame)
+    assert output.shape == (1, 3)
+    assert all(['test' in c for c in output.columns])
+    assert (output.values == 4.5).all()
 
 
 def test_set_optimizer(base_trainer):

@@ -93,8 +93,9 @@ Data of nucleus distance map. Size 100x100. Images were cropped with nucleus bei
 
 
 ### 2. Create and train a cytoself model
+
 ```python
-from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
+from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
 
 model_args = {
     'input_shape': (1, 100, 100),

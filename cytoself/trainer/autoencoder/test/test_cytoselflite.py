@@ -42,13 +42,13 @@ def test_cytoselflite_encoding():
     model.to(device)
     input_data = torch.randn((1,) + input_shape).to(device)
     for i in range(2):
-        out = model(input_data, f'encoder{i}')
+        out = model(input_data, f'encoder{i + 1}')
         assert out.shape == (1,) + emb_shape[i]
-        out = model(input_data, f'vqvec{i}')
+        out = model(input_data, f'vqvec{i + 1}')
         assert out.shape == (1,) + emb_shape[i]
-        out = model(input_data, f'vqind{i}')
+        out = model(input_data, f'vqind{i + 1}')
         assert out.shape == (1,) + emb_shape[i][1:]
-        out = model(input_data, f'vqindhist{i}')
+        out = model(input_data, f'vqindhist{i + 1}')
         assert out.shape == (1, 7)
 
 

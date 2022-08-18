@@ -10,16 +10,7 @@ def test_vanilla_ae_trainer_fit(vanilla_ae_trainer, opencell_datamgr_vanilla, ba
     vanilla_ae_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
     assert len(vanilla_ae_trainer.losses['train_loss']) == vanilla_ae_trainer.train_args['max_epoch']
     assert min(vanilla_ae_trainer.losses['train_loss']) < torch.inf
-
-
-def test_vanilla_ae_trainer__detach_graph(vanilla_ae_trainer, opencell_datamgr_vanilla):
-    _batch = next(iter(opencell_datamgr_vanilla.test_loader))
-    timg = vanilla_ae_trainer._get_data_by_name(_batch, 'image')
-    out = vanilla_ae_trainer.model(timg)
-    loss = vanilla_ae_trainer.calc_loss_one_batch(out, torch.ones_like(timg).to(vanilla_ae_trainer.device))
-    assert loss[0].requires_grad
-    assert vanilla_ae_trainer._detach_graph(loss[0]).requires_grad is False
-    assert vanilla_ae_trainer._detach_graph(loss[:1])[0].requires_grad is False
+    assert exists(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv'))
 
 
 def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):
@@ -64,7 +55,7 @@ def test_save_load_checkpoint(vanilla_ae_trainer, opencell_datamgr_vanilla, base
     w = deepcopy(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     torch.nn.init.zeros_(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     vanilla_ae_trainer.set_optimizer(lr=1e-3)
-    vanilla_ae_trainer.losses['train_loss'] = [1.0]
+    vanilla_ae_trainer.losses['train_loss'][:] = 1.0
 
     # load a checkpoint
     vanilla_ae_trainer.load_checkpoint()
@@ -75,12 +66,12 @@ def test_save_load_checkpoint(vanilla_ae_trainer, opencell_datamgr_vanilla, base
         vanilla_ae_trainer.optimizer.param_groups[0]['lr']
         == checkpoint['optimizer_state_dict']['param_groups'][0]['lr']
     )
-    assert vanilla_ae_trainer.losses == checkpoint['loss']
+    assert all(vanilla_ae_trainer.losses == checkpoint['loss'])
 
     # load a checkpoint with a specific epoch number
     torch.nn.init.zeros_(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     vanilla_ae_trainer.set_optimizer(lr=1e-3)
-    vanilla_ae_trainer.losses['train_loss'] = [1.0]
+    vanilla_ae_trainer.losses['train_loss'][:] = 1.0
     vanilla_ae_trainer.load_checkpoint(epoch=101)
     checkpoint = torch.load(join(chkp_path, flist[-1]))
     assert (vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight == w).all()
@@ -89,4 +80,4 @@ def test_save_load_checkpoint(vanilla_ae_trainer, opencell_datamgr_vanilla, base
         vanilla_ae_trainer.optimizer.param_groups[0]['lr']
         == checkpoint['optimizer_state_dict']['param_groups'][0]['lr']
     )
-    assert vanilla_ae_trainer.losses == checkpoint['loss']
+    assert all(vanilla_ae_trainer.losses == checkpoint['loss'])

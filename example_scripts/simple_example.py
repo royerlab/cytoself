@@ -1,5 +1,5 @@
 from cytoself.datamanager.opencell import DataManagerOpenCell
-from cytoself.trainer.cytoselflight_trainer import CytoselfLiteTrainer
+from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 
 

@@ -2,10 +2,11 @@ import inspect
 import os
 from copy import deepcopy
 from os.path import join
-from typing import Optional, Union, Collection, Sequence
+from typing import Optional, Union
 from warnings import warn
 
 from natsort import natsorted
+import pandas as pd
 from tqdm import tqdm
 import numpy as np
 
@@ -20,13 +21,7 @@ class BaseTrainer:
     Base class for Trainer
     """
 
-    def __init__(
-        self,
-        train_args: dict,
-        metrics_names: Collection[str] = ('loss',),
-        homepath: str = './',
-        device: Optional[str] = None,
-    ):
+    def __init__(self, train_args: dict, homepath: str = './', device: Optional[str] = None):
         if device is None:
             self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         else:
@@ -40,8 +35,7 @@ class BaseTrainer:
         self.optimizer = None
         self.savepath_dict = {'homepath': homepath}
         self.current_epoch = 0
-        self.metrics_names = metrics_names
-        self.losses = {}
+        self.losses = pd.DataFrame()
 
     def _init_model(self, model):
         """
@@ -75,41 +69,86 @@ class BaseTrainer:
             if key not in self.train_args:
                 self.train_args[key] = val
 
-    def calc_loss_one_batch(self, inputs, targets, **kwargs):
+    def calc_loss_one_batch(
+        self,
+        inputs: Tensor,
+        targets: Tensor,
+        zero_grad: bool = False,
+        backward: bool = False,
+        optimize: bool = False,
+        **kwargs,
+    ):
         """
         Computes loss for one batch
 
         Parameters
         ----------
-        inputs : tensor
+        inputs : torch.Tensor
             input data
-        targets : tensor
+        targets : torch.Tensor
             target data
+        zero_grad : bool
+            Sets the gradients of all optimized torch.Tensor s to zero.
+        backward : bool
+            Computes the gradient of current tensor w.r.t. graph leaves if True
+        optimize : bool
+            Performs a single optimization step if True
         kwargs : dict
             kwargs for the loss function
 
         Returns
         -------
-        Tuple of tensors
+        A dict of tensors with the loss names and loss values.
 
         """
-        return (nn.MSELoss(**kwargs)(inputs, targets),)
+        if zero_grad:
+            self.optimizer.zero_grad()
 
-    def _adaptive_record_metrics(self, key: str, metrics: float):
-        if key in self.losses:
-            self.losses[key].append(metrics)
-        else:
-            self.losses[key] = [metrics]
+        loss = nn.MSELoss(**kwargs)(inputs, targets)
 
-    def record_metrics(self, metrics: Union[float, list], phase: str = 'train'):
-        if not isinstance(metrics, list):
-            metrics = [metrics]
-        for n, l in zip(self.metrics_names, metrics):
-            if isinstance(l, list):
-                for i, _l in enumerate(l):
-                    self._adaptive_record_metrics(f'{phase}_{n}{i + 1}', _l)
-            else:
-                self._adaptive_record_metrics(f'{phase}_{n}', l)
+        if backward:
+            loss.backward()
+
+        if optimize:
+            self.optimizer.step()
+
+        return {'loss': loss.item()}
+
+    def _aggregate_metrics(self, metrics: dict, phase: str) -> dict:
+        """
+        Aggregate a list of dicts of metrics in a epoch
+
+        Parameters
+        ----------
+        metrics : dict
+            A list of metrics in dict
+        phase : str
+            train or val or test; will be on the top of the column names
+
+        Returns
+        -------
+        A DataFrame with all metrics in it.
+
+        """
+        metrics = pd.DataFrame(metrics).mean(axis=0).to_frame().T
+        metrics.columns = [phase + '_' + c for c in metrics.columns]
+        return metrics
+
+    def record_metrics(self, metrics: Union[list[pd.DataFrame], pd.DataFrame]) -> pd.DataFrame:
+        """
+        Register metrics to self.losses
+
+        Parameters
+        ----------
+        metrics : (a list of) DataFrame
+            A dataframe of metric values
+
+        """
+
+        if isinstance(metrics, list) or isinstance(metrics, tuple):
+            metrics = pd.concat(metrics, axis=1)
+        self.losses = pd.concat([self.losses, metrics], ignore_index=True, axis=0)
+        self.losses = self.losses.fillna(0)
 
     def set_optimizer(self, optimizer: Optional = None, **kwargs):
         """
@@ -118,11 +157,11 @@ class BaseTrainer:
         Parameters
         ----------
         optimizer : pytorch optimizer
-            optimizer
+            Optimizer
 
         """
         if self.model:
-            local_optimizer = optim.Adam if optimizer is None else optimizer
+            local_optimizer = optim.AdamW if optimizer is None else optimizer
             local_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(local_optimizer).args if a in kwargs}
             self.optimizer = local_optimizer(self.model.parameters(), **local_kwargs)
         else:
@@ -148,15 +187,25 @@ class BaseTrainer:
             os.makedirs(self.savepath_dict['tb_logs'])
         self.tb_writer = SummaryWriter(self.savepath_dict['tb_logs'])
 
-    def write_on_tensorboard(self, tensorboard_path: str, main_tag: str = 'Training'):
+    def write_on_tensorboard(self, tensorboard_path: str):
+        """
+        Write training history to tensorboard
+
+        Parameters
+        ----------
+        tensorboard_path : str
+            The path to save tensorboard log
+
+        """
         if tensorboard_path is not None:
             if self.tb_writer is None:
                 self.enable_tensorboard(tensorboard_path)
-            self.tb_writer.add_scalars(
-                main_tag,
-                {key: val[-1] for key, val in self.losses.items() if 'test' not in key},
-                self.current_epoch + 1,
-            )
+            for tag in ['Train', 'Val', 'Test']:
+                self.tb_writer.add_scalars(
+                    tag,
+                    self.losses.filter(regex=tag.lower(), axis=1).to_dict('index')[len(self.losses) - 1],
+                    len(self.losses) - 1,
+                )
             self.tb_writer.flush()
 
     def init_savepath(self, makedirs: bool = True, **kwargs):
@@ -175,7 +224,7 @@ class BaseTrainer:
             if makedirs and not os.path.exists(self.savepath_dict[d]):
                 os.makedirs(self.savepath_dict[d])
 
-    def train_one_epoch(self, data_loader, **kwargs):
+    def train_one_epoch(self, data_loader: DataLoader, **kwargs) -> dict:
         """
         Trains self.model for one epoch
 
@@ -184,28 +233,27 @@ class BaseTrainer:
         data_loader : DataLoader
             A DataLoader object that handles data distribution and augmentation.
 
+        Returns
+        -------
+        Training metrics
+
         """
         if self.model is None:
             raise ValueError('model is not defined.')
         else:
-            _metrics = [0] * len(self.metrics_names)
+            _metrics = []
             for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
                 timg = self._get_data_by_name(_batch, 'image')
-                self.optimizer.zero_grad()
-
-                loss = self.calc_loss_one_batch(self.model(timg), timg, **kwargs)
-                loss[0].backward()
-
-                # Adjust learning weights
-                self.optimizer.step()
+                loss = self.calc_loss_one_batch(
+                    self.model(timg), timg, zero_grad=True, backward=True, optimize=True, **kwargs
+                )
 
                 # Accumulate metrics
-                _metrics = [m + l.item() for m, l in zip(_metrics, loss)]
-            _metrics = [m / i for m in _metrics]
-            self.record_metrics(_metrics, phase='train')
+                _metrics.append(loss)
+            return self._aggregate_metrics(_metrics, 'train')
 
     @torch.inference_mode()
-    def _infer_one_epoch(self, data_loader, _model):
+    def _infer_one_epoch(self, data_loader: DataLoader, _model):
         """
         Infers the output of a given model for one epoch
 
@@ -264,7 +312,7 @@ class BaseTrainer:
         return output.to(self.device)
 
     @torch.inference_mode()
-    def calc_val_loss(self, data_loader, **kwargs):
+    def calc_val_loss(self, data_loader: DataLoader, **kwargs) -> dict:
         """
         Compute validate loss
 
@@ -275,20 +323,20 @@ class BaseTrainer:
 
         Returns
         -------
-        Validation loss
+        Validation metrics
 
         """
         if self.model is None:
             raise ValueError('model is not defined.')
         else:
-            _metrics = [0] * len(self.metrics_names)
+            _metrics = []
             for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
                 vimg = self._get_data_by_name(_batch, 'image')
                 _vloss = self.calc_loss_one_batch(self.model(vimg), vimg)
-                _metrics = [m + l.item() for m, l in zip(_metrics, _vloss)]
-            self.record_metrics(_metrics, phase='val')
+                _metrics.append(_vloss)
+            return self._aggregate_metrics(_metrics, 'val')
 
-    def _reduce_lr_on_plateau(self, count_lr_no_improve: int):
+    def _reduce_lr_on_plateau(self, count_lr_no_improve: int) -> int:
         """
         Reduces learning rate when no improvement in the training
 
@@ -314,24 +362,6 @@ class BaseTrainer:
                     return count_lr_no_improve
             else:
                 return count_lr_no_improve
-
-    def _detach_graph(self, losses: Union[Sequence[Tensor], Tensor]):
-        """
-        Detach graph from loss object to save memory
-
-        Parameters
-        ----------
-        losses : list or loss object
-
-        Returns
-        -------
-        Tensor or list of Tensor
-
-        """
-        if isinstance(losses, Tensor):
-            return losses.detach()
-        else:
-            return [loss.detach() for loss in losses]
 
     def fit(
         self,
@@ -364,12 +394,16 @@ class BaseTrainer:
                 print(f'Epoch {current_epoch}/{self.train_args["max_epoch"]}')
                 # Train the model
                 self.model.train(True)
-                self.train_one_epoch(datamanager.train_loader, **kwargs)
+                train_metrics = self.train_one_epoch(datamanager.train_loader, **kwargs)
                 self.model.train(False)
 
                 # Validate the model
-                self.calc_val_loss(datamanager.val_loader)
-                _vloss = self.losses['val_loss'][-1]
+                val_metrics = self.calc_val_loss(datamanager.val_loader)
+
+                # Register metrics
+                self.record_metrics([train_metrics, val_metrics])
+
+                _vloss = self.losses['val_loss'].iloc[-1]
 
                 # Track the best performance, and save the model's state
                 if _vloss < best_vloss:
@@ -397,6 +431,7 @@ class BaseTrainer:
                     break
 
             self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt')
+            self.losses.to_csv(join(self.savepath_dict['visualization'], 'training_history.csv'))
 
     def save_checkpoint(self, path: Optional[str] = None):
         """

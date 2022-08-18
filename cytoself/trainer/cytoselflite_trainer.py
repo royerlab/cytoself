@@ -1,9 +1,9 @@
 import inspect
 from functools import partial
-from typing import Optional, Union
+from typing import Optional
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
@@ -23,16 +23,18 @@ class CytoselfLiteTrainer(BaseTrainer):
         homepath: str = './',
         device: Optional[str] = None,
     ):
-        metrics_names = ('loss', 'mse', 'vq_loss', 'perplexity', 'fc_loss')
-        super().__init__(train_args, metrics_names, homepath, device)
+        super().__init__(train_args, homepath, device)
         self._init_model(CytoselfLite(**model_args))
 
     def calc_loss_one_batch(
         self,
-        inputs,
-        targets,
-        vq_coeff: Union[int, float] = 1,
-        fc_coeff: Union[int, float] = 1,
+        inputs: Tensor,
+        targets: Tensor,
+        vq_coeff: float = 1,
+        fc_coeff: float = 1,
+        zero_grad: bool = False,
+        backward: bool = False,
+        optimize: bool = False,
         **kwargs,
     ):
         """
@@ -40,14 +42,20 @@ class CytoselfLiteTrainer(BaseTrainer):
 
         Parameters
         ----------
-        inputs : tensor
+        inputs : torch.Tensor
             Input data
-        targets : tensor
+        targets : torch.Tensor
             Target data
         vq_coeff : float
             Coefficient for vq loss
         fc_coeff : float
             Coefficient for fc loss
+        zero_grad : bool
+            Sets the gradients of all optimized torch.Tensor s to zero.
+        backward : bool
+            Computes the gradient of current tensor w.r.t. graph leaves if True
+        optimize : bool
+            Performs a single optimization step if True
         kwargs : dict
             kwargs for loss functions
 
@@ -56,20 +64,44 @@ class CytoselfLiteTrainer(BaseTrainer):
         tuple of tensors
 
         """
+        if zero_grad:
+            self.optimizer.zero_grad()
+
         mse_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.MSELoss).args if a in kwargs}
         ce_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.CrossEntropyLoss).args if a in kwargs}
         mse_loss_fn, ce_loss_fn = nn.MSELoss(**mse_kwargs), nn.CrossEntropyLoss(**ce_kwargs)
         reconstruction_loss = mse_loss_fn(inputs[0], targets[0])
-        self.model.fc_loss = [ce_loss_fn(t, i) for t, i in zip(inputs[1:], targets[1:])]
+        self.model.fc_loss = {
+            f'fc{j + 1}_loss': ce_loss_fn(t, i) for j, (t, i) in enumerate(zip(inputs[1:], targets[1:]))
+        }
         loss = (
             reconstruction_loss
-            + vq_coeff * torch.stack(self.model.vq_loss).sum()
-            + fc_coeff * torch.stack(self.model.fc_loss).sum()
+            + vq_coeff * torch.stack([d['loss'] for d in self.model.vq_loss.values()]).sum()
+            + fc_coeff * torch.stack(list(self.model.fc_loss.values())).sum()
         )
         # TODO How to equalize losses?
-        return loss, reconstruction_loss, self.model.vq_loss, self.model.perplexity, self.model.fc_loss
 
-    def train_one_epoch(self, data_loader, **kwargs):
+        if backward:
+            loss.backward()
+
+        if optimize:
+            self.optimizer.step()
+
+        output = {
+            'loss': loss.item(),
+            'reconstruction_loss': reconstruction_loss.item(),
+        }
+        output.update({k: v.item() for k, v in self.model.fc_loss.items()})
+        output.update({k: v.item() for k, v in self.model.perplexity.items()})
+        vq_loss_dict = {}
+        for key0, val0 in self.model.vq_loss.items():
+            for key1, val1 in val0.items():
+                vq_loss_dict[key0 + '_' + key1] = val1.item()
+        output.update(vq_loss_dict)
+
+        return output
+
+    def train_one_epoch(self, data_loader: DataLoader, **kwargs):
         """
         Trains self.model for one epoch
 
@@ -79,32 +111,20 @@ class CytoselfLiteTrainer(BaseTrainer):
             A DataLoader object that handles data distribution and augmentation.
 
         """
-        _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
+        _metrics = []
         for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
             timg = self._get_data_by_name(_batch, 'image')
             tlab = self._get_data_by_name(_batch, 'label', force_float=False)
-            self.optimizer.zero_grad()
-
-            loss = self.calc_loss_one_batch(self.model(timg), [timg, tlab, tlab], **kwargs)
-            loss[0].backward()
-
-            # Adjust learning weights
-            self.optimizer.step()
-
-            # Clear graphs to save memory
-            self.model.fc_loss = self._detach_graph(self.model.fc_loss)
-            self.model.vq_loss = self._detach_graph(self.model.vq_loss)
+            loss = self.calc_loss_one_batch(
+                self.model(timg), [timg, tlab, tlab], zero_grad=True, backward=True, optimize=True, **kwargs
+            )
 
             # Accumulate metrics
-            _metrics = [
-                [_m + _l.item() for _m, _l in zip(m, l)] if isinstance(l, list) else m + l.item()
-                for m, l in zip(_metrics, loss)
-            ]
-        _metrics = [[_m / i for _m in m] if isinstance(m, list) else m / i for m in _metrics]
-        self.record_metrics(_metrics, phase='train')
+            _metrics.append(loss)
+        return self._aggregate_metrics(_metrics, 'train')
 
     @torch.inference_mode()
-    def calc_val_loss(self, data_loader, **kwargs):
+    def calc_val_loss(self, data_loader: DataLoader, **kwargs):
         """
         Compute validate loss
 
@@ -118,19 +138,16 @@ class CytoselfLiteTrainer(BaseTrainer):
         Validation loss
 
         """
-        _metrics = [0, 0, [0, 0], [0, 0], [0, 0]]
+        _metrics = []
         for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
             vimg = self._get_data_by_name(_batch, 'image')
             vlab = self._get_data_by_name(_batch, 'label', force_float=False)
             _vloss = self.calc_loss_one_batch(self.model(vimg), [vimg, vlab, vlab])
-            _metrics = [
-                [_m + _l.item() for _m, _l in zip(m, l)] if isinstance(l, list) else m + l.item()
-                for m, l in zip(_metrics, _vloss)
-            ]
-        self.record_metrics(_metrics, phase='val')
+            _metrics.append(_vloss)
+        return self._aggregate_metrics(_metrics, 'val')
 
     @torch.inference_mode()
-    def infer_embeddings(self, data, output_layer: str = 'vqvec1'):
+    def infer_embeddings(self, data, output_layer: str = 'vqvec2'):
         """
         Infers embeddings
 

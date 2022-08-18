@@ -7,7 +7,8 @@ import pytest
 
 from cytoself.datamanager.opencell import DataManagerOpenCell
 from cytoself.test_util.dummy_data_generation import gen_npy
-from cytoself.test_util.test_parameters import add_default_model_args
+from cytoself.test_util.test_parameters import add_default_model_args, CYTOSELF_MODEL_ARGS
+from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
 from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 
@@ -83,3 +84,9 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "slow" in item.keywords:
                 item.add_marker(skip_heavy)
+
+
+@pytest.fixture(scope='module')
+def cytoselflite_trainer(basepath):
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
+    return CytoselfLiteTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)

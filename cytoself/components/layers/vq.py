@@ -1,7 +1,8 @@
 from typing import Optional
+import numpy as np
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 
 
 class VectorQuantizer(nn.Module):
@@ -15,6 +16,7 @@ class VectorQuantizer(nn.Module):
         embedding_dim: int,
         num_embeddings: int,
         commitment_cost: float = 0.25,
+        softmaxloss_cost: float = 1,
         padding_idx: Optional[int] = None,
         initializer: str = 'uniform',
         **kwargs,
@@ -30,6 +32,8 @@ class VectorQuantizer(nn.Module):
             Number of embeddings
         commitment_cost : float
             Commitment cost
+        softmaxloss_cost : float
+            Coefficient for softmax loss
         padding_idx : int
             If specified, the entries at padding_idx do not contribute to the gradient;
             therefore, the embedding vector at padding_idx is not updated during training,
@@ -41,24 +45,29 @@ class VectorQuantizer(nn.Module):
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
         self.commitment_cost = commitment_cost
+        self.softmaxloss_cost = softmaxloss_cost
         self.padding_idx = padding_idx
+        self.commitment_loss = 0
+        self.quantization_loss = 0
+        self.softmax_loss = 0
 
         self.codebook = nn.Embedding(self.num_embeddings, self.embedding_dim, self.padding_idx)
         if initializer == 'uniform':
-            self.codebook.weight.data.uniform_(-1.0 / self.num_embeddings, 1.0 / self.num_embeddings)
+            limit = np.sqrt(3.0 / self.num_embeddings)
+            self.codebook.weight.data.uniform_(-limit, limit)
 
-    def _calc_dist(self, z):
+    def _calc_dist(self, z: Tensor) -> Tensor:
         """
         Computes distance between inputs and codebook.
 
         Parameters
         ----------
-        z : tensor
+        z : torch.Tensor
             Usually the output of encoder
 
         Returns
         -------
-        tensor
+        torch.Tensor
 
         """
         # reshape z -> (batch, height, width, channel) and flatten
@@ -73,45 +82,50 @@ class VectorQuantizer(nn.Module):
         )
         return distances
 
-    def _calc_metrics(self, z, z_quantized, encoding_onehot, softmax_loss=0):
+    def _calc_metrics(
+        self, z: Tensor, z_quantized: Tensor, encoding_onehot: Tensor, softmax_loss: float = 0
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         """
         Compute metrics and losses
 
         Parameters
         ----------
-        z : tensor
+        z : torch.Tensor
             Usually the output of encoder
-        z_quantized : tensor
+        z_quantized : torch.Tensor
             Quantized tensor
-        encoding_onehot : tensor
+        encoding_onehot : torch.Tensor
             Quantized tensor in onehot vector
-        softmax_loss : tensor
+        softmax_loss : torch.Tensor
             The loss between distance and quantized indices
 
         Returns
         -------
-        loss : tensor
+        loss : torch.Tensor
             Total loss from the VectorQuantizer layer
-        perplexity : tensor
+        perplexity : torch.Tensor
             Perplexity (i.e. entropy of quantized vectors)
-
+        commitment_loss : torch.Tensor
+            Commitment loss (i.e. regularizer to keep the same quantization index )
+        quantization_loss : torch.Tensor
+            Quantization loss (i.e. making better quantization)
         """
         # compute losses
         commitment_loss = torch.mean((z_quantized.detach() - z) ** 2)
         quantization_loss = torch.mean((z_quantized - z.detach()) ** 2)
-        loss = quantization_loss + self.commitment_cost * commitment_loss + softmax_loss
+        loss = quantization_loss + self.commitment_cost * commitment_loss + self.softmaxloss_cost * softmax_loss
 
         # perplexity
         avg_probs = torch.mean(encoding_onehot.float(), dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
-        return loss, perplexity
+        return loss, perplexity, commitment_loss, quantization_loss
 
-    def forward(self, z):
+    def forward(self, z: Tensor):
         """
 
         Parameters
         ----------
-        z : tensor
+        z : torch.Tensor
             input tensor; usually the output of an encoder
 
         Returns
@@ -155,7 +169,9 @@ class VectorQuantizer(nn.Module):
         ).contiguous()
 
         # compute metrics
-        loss, perplexity = self._calc_metrics(z, z_quantized, encoding_onehot, softmax_loss)
+        loss, perplexity, commitment_loss, quantization_loss = self._calc_metrics(
+            z, z_quantized, encoding_onehot, softmax_loss
+        )
         # reshape back to match original input shape
         encoding_onehot = torch.movedim(
             encoding_onehot.view((z.shape[0],) + z.shape[2:] + (self.num_embeddings,)), -1, 1
@@ -165,7 +181,12 @@ class VectorQuantizer(nn.Module):
         z_quantized = z + (z_quantized - z).detach()
 
         return (
-            loss,
+            {
+                'loss': loss,
+                'commitment_loss': commitment_loss,
+                'quantization_loss': quantization_loss,
+                'softmax_loss': softmax_loss,
+            },
             z_quantized,
             perplexity,
             encoding_onehot,

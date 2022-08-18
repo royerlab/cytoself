@@ -10,7 +10,9 @@ def test_VectorQuantizer():
 
     data = torch.randn((5, embedding_dim, 4, 4), dtype=torch.float32)
     out = vq(data)
-    assert len(out[0].shape) == 0
+    assert len(out[0]) == 4
+    for k, v in out[0].items():
+        assert len(v.shape) == 0
     assert out[1].shape == data.shape
     assert len(out[2].shape) == 0
     assert out[3].max() == 1
