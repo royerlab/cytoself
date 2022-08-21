@@ -11,6 +11,8 @@ def test_duplicate_kwargs():
     arg_out = duplicate_kwargs(arg1, arg2)
     assert len(arg_out) == len(arg2)
     assert all([a == arg1 for a in arg_out])
+    with pytest.raises(ValueError):
+        duplicate_kwargs((arg1,), arg2)
 
 
 def test_calc_emb_dim():

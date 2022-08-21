@@ -367,7 +367,7 @@ def _assert_dtype(label, label_format):
     if (
         label_format is None
         and isinstance(label, np.ndarray)
-        and not (np.issubdtype(label, np.number) or np.issubdtype(label, bool))
+        and not (np.issubdtype(label.dtype, np.number) or np.issubdtype(label.dtype, bool))
     ):
         raise TypeError(f'label must be numerical to use dataloader, instead {label.dtype} is given.')
 

@@ -1,5 +1,4 @@
 import inspect
-import os
 from os.path import exists, join
 from contextlib import contextmanager
 import pytest
@@ -85,7 +84,6 @@ def test_plot_umap_of_embedding_vector_umapdata(analysis_opencell, _file_name, _
     assert exists(_file_name)
     assert output.shape == (100, 2)
     assert isinstance(analysis_opencell.fig, type(plt.figure()))
-    os.remove(_file_name)
 
 
 def test_plot_umap_of_embedding_vector_embedding(analysis_opencell, _file_name, _label_data):
@@ -102,7 +100,6 @@ def test_plot_umap_of_embedding_vector_embedding(analysis_opencell, _file_name, 
         )
     assert exists(_file_name)
     assert output.shape == (100, 2)
-    os.remove(_file_name)
 
 
 def test_plot_umap_of_embedding_vector_image(analysis_opencell, _file_name, opencell_datamgr_vanilla):
@@ -111,15 +108,13 @@ def test_plot_umap_of_embedding_vector_image(analysis_opencell, _file_name, open
         output = analysis_opencell.plot_umap_of_embedding_vector(
             label_data=opencell_datamgr_vanilla.test_loader.dataset.label,
             image_data=opencell_datamgr_vanilla.test_loader.dataset.data,
-            savepath=_file_name,
             title='fig title',
             xlabel='x axis',
             ylabel='y axis',
             show_legend=True,
         )
-    assert exists(_file_name)
+    assert exists(join(analysis_opencell.savepath_dict['umap_figures'], 'fig title.png'))
     assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
-    os.remove(_file_name)
 
 
 def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name, opencell_datamgr_vanilla):
@@ -140,4 +135,3 @@ def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name,
     assert exists(_file_name)
     assert exists(join(join(analysis_opencell.trainer.savepath_dict['embeddings'], 'embeddings_for_umap.npy')))
     assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
-    os.remove(_file_name)

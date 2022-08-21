@@ -1,3 +1,4 @@
+import pytest
 import torch
 from cytoself.components.layers.vq import VectorQuantizer, split_channel, unsplit_channel
 
@@ -7,6 +8,8 @@ def test_split_channel():
     zz = split_channel(z, 2, 5)
     assert (z[:, :5, ...] == zz[..., ::2]).all()
     assert (z[:, 5:, ...] == zz[..., 1::2]).all()
+    with pytest.raises(ValueError):
+        split_channel(z, 3, 5)
 
 
 def test_unsplit_channel():

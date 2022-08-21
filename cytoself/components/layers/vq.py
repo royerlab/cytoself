@@ -5,13 +5,13 @@ import torch
 from torch import nn, Tensor
 
 
-def split_channel(z, channel_split, embedding_dim):
+def split_channel(z: Tensor, channel_split: int, embedding_dim: int) -> Tensor:
     """
     Split channel
 
     Parameters
     ----------
-    z : tensor
+    z : torch.Tensor
         Pytorch tensor
     channel_split : int
         Number to be split
@@ -20,7 +20,7 @@ def split_channel(z, channel_split, embedding_dim):
 
     Returns
     -------
-    tensor
+    torch.Tensor
 
     """
     if z.shape[1] / channel_split == embedding_dim:
@@ -35,20 +35,20 @@ def split_channel(z, channel_split, embedding_dim):
         )
 
 
-def unsplit_channel(z, channel_split):
+def unsplit_channel(z: Tensor, channel_split: int) -> Tensor:
     """
     Undo channel splitting
 
     Parameters
     ----------
-    z : tensor
+    z : torch.Tensor
         Pytorch tensor
     channel_split : int
         Number to be split
 
     Returns
     -------
-    tensor
+    torch.Tensor
 
     """
     z_t = torch.movedim(z, 1, -1)
