@@ -38,4 +38,4 @@ def vanilla_ae_trainer_plateau(basepath):
 def test__reduce_lr_on_plateau(vanilla_ae_trainer_plateau, opencell_datamgr_vanilla, basepath):
     vanilla_ae_trainer_plateau.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
     assert round(vanilla_ae_trainer_plateau.optimizer.param_groups[0]['lr'], 9) == 1e-9
-    assert len(vanilla_ae_trainer_plateau.losses['train_loss']) == 4
+    assert len(vanilla_ae_trainer_plateau.history['train_loss']) == 4

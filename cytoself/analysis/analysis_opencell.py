@@ -1,6 +1,6 @@
 import inspect
 from os.path import join
-from typing import Optional
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -175,7 +175,7 @@ class AnalysisOpenCell(BaseAnalysis):
         umap_data,
         label_data,
         unique_groups: Optional = None,
-        colormap: str = 'tab20',
+        colormap: Union[str, tuple] = 'tab20_others',
         s: float = 0.2,
         alpha: float = 0.1,
         title: str = 'UMAP',
@@ -195,8 +195,9 @@ class AnalysisOpenCell(BaseAnalysis):
         label_data : Numpy array
             Label data; has the same length with UMAP data
         unique_groups
-        colormap : str
-            Name of a color map
+        colormap : str or tuple of tuples
+            Name of a color map or colormap in RGB or RGBA
+            If colormap contains '_others' in its name, the data points labeled with 'others' will be in light gray.
         s : float or int
             Size of data points
         alpha : float or int
@@ -221,19 +222,28 @@ class AnalysisOpenCell(BaseAnalysis):
         """
         if savepath == 'default':
             savepath = join(self.savepath_dict['umap_figures'], title + '.png')
-        cmap = cm.get_cmap(colormap).colors
+        if isinstance(colormap, str):
+            cmap = cm.get_cmap(colormap.replace('_others', '')).colors
+        else:
+            cmap = colormap
         if unique_groups is None:
             unique_groups = np.unique(label_data)
 
         fig, ax = plt.subplots(1, figsize=figsize)
-        for i, gp in enumerate(unique_groups):
+        i = 0
+        for gp in unique_groups:
+            if '_others' in colormap and gp == 'others':
+                _c = cm.Greys(25)
+            else:
+                _c = cmap[i % len(cmap)]
+                i += 1
             ind = label_data == gp
             ax.scatter(
                 umap_data[ind, 0],
                 umap_data[ind, 1],
                 s=s,
                 alpha=alpha,
-                c=np.array(cmap[i % len(cmap)]).reshape(1, -1),
+                c=np.array(_c).reshape(1, -1),
                 label=gp,
             )
         ax.spines['top'].set_visible(False)

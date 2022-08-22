@@ -2,15 +2,17 @@ import os
 from copy import deepcopy
 from os.path import join, exists, splitext
 
+import pandas as pd
 import torch
 from natsort import natsorted
 
 
 def test_vanilla_ae_trainer_fit(vanilla_ae_trainer, opencell_datamgr_vanilla, basepath):
     vanilla_ae_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
-    assert len(vanilla_ae_trainer.losses['train_loss']) == vanilla_ae_trainer.train_args['max_epoch']
-    assert min(vanilla_ae_trainer.losses['train_loss']) < torch.inf
+    assert len(vanilla_ae_trainer.history['train_loss']) == vanilla_ae_trainer.train_args['max_epoch']
+    assert min(vanilla_ae_trainer.history['train_loss']) < torch.inf
     assert exists(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv'))
+    assert pd.read_csv(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv')).shape == (2, 2)
 
 
 def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):
@@ -55,29 +57,29 @@ def test_save_load_checkpoint(vanilla_ae_trainer, opencell_datamgr_vanilla, base
     w = deepcopy(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     torch.nn.init.zeros_(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     vanilla_ae_trainer.set_optimizer(lr=1e-3)
-    vanilla_ae_trainer.losses['train_loss'][:] = 1.0
+    vanilla_ae_trainer.history['train_loss'][:] = 1.0
 
     # load a checkpoint
     vanilla_ae_trainer.load_checkpoint()
     checkpoint = torch.load(join(chkp_path, flist[-1]))
     assert (vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight == w).all()
-    assert vanilla_ae_trainer.current_epoch == int(splitext(flist[-1])[0].split('_ep')[-1]) - 1
+    assert vanilla_ae_trainer.current_epoch == int(splitext(flist[-1])[0].split('_ep')[-1])
     assert (
         vanilla_ae_trainer.optimizer.param_groups[0]['lr']
         == checkpoint['optimizer_state_dict']['param_groups'][0]['lr']
     )
-    assert all(vanilla_ae_trainer.losses == checkpoint['loss'])
+    assert all(vanilla_ae_trainer.history == checkpoint['history'])
 
     # load a checkpoint with a specific epoch number
     torch.nn.init.zeros_(vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight)
     vanilla_ae_trainer.set_optimizer(lr=1e-3)
-    vanilla_ae_trainer.losses['train_loss'][:] = 1.0
+    vanilla_ae_trainer.history['train_loss'][:] = 1.0
     vanilla_ae_trainer.load_checkpoint(epoch=101)
     checkpoint = torch.load(join(chkp_path, flist[-1]))
     assert (vanilla_ae_trainer.model.decoder.decoder.resrep1last.conv.weight == w).all()
-    assert vanilla_ae_trainer.current_epoch == int(splitext(flist[-1])[0].split('_ep')[-1]) - 1
+    assert vanilla_ae_trainer.current_epoch == int(splitext(flist[-1])[0].split('_ep')[-1])
     assert (
         vanilla_ae_trainer.optimizer.param_groups[0]['lr']
         == checkpoint['optimizer_state_dict']['param_groups'][0]['lr']
     )
-    assert all(vanilla_ae_trainer.losses == checkpoint['loss'])
+    assert all(vanilla_ae_trainer.history == checkpoint['history'])

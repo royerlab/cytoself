@@ -23,6 +23,6 @@ def vqvaefc_trainer(basepath):
 
 def test_vqvaefc_trainer_fit(vqvaefc_trainer, opencell_datamgr_vanilla, basepath):
     vqvaefc_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
-    assert len(vqvaefc_trainer.losses['train_loss']) == vqvaefc_trainer.train_args['max_epoch']
-    assert min(vqvaefc_trainer.losses['train_loss']) < torch.inf
-    assert min(vqvaefc_trainer.losses['train_vq_loss']) < torch.inf
+    assert len(vqvaefc_trainer.history['train_loss']) == vqvaefc_trainer.train_args['max_epoch']
+    assert min(vqvaefc_trainer.history['train_loss']) < torch.inf
+    assert min(vqvaefc_trainer.history['train_vq_loss']) < torch.inf

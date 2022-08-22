@@ -17,13 +17,13 @@ def base_trainer(basepath):
 def test_base_trainer_init_(base_trainer, basepath):
     assert base_trainer.model is None
     assert base_trainer.best_model == []
-    assert isinstance(base_trainer.losses, pd.DataFrame)
-    assert base_trainer.losses.empty
+    assert isinstance(base_trainer.history, pd.DataFrame)
+    assert base_trainer.history.empty
     assert base_trainer.lr == 0
     assert base_trainer.tb_writer is None
     assert base_trainer.optimizer is None
     assert base_trainer.savepath_dict['homepath'] == basepath
-    assert base_trainer.current_epoch == 0
+    assert base_trainer.current_epoch == 1
 
 
 def test_base_trainer__default_train_args(base_trainer):
@@ -45,10 +45,10 @@ def test_calc_loss_one_batch(base_trainer):
 
 def test_record_metrics(base_trainer):
     base_trainer.record_metrics(pd.DataFrame([{'train_loss': 1.0}]))
-    assert (base_trainer.losses['train_loss'] == [1.0]).all()
+    assert (base_trainer.history['train_loss'] == [1.0]).all()
     base_trainer.record_metrics([pd.DataFrame([{'train_loss': 2.0}]), pd.DataFrame([{'val_loss': 3.0}])])
-    assert base_trainer.losses['train_loss'].to_list() == [1.0, 2.0]
-    assert base_trainer.losses['val_loss'].to_list() == [0, 3.0]
+    assert base_trainer.history['train_loss'].to_list() == [1.0, 2.0]
+    assert base_trainer.history['val_loss'].to_list() == [0, 3.0]
 
 
 def test__aggregate_metrics(base_trainer):

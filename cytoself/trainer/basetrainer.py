@@ -46,8 +46,8 @@ class BaseTrainer:
         self.tb_writer = None
         self.optimizer = None
         self.savepath_dict = {'homepath': homepath}
-        self.current_epoch = 0
-        self.losses = pd.DataFrame()
+        self.current_epoch = 1
+        self.history = pd.DataFrame()
 
     def _init_model(self, model):
         """
@@ -148,7 +148,7 @@ class BaseTrainer:
 
     def record_metrics(self, metrics: Union[list[pd.DataFrame], pd.DataFrame]) -> pd.DataFrame:
         """
-        Register metrics to self.losses
+        Register metrics to self.history
 
         Parameters
         ----------
@@ -159,8 +159,8 @@ class BaseTrainer:
 
         if isinstance(metrics, list) or isinstance(metrics, tuple):
             metrics = pd.concat(metrics, axis=1)
-        self.losses = pd.concat([self.losses, metrics], ignore_index=True, axis=0)
-        self.losses = self.losses.fillna(0)
+        self.history = pd.concat([self.history, metrics], ignore_index=True, axis=0)
+        self.history = self.history.fillna(0)
 
     def set_optimizer(self, optimizer: Optional = None, **kwargs):
         """
@@ -212,13 +212,13 @@ class BaseTrainer:
         if tensorboard_path is not None:
             if self.tb_writer is None:
                 self.enable_tensorboard(tensorboard_path)
-            m_names = self.losses.columns.to_frame().iloc[:, 0].str.split('_', expand=True).iloc[:, 1].unique()
+            m_names = self.history.columns.to_frame().iloc[:, 0].str.split('_', expand=True).iloc[:, 1].unique()
             for tag in m_names:
                 if tag == 'loss':
-                    df = self.losses.filter(items=[f'{i}_loss' for i in ['train', 'val', 'test']], axis=1)
+                    df = self.history.filter(items=[f'{i}_loss' for i in ['train', 'val', 'test']], axis=1)
                 else:
-                    df = self.losses.filter(regex=tag.lower(), axis=1)
-                self.tb_writer.add_scalars(tag, df.to_dict('index')[len(self.losses) - 1], len(self.losses) - 1)
+                    df = self.history.filter(regex=tag.lower(), axis=1)
+                self.tb_writer.add_scalars(tag, df.to_dict('index')[len(self.history) - 1], len(self.history))
             self.tb_writer.flush()
 
     def init_savepath(self, makedirs: bool = True, **kwargs):
@@ -379,7 +379,7 @@ class BaseTrainer:
     def fit(
         self,
         datamanager,
-        initial_epoch: int = 0,
+        initial_epoch: int = 1,
         tensorboard_path: Optional[str] = None,
         **kwargs,
     ):
@@ -400,10 +400,11 @@ class BaseTrainer:
             raise ValueError('model is not defined.')
         else:
             self.current_epoch = initial_epoch
-            best_vloss = torch.inf if 'val_loss' not in self.losses else min(self.losses['val_loss'])
+            best_vloss = torch.inf if 'val_loss' not in self.history else min(self.history['val_loss'])
             count_lr_no_improve = 0
             count_early_stop = 0
-            for current_epoch in range(self.current_epoch, self.train_args['max_epoch']):
+            for current_epoch in range(self.current_epoch, self.train_args['max_epoch'] + 1):
+                self.current_epoch = current_epoch
                 print(f'Epoch {current_epoch}/{self.train_args["max_epoch"]}')
                 # Train the model
                 self.model.train(True)
@@ -416,7 +417,7 @@ class BaseTrainer:
                 # Register metrics
                 self.record_metrics([train_metrics, val_metrics])
 
-                _vloss = self.losses['val_loss'].iloc[-1]
+                _vloss = self.history['val_loss'].iloc[-1]
 
                 # Track the best performance, and save the model's state
                 if _vloss < best_vloss:
@@ -436,15 +437,14 @@ class BaseTrainer:
                 if tensorboard_path is not None:
                     tensorboard_path = join(self.savepath_dict['homepath'], tensorboard_path)
                 self.write_on_tensorboard(tensorboard_path)
-                self.current_epoch = current_epoch
 
                 # Check for early stopping
                 if count_early_stop >= self.train_args['earlystop_patience']:
                     print('Early stopping.')
                     break
 
-            self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch + 1}.pt')
-            self.losses.to_csv(join(self.savepath_dict['visualization'], 'training_history.csv'))
+            self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch}.pt')
+            self.history.to_csv(join(self.savepath_dict['visualization'], 'training_history.csv'), index=False)
 
     def save_checkpoint(self, path: Optional[str] = None):
         """
@@ -458,13 +458,13 @@ class BaseTrainer:
         """
         if path is None:
             path = self.savepath_dict['checkpoints']
-        fpath = join(path, f'checkpoint_ep{self.current_epoch + 1}.chkp')
+        fpath = join(path, f'checkpoint_ep{self.current_epoch}.chkp')
         torch.save(
             {
                 'epoch': self.current_epoch,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
-                'loss': self.losses,
+                'history': self.history,
             },
             fpath,
         )
@@ -482,7 +482,7 @@ class BaseTrainer:
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.current_epoch = checkpoint['epoch']
-        self.losses = checkpoint['loss']
+        self.history = checkpoint['history']
         print(fpath + ' has been loaded.')
 
     def save_model(

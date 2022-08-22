@@ -77,7 +77,6 @@ def test_plot_umap_of_embedding_vector_umapdata(analysis_opencell, _file_name, _
             title='fig title',
             xlabel='x axis',
             ylabel='y axis',
-            show_legend=True,
             figsize=(6, 5),
             dpi=100,
         )
@@ -96,7 +95,7 @@ def test_plot_umap_of_embedding_vector_embedding(analysis_opencell, _file_name, 
             title='fig title',
             xlabel='x axis',
             ylabel='y axis',
-            show_legend=True,
+            colormap='tab20',
         )
     assert exists(_file_name)
     assert output.shape == (100, 2)
@@ -111,7 +110,7 @@ def test_plot_umap_of_embedding_vector_image(analysis_opencell, _file_name, open
             title='fig title',
             xlabel='x axis',
             ylabel='y axis',
-            show_legend=True,
+            colormap='tab10',
         )
     assert exists(join(analysis_opencell.savepath_dict['umap_figures'], 'fig title.png'))
     assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
@@ -130,7 +129,7 @@ def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name,
             title='fig title',
             xlabel='x axis',
             ylabel='y axis',
-            show_legend=True,
+            colormap=((0.5, 0.1, 0.2, 0.7), (0.2, 0.6, 0.4, 0.5)),
         )
     assert exists(_file_name)
     assert exists(join(join(analysis_opencell.trainer.savepath_dict['embeddings'], 'embeddings_for_umap.npy')))

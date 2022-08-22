@@ -22,6 +22,6 @@ def vqvae_trainer(basepath):
 
 def test_vqvae_trainer_fit(vqvae_trainer, opencell_datamgr_vanilla, basepath):
     vqvae_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
-    assert len(vqvae_trainer.losses['train_loss']) == vqvae_trainer.train_args['max_epoch']
-    assert min(vqvae_trainer.losses['train_loss']) < torch.inf
-    assert min(vqvae_trainer.losses['train_vq_loss']) < torch.inf
+    assert len(vqvae_trainer.history['train_loss']) == vqvae_trainer.train_args['max_epoch']
+    assert min(vqvae_trainer.history['train_loss']) < torch.inf
+    assert min(vqvae_trainer.history['train_vq_loss']) < torch.inf
