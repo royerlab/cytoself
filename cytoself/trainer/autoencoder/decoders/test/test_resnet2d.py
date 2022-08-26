@@ -41,3 +41,8 @@ def test_DecoderResnet():
             test_Conv2dBN(getattr(model.decoder, key))
         elif key == 'resrep1':
             test_ResidualBlockRepeat(getattr(model.decoder, key))
+        elif key == 'resrep3last':
+            last_layer = getattr(model.decoder, key)
+            assert last_layer.act is None
+            assert last_layer.bn is None
+            assert isinstance(last_layer.conv, nn.Conv2d)

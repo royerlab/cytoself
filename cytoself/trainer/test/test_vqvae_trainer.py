@@ -16,7 +16,7 @@ def vqvae_trainer(basepath):
         'vq_args': {'num_embeddings': 7, 'embedding_dim': 16},
     }
     model_args = add_default_model_args(model_args)
-    train_args = {'lr': 1e-6, 'max_epoch': 2}
+    train_args = {'lr': 1e-6, 'max_epoch': 2, 'optimizer': torch.optim.SGD}
     return VQVAETrainer(model_args, train_args, homepath=basepath)
 
 

@@ -103,9 +103,6 @@ class VectorQuantizer(nn.Module):
         self.commitment_cost = commitment_cost
         self.softmaxloss_cost = softmaxloss_cost
         self.padding_idx = padding_idx
-        self.commitment_loss = 0
-        self.quantization_loss = 0
-        self.softmax_loss = 0
 
         self.codebook = nn.Embedding(self.num_embeddings, self.embedding_dim, self.padding_idx)
         if initializer == 'uniform':
@@ -174,7 +171,7 @@ class VectorQuantizer(nn.Module):
         # perplexity
         avg_probs = torch.mean(encoding_onehot.float(), dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs * torch.log(avg_probs + 1e-10)))
-        return loss, perplexity, commitment_loss, quantization_loss
+        return loss, perplexity.detach(), commitment_loss.detach(), quantization_loss.detach()
 
     def forward(self, z: Tensor):
         """
@@ -246,7 +243,7 @@ class VectorQuantizer(nn.Module):
                 'loss': loss,
                 'commitment_loss': commitment_loss,
                 'quantization_loss': quantization_loss,
-                'softmax_loss': softmax_loss,
+                'softmax_loss': softmax_loss.detach(),
             },
             unsplit_channel(z_quantized, self.channel_split),
             perplexity,

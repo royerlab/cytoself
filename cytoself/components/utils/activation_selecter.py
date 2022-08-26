@@ -4,6 +4,7 @@ _ACT_DICT = {
     'relu': nn.ReLU,
     'lrelu': nn.LeakyReLU,
     'swish': nn.SiLU,
+    'silu': nn.SiLU,
     'hswish': nn.Hardswish,
     'mish': nn.Mish,
     'sigmoid': nn.Sigmoid,

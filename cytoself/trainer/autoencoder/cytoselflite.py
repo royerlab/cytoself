@@ -220,9 +220,6 @@ class CytoselfLite(nn.Module):
             self.vq_layers.append(VectorQuantizer(**varg))
         self.vq_loss = None
         self.perplexity = None
-        self.encoding_onehot = None
-        self.encoding_indices = None
-        self.index_histogram = None
 
         # Construct fc blocks (same order as encoders)
         if fc_args is None:
@@ -292,16 +289,22 @@ class CytoselfLite(nn.Module):
 
         """
         if decoder_args is None:
-            decoder_args = [{}, {}]
+            decoder_args = [{}] * len(self.emb_shapes)
 
         decoders = nn.ModuleList()
         for i, shp in enumerate(self.emb_shapes):
             if i == 0:
                 shp = (sum(i[0] for i in self.emb_shapes),) + shp[1:]
-            decoder_args[i].update(
-                {'input_shape': shp, 'output_shape': output_shape if i == 0 else self.emb_shapes[i - 1]}
-            )
-            decoders.append(DecoderResnet(**decoder_args[i]))
+                decoder_args[i].update(
+                    {
+                        'input_shape': shp,
+                        'output_shape': output_shape if i == 0 else self.emb_shapes[i - 1],
+                        'linear_output': i == 0,
+                    }
+                )
+                decoders.append(DecoderResnet(**decoder_args[i]))
+            else:
+                decoders.append(nn.Module())
         return decoders
 
     def forward(self, x: Tensor, output_layer: str = 'decoder0') -> tuple[Tensor, Tensor]:
@@ -325,9 +328,6 @@ class CytoselfLite(nn.Module):
         """
         self.vq_loss = {}
         self.perplexity = {}
-        self.encoding_onehot = []
-        self.encoding_indices = []
-        self.index_histogram = []
         out_layer_name, out_layer_idx = output_layer[:-1], int(output_layer[-1]) - 1
 
         fc_outs = []
@@ -341,23 +341,23 @@ class CytoselfLite(nn.Module):
                 vq_loss,
                 quantized,
                 perplexity,
-                encoding_onehot,
-                encoding_indices,
-                index_histogram,
+                _,
+                _encoding_indices,
+                _index_histogram,
                 softmax_histogram,
             ) = self.vq_layers[i](encoded)
             if i == out_layer_idx:
                 if out_layer_name == 'vqvec':
                     return quantized
                 elif out_layer_name == 'vqind':
-                    return encoding_indices
+                    return _encoding_indices
                 elif out_layer_name == 'vqindhist':
-                    return index_histogram
+                    return _index_histogram
 
             if self.fc_input_type == 'vqvec':
                 fcout = self.fc_layers[i](quantized.view(quantized.size(0), -1))
             elif self.fc_input_type == 'vqind':
-                fcout = self.fc_layers[i](encoding_indices.view(encoding_indices.size(0), -1))
+                fcout = self.fc_layers[i](_encoding_indices.view(_encoding_indices.size(0), -1))
             elif self.fc_input_type == 'vqindhist':
                 fcout = self.fc_layers[i](softmax_histogram)
             else:
@@ -365,20 +365,17 @@ class CytoselfLite(nn.Module):
 
             fc_outs.append(fcout)
             encoded_list.append(encoded)
-            self.encoding_onehot.append(encoding_onehot)
-            self.encoding_indices.append(encoding_indices)
-            self.index_histogram.append(index_histogram)
             self.vq_loss[f'vq{i + 1}'] = vq_loss
             self.perplexity[f'perplexity{i + 1}'] = perplexity
             x = encoded
 
-        decoded_list = []
+        decoding_list = []
         for i, (encd, dec) in enumerate(zip(encoded_list[::-1], self.decoders[::-1])):
             if i < len(self.decoders) - 1:
-                decoded_list.append(resize(encd, self.emb_shapes[0][1:], interpolation=InterpolationMode.NEAREST))
+                decoding_list.append(resize(encd, self.emb_shapes[0][1:], interpolation=InterpolationMode.NEAREST))
             else:
-                decoded_list.append(encd)
-                decoded_final = dec(torch.cat(decoded_list, 1))
+                decoding_list.append(encd)
+                decoded_final = dec(torch.cat(decoding_list, 1))
 
         # TODO: implement mse_layer for decoder2 and encoded1
 

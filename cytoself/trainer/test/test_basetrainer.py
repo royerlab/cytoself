@@ -60,9 +60,22 @@ def test__aggregate_metrics(base_trainer):
     assert (output.values == 4.5).all()
 
 
-def test_set_optimizer(base_trainer):
+def test_set_optimizer(base_trainer, basepath):
     with pytest.raises(ValueError):
         base_trainer.set_optimizer()
+
+    from cytoself.test_util.test_parameters import add_default_model_args
+    from cytoself.trainer.vanilla_trainer import VanillaAETrainer
+
+    model_args = {
+        'input_shape': (1, 32, 32),
+        'emb_shape': (16, 16, 16),
+        'output_shape': (1, 32, 32),
+    }
+    model_args = add_default_model_args(model_args)
+    train_args = {'lr': 1e-6, 'max_epoch': 2, 'optimizer': 'SGD'}
+    with pytest.raises(ValueError):
+        VanillaAETrainer(model_args, train_args, homepath=basepath)
 
 
 def test_enable_tensorboard(base_trainer):

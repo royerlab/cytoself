@@ -51,20 +51,26 @@ class VQVAE(BaseAE):
         self.vq_layer = VectorQuantizer(**self.vq_args)
         self.vq_loss = None
         self.perplexity = None
-        self.encoding_onehot = None
-        self.encoding_indices = None
-        self.index_histogram = None
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor, output_layer: str = 'decoder') -> Tensor:
         x = self.encoder(x)
+        if output_layer == 'encoder':
+            return x
         (
             self.vq_loss,
-            x,
+            quantized,
             self.perplexity,
-            self.encoding_onehot,
-            self.encoding_indices,
-            self.index_histogram,
+            _,
+            encoding_indices,
+            index_histogram,
             _,
         ) = self.vq_layer(x)
+        if output_layer == 'vqvec':
+            return quantized
+        elif output_layer == 'vqind':
+            return encoding_indices
+        elif output_layer == 'vqindhist':
+            return index_histogram
+
         x = self.decoder(x)
         return x

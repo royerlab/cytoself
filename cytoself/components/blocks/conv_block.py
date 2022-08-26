@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from torch import nn
 from warnings import warn
 
@@ -44,7 +44,7 @@ class Conv2dBN(nn.Module):
         out_channels: int,
         kernel_size: int = 3,
         stride: int = 1,
-        act: str = 'swish',
+        act: Optional[str] = 'swish',
         pad: Union[int, str, tuple] = 'same',
         conv_gp: Union[int, str] = 1,
         dilation: int = 1,
@@ -63,8 +63,8 @@ class Conv2dBN(nn.Module):
             Size of the convolving kernel
         stride : int
             Stride of the convolution. Default: 1
-        act : str
-            Activation function
+        act : str or None
+            Name of an activation function or no activation if None
         pad : int or str or tuple
             Padding added to all four sides of the input. Default: 'same'
         conv_gp : int or str
@@ -94,11 +94,12 @@ class Conv2dBN(nn.Module):
             groups=conv_gp,
             bias=use_bias,
         )
-        self.bn = nn.BatchNorm2d(out_channels, affine=bn_affine)
-        self.act = act_layer(act)
+        self.bn = None if act is None else nn.BatchNorm2d(out_channels, affine=bn_affine)
+        self.act = act if act is None else act_layer(act)
 
     def forward(self, x):
         x = self.conv(x)
-        x = self.bn(x)
-        x = self.act(x)
+        if self.act is not None:
+            x = self.bn(x)
+            x = self.act(x)
         return x

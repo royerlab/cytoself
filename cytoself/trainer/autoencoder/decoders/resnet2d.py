@@ -24,6 +24,7 @@ class DecoderResnet(nn.Module):
         use_upsampling: bool = True,
         use_depthwise: bool = False,
         name: str = 'decoder',
+        linear_output: bool = True,
         **kwargs,
     ) -> None:
         """
@@ -55,6 +56,8 @@ class DecoderResnet(nn.Module):
             Use depthwise convolution if True.
         name : str
             Name of this block module. Default: res
+        linear_output : bool
+            No activation function is used at the last layer if True, otherwise the same activation is used.
         """
         super().__init__()
         input_shape = np.array(input_shape)
@@ -98,6 +101,8 @@ class DecoderResnet(nn.Module):
                 _num_hiddens = max(int(num_hiddens / 2), min_hiddens)
             if i == num_blocks - 1:
                 _num_hiddens = output_shape[0]
+                if linear_output:
+                    act = None
             self.decoder[f'resrep{i+1}last'] = Conv2dBN(
                 num_hiddens,
                 _num_hiddens,

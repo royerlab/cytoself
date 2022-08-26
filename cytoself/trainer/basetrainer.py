@@ -162,18 +162,29 @@ class BaseTrainer:
         self.history = pd.concat([self.history, metrics], ignore_index=True, axis=0)
         self.history = self.history.fillna(0)
 
-    def set_optimizer(self, optimizer: Optional = None, **kwargs):
+    def set_optimizer(self, optimizer: Union[str, optim.Optimizer] = 'AdamW', **kwargs):
         """
         Sets optimizer
 
         Parameters
         ----------
-        optimizer : pytorch optimizer
-            Optimizer
+        optimizer : torch.optim.Optimizer or str
+            Optimizer name or Optimizer object
 
         """
         if self.model:
-            local_optimizer = optim.AdamW if optimizer is None else optimizer
+            if isinstance(optimizer, str):
+                if optimizer == 'Adam':
+                    local_optimizer = optim.Adam
+                elif optimizer == 'AdamW':
+                    local_optimizer = optim.AdamW
+                else:
+                    raise ValueError(
+                        optimizer
+                        + ' cannot be specified with string. Please pass a torch.optim.Optimizer object directly'
+                    )
+            else:
+                local_optimizer = optimizer
             local_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(local_optimizer).args if a in kwargs}
             self.optimizer = local_optimizer(self.model.parameters(), **local_kwargs)
         else:

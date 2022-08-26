@@ -67,23 +67,32 @@ class VQVAEFC(VQVAE):
         self.fc_loss = None
         self.fc_input_type = fc_input_type
 
-    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, x: Tensor, output_layer: str = 'decoder') -> tuple[Tensor, Tensor]:
         encoded = self.encoder(x)
+        if output_layer == 'encoder':
+            return x
         (
             self.vq_loss,
             quantized,
             self.perplexity,
-            self.encoding_onehot,
-            self.encoding_indices,
-            self.index_histogram,
+            _,
+            encoding_indices,
+            index_histogram,
             softmax_histogram,
         ) = self.vq_layer(encoded)
+        if output_layer == 'vqvec':
+            return quantized
+        elif output_layer == 'vqind':
+            return encoding_indices
+        elif output_layer == 'vqindhist':
+            return index_histogram
+
         x = self.decoder(quantized)
 
         if self.fc_input_type == 'vqvec':
             fcout = self.fc_layer(quantized.view(quantized.size(0), -1))
         elif self.fc_input_type == 'vqind':
-            fcout = self.fc_layer(self.encoding_indices.view(self.encoding_indices.size(0), -1))
+            fcout = self.fc_layer(encoding_indices.view(encoding_indices.size(0), -1))
         elif self.fc_input_type == 'vqindhist':
             fcout = self.fc_layer(softmax_histogram)
         else:

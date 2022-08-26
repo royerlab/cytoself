@@ -11,6 +11,10 @@ from torchvision.utils import _log_api_usage_once
 from torchvision.models._utils import _make_divisible
 
 
+"""
+This is adapted from torchvision.models.efficientnet
+"""
+
 __all__ = [
     "EfficientNet",
     "efficientenc_b0",
