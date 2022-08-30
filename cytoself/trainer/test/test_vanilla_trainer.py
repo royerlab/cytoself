@@ -12,7 +12,7 @@ def test_vanilla_ae_trainer_fit(vanilla_ae_trainer, opencell_datamgr_vanilla, ba
     assert len(vanilla_ae_trainer.history['train_loss']) == vanilla_ae_trainer.train_args['max_epoch']
     assert min(vanilla_ae_trainer.history['train_loss']) < torch.inf
     assert exists(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv'))
-    assert pd.read_csv(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv')).shape == (2, 2)
+    assert pd.read_csv(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv')).shape == (2, 3)
 
 
 def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):

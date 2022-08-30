@@ -223,7 +223,18 @@ class BaseTrainer:
         if tensorboard_path is not None:
             if self.tb_writer is None:
                 self.enable_tensorboard(tensorboard_path)
-            m_names = self.history.columns.to_frame().iloc[:, 0].str.split('_', expand=True).iloc[:, 1].unique()
+            m_names = (
+                self.history.columns.to_frame()
+                .iloc[:, 0]
+                .str.replace('train_', '')
+                .str.replace('val_', '')
+                .str.replace('test_', '')
+                .to_frame()
+                .iloc[:, 0]
+                .str.split('_', expand=True)
+                .iloc[:, 0]
+                .unique()
+            )
             for tag in m_names:
                 if tag == 'loss':
                     df = self.history.filter(items=[f'{i}_loss' for i in ['train', 'val', 'test']], axis=1)
@@ -426,7 +437,8 @@ class BaseTrainer:
                 val_metrics = self.calc_val_loss(datamanager.val_loader)
 
                 # Register metrics
-                self.record_metrics([train_metrics, val_metrics])
+                lr_metrics = pd.DataFrame({'lr': [self.optimizer.param_groups[0]['lr']]})
+                self.record_metrics([train_metrics, val_metrics, lr_metrics])
 
                 _vloss = self.history['val_loss'].iloc[-1]
 

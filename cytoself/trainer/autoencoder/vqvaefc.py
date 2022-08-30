@@ -70,7 +70,7 @@ class VQVAEFC(VQVAE):
     def forward(self, x: Tensor, output_layer: str = 'decoder') -> tuple[Tensor, Tensor]:
         encoded = self.encoder(x)
         if output_layer == 'encoder':
-            return x
+            return encoded
         (
             self.vq_loss,
             quantized,
@@ -90,11 +90,11 @@ class VQVAEFC(VQVAE):
         x = self.decoder(quantized)
 
         if self.fc_input_type == 'vqvec':
-            fcout = self.fc_layer(quantized.view(quantized.size(0), -1))
+            fcout = self.fc_layer(quantized.reshape(quantized.size(0), -1))
         elif self.fc_input_type == 'vqind':
-            fcout = self.fc_layer(encoding_indices.view(encoding_indices.size(0), -1))
+            fcout = self.fc_layer(encoding_indices.reshape(encoding_indices.size(0), -1))
         elif self.fc_input_type == 'vqindhist':
             fcout = self.fc_layer(softmax_histogram)
         else:
-            fcout = self.fc_layer(encoded.view(encoded.size(0), -1))
+            fcout = self.fc_layer(encoded.reshape(encoded.size(0), -1))
         return x, fcout

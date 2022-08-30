@@ -67,7 +67,7 @@ def test_cytoselflite_encoding():
         {'num_embeddings': 7, 'embedding_dim': 64},
         3,
         input_shape,
-        input_shape,
+        None,
         'vqvec',
         fc_args={'num_layers': 1, 'num_features': 10},
     )
