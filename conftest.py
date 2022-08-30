@@ -9,6 +9,7 @@ from cytoself.datamanager.opencell import DataManagerOpenCell
 from cytoself.test_util.dummy_data_generation import gen_npy
 from cytoself.test_util.test_parameters import add_default_model_args, CYTOSELF_MODEL_ARGS
 from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
+from cytoself.trainer.cytoselffull_trainer import CytoselfFullTrainer
 from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 
@@ -90,3 +91,9 @@ def pytest_collection_modifyitems(config, items):
 def cytoselflite_trainer(basepath):
     train_args = {'lr': 1e-6, 'max_epoch': 2}
     return CytoselfLiteTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)
+
+
+@pytest.fixture(scope='module')
+def cytoselffull_trainer(basepath):
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
+    return CytoselfFullTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)

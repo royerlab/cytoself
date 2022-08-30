@@ -21,7 +21,7 @@ class BaseTrainer:
     Base class for Trainer
     """
 
-    def __init__(self, train_args: dict, homepath: str = './', device: Optional[str] = None):
+    def __init__(self, train_args: dict, homepath: str = './', device: Optional[str] = None, model: Optional = None):
         """
         Base class for trainer
 
@@ -33,6 +33,8 @@ class BaseTrainer:
             Path where training results will be saved
         device : str
             Specify device; e.g. cpu, cuda, cuda:0 etc.
+        model : torch.nn.Module
+            An autoencoder model
         """
         if device is None:
             self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -48,6 +50,8 @@ class BaseTrainer:
         self.savepath_dict = {'homepath': homepath}
         self.current_epoch = 1
         self.history = pd.DataFrame()
+        if model is not None:
+            self._init_model(model)
 
     def _init_model(self, model):
         """

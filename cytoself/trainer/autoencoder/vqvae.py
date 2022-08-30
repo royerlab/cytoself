@@ -3,7 +3,7 @@ from torch import Tensor
 
 from cytoself.components.layers.vq import VectorQuantizer
 from cytoself.trainer.autoencoder.base import BaseAE
-from cytoself.trainer.autoencoder.cytoselflite import calc_emb_dim
+from cytoself.trainer.autoencoder.cytoselffull import calc_emb_dim
 
 
 class VQVAE(BaseAE):
