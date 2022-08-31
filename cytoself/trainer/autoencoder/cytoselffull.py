@@ -34,6 +34,7 @@ class CytoselfFull(nn.Module):
         input_shape: Optional[tuple[int, int, int]] = None,
         output_shape: Optional[tuple[int, int, int]] = None,
         fc_input_type: str = 'vqvec',
+        fc_output_idx: Union[str, Sequence[int]] = 'all',
         encoder_args: Optional[Collection[dict]] = None,
         decoder_args: Optional[Collection[dict]] = None,
         fc_args: Optional[Union[dict, Collection[dict]]] = None,
@@ -58,6 +59,8 @@ class CytoselfFull(nn.Module):
         fc_input_type : str
             Input type for the fc layers;
             vqvec: quantized vector, vqind: quantized index, vqindhist: quantized index histogram
+        fc_output_idx : int or 'all'
+            Index of encoder to connect FC layers
         encoder_args : dict
             Additional arguments for encoder
         decoder_args : dict
@@ -115,6 +118,10 @@ class CytoselfFull(nn.Module):
             self.fc_layers.append(FCblock(**arg))
         self.fc_loss = None
         self.fc_input_type = fc_input_type
+        if fc_output_idx == 'all':
+            self.fc_output_idx = [i + 1 for i in range(len(emb_shapes))]
+        else:
+            self.fc_output_idx = fc_output_idx
 
     def _const_encoders(self, input_shape, encoder_args) -> nn.ModuleList:
         """
@@ -242,16 +249,16 @@ class CytoselfFull(nn.Module):
                 elif out_layer_name == 'vqindhist':
                     return _index_histogram
 
-            if self.fc_input_type == 'vqvec':
-                fcout = self.fc_layers[i](quantized.reshape(quantized.size(0), -1))
-            elif self.fc_input_type == 'vqind':
-                fcout = self.fc_layers[i](_encoding_indices.reshape(_encoding_indices.size(0), -1))
-            elif self.fc_input_type == 'vqindhist':
-                fcout = self.fc_layers[i](softmax_histogram)
-            else:
-                fcout = self.fc_layers[i](encoded.reshape(encoded.size(0), -1))
-
-            fc_outs.append(fcout)
+            if i + 1 in self.fc_output_idx:
+                if self.fc_input_type == 'vqvec':
+                    fcout = self.fc_layers[i](quantized.view(quantized.size(0), -1))
+                elif self.fc_input_type == 'vqind':
+                    fcout = self.fc_layers[i](_encoding_indices.view(_encoding_indices.size(0), -1))
+                elif self.fc_input_type == 'vqindhist':
+                    fcout = self.fc_layers[i](softmax_histogram)
+                else:
+                    fcout = self.fc_layers[i](encoded.view(encoded.size(0), -1))
+                fc_outs.append(fcout)
             encoded_list.append(encoded)
             self.vq_loss[f'vq{i + 1}'] = vq_loss
             self.perplexity[f'perplexity{i + 1}'] = perplexity

@@ -69,7 +69,7 @@ class AnalysisOpenCell(BaseAnalysis):
         label_converted, unique_groups = self.group_labels(label_data, group_col, unique_groups, group_annotation)
 
         # Making the plot
-        scatter_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(self.plot_umap_by_group).args if a in kwargs}
+        scatter_kwargs = {a: kwargs[a] for a in inspect.signature(self.plot_umap_by_group).parameters if a in kwargs}
         self.fig, self.ax = self.plot_umap_by_group(umap_data, label_converted, unique_groups, **scatter_kwargs)
 
         return umap_data
@@ -105,7 +105,7 @@ class AnalysisOpenCell(BaseAnalysis):
             print('Computing embeddings from image...')
             embedding_data = self.trainer.infer_embeddings(
                 image_data if data_loader is None else data_loader,
-                **{a: kwargs[a] for a in inspect.getfullargspec(self.trainer.infer_embeddings).args if a in kwargs},
+                **{a: kwargs[a] for a in inspect.signature(self.trainer.infer_embeddings).parameters if a in kwargs},
             )
             if isinstance(embedding_data, tuple) and len(embedding_data) > 1:
                 embedding_data = embedding_data[0]
@@ -125,7 +125,7 @@ class AnalysisOpenCell(BaseAnalysis):
         print('Computing UMAP coordinates from embeddings...')
         umap_data = self._transform_umap(
             embedding_data,
-            **{a: kwargs[a] for a in inspect.getfullargspec(self._transform_umap).args if a in kwargs},
+            **{a: kwargs[a] for a in inspect.signature(self._transform_umap).parameters if a in kwargs},
         )
         return umap_data
 
@@ -245,6 +245,7 @@ class AnalysisOpenCell(BaseAnalysis):
                 alpha=alpha,
                 c=np.array(_c).reshape(1, -1),
                 label=gp,
+                zorder=0 if gp == 'others' else len(unique_groups) - i + 1,
             )
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)

@@ -189,7 +189,7 @@ class BaseTrainer:
                     )
             else:
                 local_optimizer = optimizer
-            local_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(local_optimizer).args if a in kwargs}
+            local_kwargs = {a: kwargs[a] for a in inspect.signature(local_optimizer).parameters if a in kwargs}
             self.optimizer = local_optimizer(self.model.parameters(), **local_kwargs)
         else:
             raise ValueError("self.model attribute is not initialized...")

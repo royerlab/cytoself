@@ -41,6 +41,7 @@ def test_compute_umap(analysis_cytoselflite, opencell_datamgr_vanilla):
     analysis_cytoselflite.compute_umap(opencell_datamgr_vanilla.test_loader)
     fname = inspect.signature(analysis_cytoselflite.trainer.infer_embeddings).parameters['output_layer'].default
     assert exists(join(analysis_cytoselflite.trainer.savepath_dict['embeddings'], fname + '.npy'))
+    analysis_cytoselflite.reset_umap()
     analysis_cytoselflite.compute_umap(opencell_datamgr_vanilla.test_loader, output_layer='vqindhist2')
     assert exists(join(analysis_cytoselflite.trainer.savepath_dict['embeddings'], 'vqindhist2.npy'))
 

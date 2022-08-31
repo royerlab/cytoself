@@ -3,7 +3,7 @@ from functools import partial
 from typing import Optional
 
 import torch
-from torch import nn, Tensor
+from torch import nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
@@ -41,8 +41,7 @@ class CytoselfTrainerBase(BaseTrainer):
 
     def calc_loss_one_batch(
         self,
-        inputs: Tensor,
-        targets: Tensor,
+        batch: dict,
         vq_coeff: float = 1,
         fc_coeff: float = 1,
         zero_grad: bool = False,
@@ -55,10 +54,8 @@ class CytoselfTrainerBase(BaseTrainer):
 
         Parameters
         ----------
-        inputs : torch.Tensor
-            Input data
-        targets : torch.Tensor
-            Target data
+        batch : dict
+            A batch data from data loader
         vq_coeff : float
             Coefficient for vq loss
         fc_coeff : float
@@ -77,15 +74,20 @@ class CytoselfTrainerBase(BaseTrainer):
         tuple of tensors
 
         """
+        img = self._get_data_by_name(batch, 'image')
+        lab = self._get_data_by_name(batch, 'label', force_float=False)
+        model_outputs = self.model(img)
+
         if zero_grad:
             self.optimizer.zero_grad()
 
-        mse_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.MSELoss).args if a in kwargs}
-        ce_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.CrossEntropyLoss).args if a in kwargs}
+        mse_kwargs = {a: kwargs[a] for a in inspect.signature(nn.MSELoss).parameters if a in kwargs}
+        ce_kwargs = {a: kwargs[a] for a in inspect.signature(nn.CrossEntropyLoss).parameters if a in kwargs}
         mse_loss_fn, ce_loss_fn = nn.MSELoss(**mse_kwargs), nn.CrossEntropyLoss(**ce_kwargs)
-        reconstruction_loss = mse_loss_fn(inputs[0], targets[0])
+        reconstruction_loss = mse_loss_fn(model_outputs[0], img)
         self.model.fc_loss = {
-            f'fc{j + 1}_loss': ce_loss_fn(t, i) for j, (t, i) in enumerate(zip(inputs[1:], targets[1:]))
+            f'fc{self.model.fc_output_idx[j]}_loss': ce_loss_fn(t, i)
+            for j, (t, i) in enumerate(zip(model_outputs[1:], [lab] * (len(model_outputs) - 1)))
         }
         loss = self._combine_losses(fc_coeff, reconstruction_loss, vq_coeff)
         # TODO How to equalize losses?
@@ -135,11 +137,7 @@ class CytoselfTrainerBase(BaseTrainer):
         """
         _metrics = []
         for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
-            timg = self._get_data_by_name(_batch, 'image')
-            tlab = self._get_data_by_name(_batch, 'label', force_float=False)
-            loss = self.calc_loss_one_batch(
-                self.model(timg), [timg, tlab, tlab], zero_grad=True, backward=True, optimize=True, **kwargs
-            )
+            loss = self.calc_loss_one_batch(_batch, zero_grad=True, backward=True, optimize=True, **kwargs)
 
             # Accumulate metrics
             _metrics.append(loss)
@@ -162,9 +160,7 @@ class CytoselfTrainerBase(BaseTrainer):
         """
         _metrics = []
         for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
-            vimg = self._get_data_by_name(_batch, 'image')
-            vlab = self._get_data_by_name(_batch, 'label', force_float=False)
-            _vloss = self.calc_loss_one_batch(self.model(vimg), [vimg, vlab, vlab])
+            _vloss = self.calc_loss_one_batch(_batch, *kwargs)
             _metrics.append(_vloss)
         return self._aggregate_metrics(_metrics, 'val')
 

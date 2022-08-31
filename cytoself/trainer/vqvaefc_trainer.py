@@ -73,8 +73,8 @@ class VQVAEFCTrainer(BaseTrainer):
         if zero_grad:
             self.optimizer.zero_grad()
 
-        mse_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.MSELoss).args if a in kwargs}
-        ce_kwargs = {a: kwargs[a] for a in inspect.getfullargspec(nn.CrossEntropyLoss).args if a in kwargs}
+        mse_kwargs = {a: kwargs[a] for a in inspect.signature(nn.MSELoss).parameters if a in kwargs}
+        ce_kwargs = {a: kwargs[a] for a in inspect.signature(nn.CrossEntropyLoss).parameters if a in kwargs}
         reconstruction_loss = nn.MSELoss(**mse_kwargs)(inputs[0], targets[0])
         self.model.fc_loss = nn.CrossEntropyLoss(**ce_kwargs)(inputs[1], targets[1])
         loss = reconstruction_loss + vq_coeff * self.model.vq_loss['loss'] + fc_coeff * self.model.fc_loss

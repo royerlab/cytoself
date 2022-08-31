@@ -27,12 +27,10 @@ def gpuinfo(gpuidx):
         out_str = sp.communicate()
         out_list = out_str[0].decode("utf-8").split('BAR1', 1)[0].split('\n')
         for item in out_list:
-            try:
-                key, val = item.split(':')
-                key, val = key.strip(), val.strip()
-                out_dict[key] = val
-            except Exception as e:
-                print(e)
+            if ':' in item:
+                fragments = item.split(':')
+                if len(fragments) == 2:
+                    out_dict[fragments[0].strip()] = fragments[1].strip()
     except Exception as e:
         print(e)
     return out_dict

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Sequence
 from collections.abc import Collection
 
 import torch
@@ -29,6 +29,7 @@ class CytoselfLite(CytoselfFull):
         input_shape: Optional[tuple[int, int, int]] = None,
         output_shape: Optional[tuple[int, int, int]] = None,
         fc_input_type: str = 'vqvec',
+        fc_output_idx: Union[str, Sequence[int]] = 'all',
         encoder_args: Optional[Collection[dict]] = None,
         decoder_args: Optional[Collection[dict]] = None,
         fc_args: Optional[Union[dict, Collection[dict]]] = None,
@@ -53,6 +54,8 @@ class CytoselfLite(CytoselfFull):
         fc_input_type : str
             Input type for the fc layers;
             vqvec: quantized vector, vqind: quantized index, vqindhist: quantized index histogram
+        fc_output_idx : int or 'all'
+            Index of encoder to connect FC layers
         encoder_args : dict
             Additional arguments for encoder
         decoder_args : dict
@@ -71,6 +74,7 @@ class CytoselfLite(CytoselfFull):
             input_shape,
             output_shape,
             fc_input_type,
+            fc_output_idx,
             encoder_args,
             decoder_args,
             fc_args,
