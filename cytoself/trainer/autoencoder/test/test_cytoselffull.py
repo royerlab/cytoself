@@ -37,7 +37,7 @@ def test_length_checker():
         length_checker([(4, 4)], [{'a': 1}, {'a': 1}])
 
 
-def test_cytoselflite():
+def test_cytoselffull():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
@@ -59,7 +59,30 @@ def test_cytoselflite():
         assert out[2].shape == (1, 3)
 
 
-def test_cytoselflite_fc2():
+def test_cytoselffull_fc2():
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
+    for fci in [1, 2]:
+        for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
+            model = CytoselfFull(
+                emb_shape,
+                {'num_embeddings': 7, 'embedding_dim': 64},
+                3,
+                input_shape,
+                input_shape,
+                t,
+                [fci],
+                fc_args={'num_layers': 1, 'num_features': 10},
+            )
+            model.to(device)
+            input_data = torch.randn((1,) + input_shape).to(device)
+            out = model(input_data)
+            assert len(out) == 2
+            assert out[0].shape == input_data.shape
+            assert out[1].shape == (1, 3)
+
+
+def test_cytoselffull_nofc():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     for t in ['vqvec', 'vqind', 'vqindhist', 'enc']:
@@ -70,18 +93,17 @@ def test_cytoselflite_fc2():
             input_shape,
             input_shape,
             t,
-            [2],
+            [],
             fc_args={'num_layers': 1, 'num_features': 10},
         )
         model.to(device)
         input_data = torch.randn((1,) + input_shape).to(device)
         out = model(input_data)
-        assert len(out) == 2
+        assert len(out) == 1
         assert out[0].shape == input_data.shape
-        assert out[1].shape == (1, 3)
 
 
-def test_cytoselflite_encoding():
+def test_cytoselffull_encoding():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     model = CytoselfFull(
@@ -106,7 +128,7 @@ def test_cytoselflite_encoding():
         assert out.shape == (1, 7)
 
 
-def test_cytoselflite_custom():
+def test_cytoselffull_custom():
     input_shape, emb_shape = (2, 100, 100), ((25, 25), (4, 4))
     encoders = [
         efficientenc_b0(in_channels=input_shape[0], out_channels=emb_shape[0][0]),
