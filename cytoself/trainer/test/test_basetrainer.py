@@ -3,6 +3,7 @@ from os.path import exists
 import pandas as pd
 import pytest
 import torch
+from torch import nn
 
 from cytoself.trainer.basetrainer import BaseTrainer
 
@@ -39,8 +40,9 @@ def test_base_trainer__default_train_args(base_trainer):
         assert base_trainer.train_args[key] == val
 
 
-def test_calc_loss_one_batch(base_trainer):
-    assert base_trainer.calc_loss_one_batch(torch.ones(5) * 3, torch.ones(5))['loss'] == torch.ones(1) * 4
+def test_run_one_batch(base_trainer):
+    base_trainer.model = nn.Identity()
+    assert base_trainer.run_one_batch({'image': torch.ones(5), 'label': torch.ones(5)})['loss'] == torch.zeros(1)
 
 
 def test_record_metrics(base_trainer):
@@ -75,7 +77,7 @@ def test_set_optimizer(base_trainer, basepath):
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epoch': 2, 'optimizer': 'sgd'}
     with pytest.raises(ValueError):
-        VanillaAETrainer(model_args, train_args, homepath=basepath)
+        VanillaAETrainer(train_args, homepath=basepath, model_args=model_args)
 
 
 def test_enable_tensorboard(base_trainer):
@@ -91,14 +93,13 @@ def test_init_savepath(base_trainer):
         assert exists(val), key + ' path was not found.'
 
 
-def test_train_one_epoch(base_trainer):
+def test_run_one_epoch(base_trainer):
+    base_trainer.model = None
     with pytest.raises(ValueError):
-        base_trainer.train_one_epoch(None)
-
-
-def test_calc_val_loss(base_trainer):
+        base_trainer.run_one_epoch(None, 'train')
+    base_trainer.model = nn.Identity()
     with pytest.raises(ValueError):
-        base_trainer.calc_val_loss(None)
+        base_trainer.run_one_epoch(None, 'validation')
 
 
 def test__reduce_lr_on_plateau(base_trainer):
@@ -107,6 +108,7 @@ def test__reduce_lr_on_plateau(base_trainer):
 
 
 def test_fit(base_trainer):
+    base_trainer.model = None
     with pytest.raises(ValueError):
         base_trainer.fit(None)
 

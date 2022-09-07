@@ -3,8 +3,16 @@ from copy import deepcopy
 from os.path import join, exists, splitext
 
 import pandas as pd
+import pytest
 import torch
 from natsort import natsorted
+
+
+def test_vanilla_ae_trainer_no_model_args():
+    from cytoself.trainer.vanilla_trainer import VanillaAETrainer
+
+    with pytest.raises(ValueError):
+        VanillaAETrainer({})
 
 
 def test_vanilla_ae_trainer_fit(vanilla_ae_trainer, opencell_datamgr_vanilla, basepath):
@@ -12,7 +20,7 @@ def test_vanilla_ae_trainer_fit(vanilla_ae_trainer, opencell_datamgr_vanilla, ba
     assert len(vanilla_ae_trainer.history['train_loss']) == vanilla_ae_trainer.train_args['max_epoch']
     assert min(vanilla_ae_trainer.history['train_loss']) < torch.inf
     assert exists(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv'))
-    assert pd.read_csv(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv')).shape == (2, 3)
+    assert pd.read_csv(join(vanilla_ae_trainer.savepath_dict['visualization'], 'training_history.csv')).shape == (2, 4)
 
 
 def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):

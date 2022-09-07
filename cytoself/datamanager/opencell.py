@@ -67,6 +67,9 @@ class DataManagerOpenCell(DataManagerBase):
         self.label_col = label_col
         self.fov_col = fov_col
         self.unique_labels = None
+        self.train_variance = None
+        self.val_variance = None
+        self.test_variance = None
 
         # Make sure label is in the list as data splitting depends on label information.
         if 'label' not in channel_list:
@@ -284,6 +287,8 @@ class DataManagerOpenCell(DataManagerBase):
             self.train_dataset = PreloadedDataset(
                 train_label, train_data, transform, self.unique_labels, label_format, self.label_col
             )
+            print('Computing variance of training data...')
+            self.train_variance = np.var(train_data).item()
         if len(val_ind) > 0:
             val_label = label_all[val_ind]
             if len(image_all) > 0:
@@ -293,6 +298,8 @@ class DataManagerOpenCell(DataManagerBase):
             self.val_dataset = PreloadedDataset(
                 val_label, val_data, transform, self.unique_labels, label_format, self.label_col
             )
+            print('Computing variance of validation data...')
+            self.val_variance = np.var(val_data).item()
         if len(test_ind) > 0:
             test_label = label_all[test_ind]
             if len(image_all) > 0:
@@ -302,6 +309,7 @@ class DataManagerOpenCell(DataManagerBase):
             self.test_dataset = PreloadedDataset(
                 test_label, test_data, None, self.unique_labels, label_format, self.label_col
             )
+            self.test_variance = np.var(test_data).item()
 
     def const_dataloader(self, shuffle: bool = True, shuffle_test: bool = False, **kwargs):
         """

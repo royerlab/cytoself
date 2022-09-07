@@ -18,7 +18,7 @@ def vqvaefc_trainer(basepath):
     }
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epoch': 2}
-    return VQVAEFCTrainer(model_args, train_args, homepath=basepath)
+    return VQVAEFCTrainer(train_args, homepath=basepath, model_args=model_args)
 
 
 def test_vqvaefc_trainer_fit(vqvaefc_trainer, opencell_datamgr_vanilla, basepath):

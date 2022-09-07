@@ -1,3 +1,4 @@
+from copy import copy
 from os.path import join
 
 import pytest
@@ -17,7 +18,7 @@ def vqvae_trainer(basepath):
     }
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epoch': 2, 'optimizer': torch.optim.SGD}
-    return VQVAETrainer(model_args, train_args, homepath=basepath)
+    return VQVAETrainer(train_args, homepath=basepath, model_args=model_args)
 
 
 def test_vqvae_trainer_fit(vqvae_trainer, opencell_datamgr_vanilla, basepath):
@@ -25,3 +26,13 @@ def test_vqvae_trainer_fit(vqvae_trainer, opencell_datamgr_vanilla, basepath):
     assert len(vqvae_trainer.history['train_loss']) == vqvae_trainer.train_args['max_epoch']
     assert min(vqvae_trainer.history['train_loss']) < torch.inf
     assert min(vqvae_trainer.history['train_vq_loss']) < torch.inf
+    assert min(vqvae_trainer.history['test_loss']) < torch.inf
+
+
+def test_vqvae_trainer_run_one_epoch(vqvae_trainer):
+    with pytest.raises(ValueError):
+        vqvae_trainer.run_one_epoch(None, 'validation')
+    vqvae_trainer_copy = copy(vqvae_trainer)
+    vqvae_trainer_copy.model = None
+    with pytest.raises(ValueError):
+        vqvae_trainer_copy.run_one_epoch(None, 'train')

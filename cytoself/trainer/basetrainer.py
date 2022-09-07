@@ -21,7 +21,9 @@ class BaseTrainer:
     Base class for Trainer
     """
 
-    def __init__(self, train_args: dict, homepath: str = './', device: Optional[str] = None, model: Optional = None):
+    def __init__(
+        self, train_args: dict, homepath: str = './', device: Optional[str] = None, model: Optional = None, **kwargs
+    ):
         """
         Base class for trainer
 
@@ -33,8 +35,8 @@ class BaseTrainer:
             Path where training results will be saved
         device : str
             Specify device; e.g. cpu, cuda, cuda:0 etc.
-        model : torch.nn.Module
-            An autoencoder model
+        model : Optional[torch.nn.Module] instance
+            An autoencoder model instance
         """
         if device is None:
             self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -85,24 +87,22 @@ class BaseTrainer:
             if key not in self.train_args:
                 self.train_args[key] = val
 
-    def calc_loss_one_batch(
+    def run_one_batch(
         self,
-        inputs: Tensor,
-        targets: Tensor,
+        batch: dict,
+        *args,
         zero_grad: bool = False,
         backward: bool = False,
         optimize: bool = False,
         **kwargs,
-    ):
+    ) -> dict:
         """
         Computes loss for one batch
 
         Parameters
         ----------
-        inputs : torch.Tensor
-            input data
-        targets : torch.Tensor
-            target data
+        batch : dict
+            A batch data from data loader
         zero_grad : bool
             Sets the gradients of all optimized torch.Tensor s to zero.
         backward : bool
@@ -117,10 +117,13 @@ class BaseTrainer:
         A dict of tensors with the loss names and loss values.
 
         """
+        img = self.get_data_by_name(batch, 'image')
+        model_outputs = self.model(img)
+
         if zero_grad:
             self.optimizer.zero_grad()
 
-        loss = nn.MSELoss(**kwargs)(inputs, targets)
+        loss = self._calc_losses(model_outputs, img)
 
         if backward:
             loss.backward()
@@ -129,6 +132,9 @@ class BaseTrainer:
             self.optimizer.step()
 
         return {'loss': loss.item()}
+
+    def _calc_losses(self, model_outputs, img, *args, **kwargs):
+        return nn.MSELoss(**kwargs)(model_outputs, img)
 
     def _aggregate_metrics(self, metrics: dict, phase: str) -> dict:
         """
@@ -263,36 +269,42 @@ class BaseTrainer:
             if makedirs and not os.path.exists(self.savepath_dict[d]):
                 os.makedirs(self.savepath_dict[d])
 
-    def train_one_epoch(self, data_loader: DataLoader, **kwargs) -> dict:
+    def run_one_epoch(self, datamanager, phase: str, **kwargs) -> dict:
         """
-        Trains self.model for one epoch
+        Run one epoch of data on the model
 
         Parameters
         ----------
-        data_loader : DataLoader
-            A DataLoader object that handles data distribution and augmentation.
+        datamanager : DataManager
+            A DataManager object that has train, val and test data loader inside
+        phase : str
+            To indicate whether it's train, val or test phase
 
         Returns
         -------
-        Training metrics
+        metrics in DataFrame
 
         """
         if self.model is None:
             raise ValueError('model is not defined.')
         else:
+            is_train = phase.lower() == 'train'
+            if phase == 'train':
+                data_loader = datamanager.train_loader
+            elif phase == 'val':
+                data_loader = datamanager.val_loader
+            elif phase == 'test':
+                data_loader = datamanager.test_loader
+            else:
+                raise ValueError('phase only accepts train, val or test.')
             _metrics = []
-            for i, _batch in enumerate(tqdm(data_loader, desc='Train')):
-                timg = self._get_data_by_name(_batch, 'image')
-                loss = self.calc_loss_one_batch(
-                    self.model(timg), timg, zero_grad=True, backward=True, optimize=True, **kwargs
-                )
-
-                # Accumulate metrics
+            for _batch in tqdm(data_loader, desc=f'{phase.capitalize():>5}'):
+                loss = self.run_one_batch(_batch, zero_grad=is_train, backward=is_train, optimize=is_train, **kwargs)
                 _metrics.append(loss)
-            return self._aggregate_metrics(_metrics, 'train')
+            return self._aggregate_metrics(_metrics, phase)
 
     @torch.inference_mode()
-    def _infer_one_epoch(self, data_loader: DataLoader, _model):
+    def infer_one_epoch(self, data_loader: DataLoader, _model):
         """
         Infers the output of a given model for one epoch
 
@@ -309,7 +321,7 @@ class BaseTrainer:
         """
         output, output_label = [], []
         for i, _batch in enumerate(tqdm(data_loader, desc='Infer')):
-            timg = self._get_data_by_name(_batch, 'image')
+            timg = self.get_data_by_name(_batch, 'image')
             out = _model(timg)
             if not torch.is_tensor(out):
                 out = out[0]
@@ -327,7 +339,7 @@ class BaseTrainer:
                 output_label = np.array([])
         return output, output_label
 
-    def _get_data_by_name(self, data: dict, name: str, force_float=True):
+    def get_data_by_name(self, data: dict, name: str, force_float=True) -> Tensor:
         """
         Get tensor by name when the output of dataloader is dict.
 
@@ -349,31 +361,6 @@ class BaseTrainer:
         if force_float:
             output = output.float()
         return output.to(self.device)
-
-    @torch.inference_mode()
-    def calc_val_loss(self, data_loader: DataLoader, **kwargs) -> dict:
-        """
-        Compute validate loss
-
-        Parameters
-        ----------
-        data_loader : DataLoader
-            Pytorch DataLoader for validation data
-
-        Returns
-        -------
-        Validation metrics
-
-        """
-        if self.model is None:
-            raise ValueError('model is not defined.')
-        else:
-            _metrics = []
-            for i, _batch in enumerate(tqdm(data_loader, desc='Val  ')):
-                vimg = self._get_data_by_name(_batch, 'image')
-                _vloss = self.calc_loss_one_batch(self.model(vimg), vimg)
-                _metrics.append(_vloss)
-            return self._aggregate_metrics(_metrics, 'val')
 
     def _reduce_lr_on_plateau(self, count_lr_no_improve: int) -> int:
         """
@@ -422,6 +409,7 @@ class BaseTrainer:
             Path for Tensorboard to load logs
 
         """
+        stop = False
         if self.model is None:
             raise ValueError('model is not defined.')
         else:
@@ -430,45 +418,57 @@ class BaseTrainer:
             count_lr_no_improve = 0
             count_early_stop = 0
             for current_epoch in range(self.current_epoch, self.train_args['max_epoch'] + 1):
-                self.current_epoch = current_epoch
-                print(f'Epoch {current_epoch}/{self.train_args["max_epoch"]}')
-                # Train the model
-                self.model.train(True)
-                train_metrics = self.train_one_epoch(datamanager.train_loader, **kwargs)
-                self.model.train(False)
-
-                # Validate the model
-                val_metrics = self.calc_val_loss(datamanager.val_loader)
-
-                # Register metrics
-                lr_metrics = pd.DataFrame({'lr': [self.optimizer.param_groups[0]['lr']]})
-                self.record_metrics([train_metrics, val_metrics, lr_metrics])
-
-                _vloss = self.history['val_loss'].iloc[-1]
-
-                # Track the best performance, and save the model's state
-                if _vloss < best_vloss:
-                    best_vloss = _vloss
-                    self.best_model = deepcopy(self.model)
-                    # Save the best model checkpoint
-                    self.save_checkpoint()
-                else:
-                    count_lr_no_improve += 1
-                    count_early_stop += 1
-                    self.model = deepcopy(self.best_model)
-
-                # Reduce learn rate on plateau
-                count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)
-
-                # Record logs for TensorBoard
-                if tensorboard_path is not None:
-                    tensorboard_path = join(self.savepath_dict['homepath'], tensorboard_path)
-                self.write_on_tensorboard(tensorboard_path)
-
-                # Check for early stopping
-                if count_early_stop >= self.train_args['earlystop_patience']:
-                    print('Early stopping.')
+                if stop:
                     break
+                else:
+                    self.current_epoch = current_epoch
+                    print(f'Epoch {current_epoch}/{self.train_args["max_epoch"]}')
+                    # Train the model
+                    self.model.train(True)
+                    train_metrics = self.run_one_epoch(datamanager, 'train', **kwargs)
+                    self.model.train(False)
+
+                    # Validate the model
+                    with torch.inference_mode():
+                        val_metrics = self.run_one_epoch(datamanager, 'val', **kwargs)
+
+                    # Register learning rate
+                    lr_metrics = pd.DataFrame({'lr': [self.optimizer.param_groups[0]['lr']]})
+                    metrics_all = [train_metrics, val_metrics, lr_metrics]
+
+                    # Track the best performance, and save the model's state
+                    _vloss = np.nan_to_num(val_metrics['val_loss'].iloc[-1])
+                    if _vloss < best_vloss:
+                        best_vloss = _vloss
+                        self.best_model = deepcopy(self.model)
+                        # Save the best model checkpoint
+                        self.save_checkpoint()
+                    else:
+                        count_lr_no_improve += 1
+                        count_early_stop += 1
+                        self.model = deepcopy(self.best_model)
+
+                    # Reduce learn rate on plateau
+                    count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)
+
+                    # Check for early stopping
+                    if count_early_stop >= self.train_args['earlystop_patience']:
+                        print('Early stopping.')
+                        stop = True
+
+                    if stop or current_epoch == self.train_args["max_epoch"]:
+                        # Test the model with test data
+                        with torch.inference_mode():
+                            test_metrics = self.run_one_epoch(datamanager, 'test', **kwargs)
+                        metrics_all.append(test_metrics)
+
+                    # Record metrics
+                    self.record_metrics(metrics_all)
+
+                    # Record logs for TensorBoard
+                    if tensorboard_path is not None:
+                        tensorboard_path = join(self.savepath_dict['homepath'], tensorboard_path)
+                    self.write_on_tensorboard(tensorboard_path)
 
             self.save_model(self.savepath_dict['homepath'], f'model_{self.current_epoch}.pt')
             self.history.to_csv(join(self.savepath_dict['visualization'], 'training_history.csv'), index=False)
@@ -573,7 +573,7 @@ class BaseTrainer:
         if data is None:
             raise ValueError('The input to infer_embeddings cannot be None.')
         if isinstance(data, DataLoader):
-            return self._infer_one_epoch(data, self.model.encoder)
+            return self.infer_one_epoch(data, self.model.encoder)
         else:
             return self.model.encoder(torch.from_numpy(data).float().to(self.device)).detach().cpu().numpy()
 
@@ -591,7 +591,7 @@ class BaseTrainer:
         if data is None:
             raise ValueError('The input to infer_embeddings cannot be None.')
         if isinstance(data, DataLoader):
-            return self._infer_one_epoch(data, self.model)[0]
+            return self.infer_one_epoch(data, self.model)[0]
         else:
             output = self.model(torch.from_numpy(data).float().to(self.device))
             if isinstance(output, tuple) or isinstance(output, list):

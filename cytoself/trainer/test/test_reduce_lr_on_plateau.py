@@ -39,7 +39,7 @@ def vanilla_ae_trainer_plateau(basepath):
         'earlystop_patience': 3,
         'optimizer': 'Adam',
     }
-    return VanillaAETrainer(model_args, train_args, homepath=basepath)
+    return VanillaAETrainer(train_args, homepath=basepath, model_args=model_args)
 
 
 def test__reduce_lr_on_plateau(vanilla_ae_trainer_plateau, opencell_datamgr_vanilla, basepath):

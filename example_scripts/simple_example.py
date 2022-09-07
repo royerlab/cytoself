@@ -26,7 +26,7 @@ train_args = {
     'reducelr_increment': 0.1,
     'earlystop_patience': 6,
 }
-trainer = CytoselfLiteTrainer(model_args, train_args, homepath='demo_output')
+trainer = CytoselfLiteTrainer(train_args, homepath='demo_output', model_args=model_args)
 trainer.fit(datamanager, tensorboard_path='tb_logs')
 
 

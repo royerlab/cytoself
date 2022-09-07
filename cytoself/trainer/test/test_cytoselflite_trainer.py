@@ -13,7 +13,7 @@ def test_cytoselflite_trainer_fit(cytoselflite_trainer, opencell_datamgr_vanilla
     assert min(cytoselflite_trainer.history['train_fc1_loss']) < torch.inf
     assert min(cytoselflite_trainer.history['train_fc2_loss']) < torch.inf
     assert 'train_reconstruction2_loss' not in cytoselflite_trainer.history
-    assert len(cytoselflite_trainer.model.mse_loss) == 0
+    assert len(cytoselflite_trainer.model.mse_loss) == 1
     assert all(
         [all([l1.requires_grad is False for l1 in l0.values()]) for l0 in cytoselflite_trainer.model.vq_loss.values()]
     )

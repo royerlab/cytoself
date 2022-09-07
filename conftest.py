@@ -71,7 +71,7 @@ def vanilla_ae_trainer(basepath):
     }
     model_args = add_default_model_args(model_args)
     train_args = {'lr': 1e-6, 'max_epoch': 2}
-    return VanillaAETrainer(model_args, train_args, homepath=basepath)
+    return VanillaAETrainer(train_args, homepath=basepath, model_args=model_args)
 
 
 def pytest_addoption(parser):
@@ -90,10 +90,10 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope='module')
 def cytoselflite_trainer(basepath):
     train_args = {'lr': 1e-6, 'max_epoch': 2}
-    return CytoselfLiteTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)
+    return CytoselfLiteTrainer(train_args, homepath=basepath, model_args=CYTOSELF_MODEL_ARGS)
 
 
 @pytest.fixture(scope='module')
 def cytoselffull_trainer(basepath):
     train_args = {'lr': 1e-6, 'max_epoch': 2}
-    return CytoselfFullTrainer(CYTOSELF_MODEL_ARGS, train_args, homepath=basepath)
+    return CytoselfFullTrainer(train_args, homepath=basepath, model_args=CYTOSELF_MODEL_ARGS)

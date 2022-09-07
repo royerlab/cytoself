@@ -1,13 +1,27 @@
-from os.path import join
+from copy import copy
 
 import pytest
 import torch
 
 from cytoself.test_util.test_parameters import CYTOSELF_MODEL_ARGS
+from cytoself.trainer.cytoselffull_trainer import CytoselfFullTrainer
+
+
+@pytest.mark.parametrize('fc_output_idx', [[1], [2], []])
+def test_cytoselffull_xfc(basepath, opencell_datamgr_vanilla, fc_output_idx):
+    train_args = {'lr': 1e-6, 'max_epoch': 2}
+    model_args = copy(CYTOSELF_MODEL_ARGS)
+    model_args['fc_output_idx'] = fc_output_idx
+    trainer = CytoselfFullTrainer(train_args, homepath=basepath, model_args=model_args)
+    trainer.fit(opencell_datamgr_vanilla)
+    if len(fc_output_idx) > 0:
+        assert f'train_fc{fc_output_idx[0]}_loss' in trainer.history
+    else:
+        assert 'train_fc1_loss' not in trainer.history
 
 
 def test_cytoselffull_trainer_fit(cytoselffull_trainer, opencell_datamgr_vanilla, basepath):
-    cytoselffull_trainer.fit(opencell_datamgr_vanilla, tensorboard_path=join(basepath, 'tb_log'))
+    cytoselffull_trainer.fit(opencell_datamgr_vanilla)
     assert len(cytoselffull_trainer.history['train_loss']) == cytoselffull_trainer.train_args['max_epoch']
     assert min(cytoselffull_trainer.history['train_loss']) < torch.inf
     assert min(cytoselffull_trainer.history['train_vq1_loss']) < torch.inf

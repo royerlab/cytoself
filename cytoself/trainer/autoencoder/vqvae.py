@@ -47,7 +47,7 @@ class VQVAE(BaseAE):
         vq_args, emb_shape = calc_emb_dim([vq_args], [emb_shape])
         self.vq_args, self.emb_shape = vq_args[0], emb_shape[0]
         super().__init__(self.emb_shape, input_shape, output_shape, encoder_args, decoder_args, encoder, decoder)
-
+        self.mse_loss = None
         self.vq_layer = VectorQuantizer(**self.vq_args)
         self.vq_loss = None
         self.perplexity = None
