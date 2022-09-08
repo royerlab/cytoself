@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional, Sequence, Union, List, Callable
+from typing import Optional, Sequence, Union, List
 from os.path import join, basename, dirname
 import numpy as np
 import pandas as pd
@@ -229,13 +229,18 @@ class DataManagerOpenCell(DataManagerBase):
 
     def const_dataset(
         self,
-        transform: Optional[Callable] = transforms.Compose(
-            [
-                torch.from_numpy,
-                transforms.RandomRotation(180, interpolation=transforms.InterpolationMode.BILINEAR),
-                transforms.RandomVerticalFlip(),
-                transforms.RandomHorizontalFlip(),
-            ]
+        transform: Optional[Sequence] = (
+            transforms.RandomApply(
+                [
+                    lambda x: transforms.functional.rotate(x, 0),
+                    lambda x: transforms.functional.rotate(x, 90),
+                    lambda x: transforms.functional.rotate(x, 180),
+                    lambda x: transforms.functional.rotate(x, 270),
+                ]
+            ),
+            # transforms.RandomRotation(180, interpolation=transforms.InterpolationMode.BILINEAR),
+            transforms.RandomVerticalFlip(),
+            transforms.RandomHorizontalFlip(),
         ),
         labels_toload: Optional[Sequence[str]] = None,
         labels_tohold: Optional[Sequence[str]] = None,
@@ -262,6 +267,7 @@ class DataManagerOpenCell(DataManagerBase):
             Relative position of label name from suffix in the npy file name
 
         """
+        transform_all = transforms.Compose([torch.from_numpy] + ([] if transform is None else list(transform)))
         # Determine which npy files to load.
         df_toload = self.determine_load_paths(
             labels_toload, labels_tohold, num_labels, label_name_position, self.channel_list
@@ -285,7 +291,7 @@ class DataManagerOpenCell(DataManagerBase):
             else:
                 train_data = []
             self.train_dataset = PreloadedDataset(
-                train_label, train_data, transform, self.unique_labels, label_format, self.label_col
+                train_label, train_data, transform_all, self.unique_labels, label_format, self.label_col
             )
             print('Computing variance of training data...')
             self.train_variance = np.var(train_data).item()
@@ -296,7 +302,7 @@ class DataManagerOpenCell(DataManagerBase):
             else:
                 val_data = []
             self.val_dataset = PreloadedDataset(
-                val_label, val_data, transform, self.unique_labels, label_format, self.label_col
+                val_label, val_data, transform_all, self.unique_labels, label_format, self.label_col
             )
             print('Computing variance of validation data...')
             self.val_variance = np.var(val_data).item()
