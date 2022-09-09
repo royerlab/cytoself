@@ -112,7 +112,7 @@ def test_const_dataloader(opencell_datamgr_2x10x10):
     opencell_datamgr_2x10x10.const_dataloader(shuffle=False)
     train_data0 = next(iter(opencell_datamgr_2x10x10.train_dataset))
     train_batch = next(iter(opencell_datamgr_2x10x10.train_loader))
-    assert len(train_batch['label']) == opencell_datamgr_2x10x10.batch_size
+    assert len(train_batch['label']) == opencell_datamgr_2x10x10.train_loader.batch_size
     assert torch.is_tensor(train_batch['label'])
     assert torch.is_tensor(train_batch['image'])
     assert train_batch['label'].shape == train_batch['image'].shape[:1]

@@ -30,7 +30,6 @@ class DataManagerOpenCell(DataManagerBase):
         data_split: tuple = (0.82, 0.098, 0.082),
         label_col: int = 0,
         fov_col: Optional[int] = -1,
-        batch_size: int = 32,
         shuffle_seed: int = 1,
         num_workers: int = 4,
         intensity_adjustment: Optional[dict] = None,
@@ -48,8 +47,6 @@ class DataManagerOpenCell(DataManagerBase):
             Column index to identify proteins
         fov_col : int
             Column index to identify FOVs
-        batch_size : int
-            Batch size for data feeding
         shuffle_seed : int
             Rnadom seed to shuffle data
         num_workers : int
@@ -57,13 +54,7 @@ class DataManagerOpenCell(DataManagerBase):
         intensity_adjustment : dict
             Intensity adjustment for each channel.
         """
-        super().__init__(
-            basepath=basepath,
-            data_split=data_split,
-            batch_size=batch_size,
-            shuffle_seed=shuffle_seed,
-            num_workers=num_workers,
-        )
+        super().__init__(basepath=basepath, data_split=data_split, shuffle_seed=shuffle_seed, num_workers=num_workers)
         self.label_col = label_col
         self.fov_col = fov_col
         self.unique_labels = None
@@ -317,12 +308,14 @@ class DataManagerOpenCell(DataManagerBase):
             )
             self.test_variance = np.var(test_data).item()
 
-    def const_dataloader(self, shuffle: bool = True, shuffle_test: bool = False, **kwargs):
+    def const_dataloader(self, batch_size=32, shuffle: bool = True, shuffle_test: bool = False, **kwargs):
         """
         Constructs DataLoader
 
         Parameters
         ----------
+        batch_size : int
+            Batch size
         shuffle : bool
             Shuffle train & val batches if True
         shuffle_test : bool
@@ -333,13 +326,13 @@ class DataManagerOpenCell(DataManagerBase):
         _assert_dtype(self.val_dataset.label, self.val_dataset.label_format)
         _assert_dtype(self.test_dataset.label, self.test_dataset.label_format)
         self.train_loader = DataLoader(
-            self.train_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+            self.train_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
         self.val_loader = DataLoader(
-            self.val_dataset, self.batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+            self.val_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
         )
         self.test_loader = DataLoader(
-            self.test_dataset, self.batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
+            self.test_dataset, batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
         )
 
     @staticmethod

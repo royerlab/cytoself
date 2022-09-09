@@ -29,7 +29,10 @@ def test_infer_reconstruction(vanilla_ae_trainer, opencell_datamgr_vanilla):
 
     d = next(iter(opencell_datamgr_vanilla.test_loader))
     out = vanilla_ae_trainer.infer_reconstruction(d['image'].numpy())
-    assert out.shape == (opencell_datamgr_vanilla.batch_size,) + opencell_datamgr_vanilla.test_dataset.data.shape[1:]
+    assert (
+        out.shape
+        == (opencell_datamgr_vanilla.test_loader.batch_size,) + opencell_datamgr_vanilla.test_dataset.data.shape[1:]
+    )
 
 
 def test_save_load_model(vanilla_ae_trainer):

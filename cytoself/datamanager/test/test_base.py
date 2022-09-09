@@ -67,13 +67,11 @@ def test_transform():
 def test_DataManagerBase():
     basepath = 'basepath'
     data_split = (0.8, 0.1, 0.1)
-    batch_size = 32
     shuffle_seed = 1
     num_workers = 4
-    datamgr = DataManagerBase(basepath, data_split, batch_size, shuffle_seed, num_workers)
+    datamgr = DataManagerBase(basepath, data_split, shuffle_seed, num_workers)
     assert datamgr.basepath == basepath
     assert datamgr.data_split == data_split
-    assert datamgr.batch_size == batch_size
     assert datamgr.shuffle_seed == shuffle_seed
     assert datamgr.num_workers == num_workers
     assert hasattr(datamgr, 'train_dataset')

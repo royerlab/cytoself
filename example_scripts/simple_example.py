@@ -6,9 +6,9 @@ from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 # 1. Prepare Data
 datapath = 'sample_data'  # path to download sample data
 DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-datamanager = DataManagerOpenCell(datapath, ['pro'], batch_size=32, fov_col=None)
+datamanager = DataManagerOpenCell(datapath, ['pro'], fov_col=None)
 datamanager.const_dataset(label_name_position=1)
-datamanager.const_dataloader()
+datamanager.const_dataloader(batch_size=32)
 
 
 # 2. Create and train a cytoself model
