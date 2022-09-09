@@ -25,11 +25,12 @@ def test_cytoselflite_trainer_reconstruction(cytoselflite_trainer, opencell_data
         cytoselflite_trainer.infer_embeddings(None)
 
     out = cytoselflite_trainer.infer_reconstruction(opencell_datamgr_vanilla.test_loader)
-    assert out.shape == opencell_datamgr_vanilla.test_dataset.data.shape
+    assert out.shape == opencell_datamgr_vanilla.test_loader.dataset.data.shape
 
     d = next(iter(opencell_datamgr_vanilla.test_loader))
     out = cytoselflite_trainer.infer_reconstruction(d['image'].numpy())
     assert (
         out.shape
-        == (opencell_datamgr_vanilla.test_loader.batch_size,) + opencell_datamgr_vanilla.test_dataset.data.shape[1:]
+        == (opencell_datamgr_vanilla.test_loader.batch_size,)
+        + opencell_datamgr_vanilla.test_loader.dataset.data.shape[1:]
     )

@@ -68,16 +68,12 @@ def test_DataManagerBase():
     basepath = 'basepath'
     data_split = (0.8, 0.1, 0.1)
     shuffle_seed = 1
-    num_workers = 4
-    datamgr = DataManagerBase(basepath, data_split, shuffle_seed, num_workers)
+    datamgr = DataManagerBase(basepath, data_split, shuffle_seed)
     assert datamgr.basepath == basepath
     assert datamgr.data_split == data_split
     assert datamgr.shuffle_seed == shuffle_seed
-    assert datamgr.num_workers == num_workers
-    assert hasattr(datamgr, 'train_dataset')
-    assert hasattr(datamgr, 'val_dataset')
-    assert hasattr(datamgr, 'test_dataset')
+    assert datamgr.num_workers == 1
     assert hasattr(datamgr, 'train_loader')
     assert hasattr(datamgr, 'val_loader')
     assert hasattr(datamgr, 'test_loader')
-    assert datamgr.const_dataset() is None
+    assert datamgr.const_dataloader() is None

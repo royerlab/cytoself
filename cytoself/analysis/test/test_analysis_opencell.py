@@ -47,9 +47,9 @@ def test_compute_umap(analysis_cytoselflite, opencell_datamgr_vanilla):
 
 
 def test_group_labels(analysis_opencell, opencell_datamgr_vanilla):
-    _lab = opencell_datamgr_vanilla.test_dataset.label
+    _lab = opencell_datamgr_vanilla.test_loader.dataset.label
     output = analysis_opencell.group_labels(_lab, group_col=0)
-    assert (output[0] == opencell_datamgr_vanilla.test_dataset.label[:, 0]).all()
+    assert (output[0] == opencell_datamgr_vanilla.test_loader.dataset.label[:, 0]).all()
     assert (output[1] == np.arange(3)).all()
     group_annotation = np.array([[0, 'gp0'], [1, 'gp1']], dtype=object)
     output = analysis_opencell.group_labels(_lab, group_annotation=group_annotation, group_col=0)
@@ -119,8 +119,7 @@ def test_plot_umap_of_embedding_vector_image(analysis_opencell, _file_name, open
 
 def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name, opencell_datamgr_vanilla):
     analysis_opencell.reset_umap()
-    opencell_datamgr_vanilla.const_dataset(label_format='index')
-    opencell_datamgr_vanilla.const_dataloader()
+    opencell_datamgr_vanilla.const_dataloader(label_format='index')
     group_annotation = np.array([[0, 'gp0'], [1, 'gp1']], dtype=object)
     with assert_not_raises():
         output = analysis_opencell.plot_umap_of_embedding_vector(

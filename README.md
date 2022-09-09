@@ -63,14 +63,14 @@ Download one set of the image and label data from [Data Availability](##Data Ava
 
 
 ### 1. Prepare Data
+
 ```python
 from cytoself.datamanager.opencell import DataManagerOpenCell
 
 datapath = 'sample_data'  # path to download sample data
 DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-datamanager = DataManagerOpenCell(datapath, ['pro'], batch_size=32, fov_col=None)
-datamanager.const_dataset(label_name_position=1)
-datamanager.const_dataloader()
+datamanager = DataManagerOpenCell(datapath, ['pro'], fov_col=None)
+datamanager.const_dataloader(batch_size=32, label_name_position=1)
 ```
 A folder, `sample_data`, will be created and sample data will be downloaded to this folder.
 The `sample_data` folder will be created in the "current working directory," which is where you are running the code. 

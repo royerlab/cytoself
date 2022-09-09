@@ -85,38 +85,34 @@ def test_const_label_book(opencell_datamgr_2x10x10):
 
 
 def test_const_dataset(opencell_datamgr_2x10x10):
-    opencell_datamgr_2x10x10.const_dataset()
-    assert_dataset(opencell_datamgr_2x10x10.train_dataset)
-    assert_dataset(opencell_datamgr_2x10x10.val_dataset)
-    assert_dataset(opencell_datamgr_2x10x10.test_dataset)
-    opencell_datamgr_2x10x10.const_dataset(label_format='onehot')
-    assert_dataset(opencell_datamgr_2x10x10.train_dataset, label_len=3)
-    assert_dataset(opencell_datamgr_2x10x10.val_dataset, label_len=3)
-    assert_dataset(opencell_datamgr_2x10x10.test_dataset, label_len=3)
+    opencell_datamgr_2x10x10.const_dataloader()
+    assert_dataset(opencell_datamgr_2x10x10.train_loader.dataset)
+    assert_dataset(opencell_datamgr_2x10x10.val_loader.dataset)
+    assert_dataset(opencell_datamgr_2x10x10.test_loader.dataset)
+    opencell_datamgr_2x10x10.const_dataloader(label_format='onehot')
+    assert_dataset(opencell_datamgr_2x10x10.train_loader.dataset, label_len=3)
+    assert_dataset(opencell_datamgr_2x10x10.val_loader.dataset, label_len=3)
+    assert_dataset(opencell_datamgr_2x10x10.test_loader.dataset, label_len=3)
 
 
 def test_const_dataset_labelonly(gen_data_2x10x10):
     datamgr = DataManagerOpenCell(gen_data_2x10x10, ['label'])
-    datamgr.const_dataset()
-    assert_dataset(datamgr.train_dataset)
-    assert_dataset(datamgr.val_dataset)
-    assert_dataset(datamgr.test_dataset)
+    datamgr.const_dataloader()
+    assert_dataset(datamgr.train_loader.dataset)
+    assert_dataset(datamgr.val_loader.dataset)
+    assert_dataset(datamgr.test_loader.dataset)
 
 
 def test_const_dataloader(opencell_datamgr_2x10x10):
-    opencell_datamgr_2x10x10.const_dataset(label_format=None)
     with pytest.raises(TypeError):
-        opencell_datamgr_2x10x10.const_dataloader(shuffle=False)
+        opencell_datamgr_2x10x10.const_dataloader(label_format=None, shuffle=False)
 
-    opencell_datamgr_2x10x10.const_dataset()
     opencell_datamgr_2x10x10.const_dataloader(shuffle=False)
-    train_data0 = next(iter(opencell_datamgr_2x10x10.train_dataset))
     train_batch = next(iter(opencell_datamgr_2x10x10.train_loader))
     assert len(train_batch['label']) == opencell_datamgr_2x10x10.train_loader.batch_size
     assert torch.is_tensor(train_batch['label'])
     assert torch.is_tensor(train_batch['image'])
     assert train_batch['label'].shape == train_batch['image'].shape[:1]
-    assert tuple(train_batch['image'].shape)[1:] == train_data0['image'].shape
 
 
 @pytest.mark.slow

@@ -31,7 +31,6 @@ class DataManagerOpenCell(DataManagerBase):
         label_col: int = 0,
         fov_col: Optional[int] = -1,
         shuffle_seed: int = 1,
-        num_workers: int = 4,
         intensity_adjustment: Optional[dict] = None,
     ):
         """
@@ -49,12 +48,10 @@ class DataManagerOpenCell(DataManagerBase):
             Column index to identify FOVs
         shuffle_seed : int
             Rnadom seed to shuffle data
-        num_workers : int
-            Number of workers for multiprocessing
         intensity_adjustment : dict
             Intensity adjustment for each channel.
         """
-        super().__init__(basepath=basepath, data_split=data_split, shuffle_seed=shuffle_seed, num_workers=num_workers)
+        super().__init__(basepath=basepath, data_split=data_split, shuffle_seed=shuffle_seed)
         self.label_col = label_col
         self.fov_col = fov_col
         self.unique_labels = None
@@ -218,8 +215,10 @@ class DataManagerOpenCell(DataManagerBase):
         """
         self.unique_labels = np.unique(label_data[:, self.label_col])
 
-    def const_dataset(
+    def const_dataloader(
         self,
+        batch_size: int = 32,
+        num_workers: int = 4,
         transform: Optional[Sequence] = (
             transforms.RandomApply(
                 [
@@ -238,12 +237,19 @@ class DataManagerOpenCell(DataManagerBase):
         num_labels: Optional[int] = None,
         label_format: Optional[str] = 'index',
         label_name_position: int = -2,
+        shuffle: bool = True,
+        shuffle_test: bool = False,
+        **kwargs,
     ):
         """
-        Loads and splits data into training, validation and test data, followed by DataSet construction.
+        Loads and splits data into training, validation and test data, followed by DataLoader construction.
 
         Parameters
         ----------
+        batch_size : int
+            Batch size
+        num_workers : int
+            Number of workers for multiprocessing
         transform : Callable
             Data augmentation functions
         labels_toload : Sequence of str
@@ -256,8 +262,13 @@ class DataManagerOpenCell(DataManagerBase):
             Format of converted label: onehot, index or None (i.e. no conversion)
         label_name_position : int
             Relative position of label name from suffix in the npy file name
+        shuffle : bool
+            Shuffle train & val batches if True
+        shuffle_test : bool
+            Shuffle test batch if True.
 
         """
+        self.num_workers = num_workers
         transform_all = transforms.Compose([torch.from_numpy] + ([] if transform is None else list(transform)))
         # Determine which npy files to load.
         df_toload = self.determine_load_paths(
@@ -281,8 +292,12 @@ class DataManagerOpenCell(DataManagerBase):
                 train_data = image_all[train_ind]
             else:
                 train_data = []
-            self.train_dataset = PreloadedDataset(
+            train_dataset = PreloadedDataset(
                 train_label, train_data, transform_all, self.unique_labels, label_format, self.label_col
+            )
+            _assert_dtype(train_dataset.label, train_dataset.label_format)
+            self.train_loader = DataLoader(
+                train_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
             )
             print('Computing variance of training data...')
             self.train_variance = np.var(train_data).item()
@@ -292,8 +307,12 @@ class DataManagerOpenCell(DataManagerBase):
                 val_data = image_all[val_ind]
             else:
                 val_data = []
-            self.val_dataset = PreloadedDataset(
+            val_dataset = PreloadedDataset(
                 val_label, val_data, transform_all, self.unique_labels, label_format, self.label_col
+            )
+            _assert_dtype(val_dataset.label, val_dataset.label_format)
+            self.val_loader = DataLoader(
+                val_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
             )
             print('Computing variance of validation data...')
             self.val_variance = np.var(val_data).item()
@@ -303,37 +322,15 @@ class DataManagerOpenCell(DataManagerBase):
                 test_data = image_all[test_ind]
             else:
                 test_data = []
-            self.test_dataset = PreloadedDataset(
+            test_dataset = PreloadedDataset(
                 test_label, test_data, None, self.unique_labels, label_format, self.label_col
             )
+            _assert_dtype(test_dataset.label, test_dataset.label_format)
+            self.test_loader = DataLoader(
+                test_dataset, batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
+            )
+            print('Computing variance of test data...')
             self.test_variance = np.var(test_data).item()
-
-    def const_dataloader(self, batch_size=32, shuffle: bool = True, shuffle_test: bool = False, **kwargs):
-        """
-        Constructs DataLoader
-
-        Parameters
-        ----------
-        batch_size : int
-            Batch size
-        shuffle : bool
-            Shuffle train & val batches if True
-        shuffle_test : bool
-            Shuffle test batch if True.
-
-        """
-        _assert_dtype(self.train_dataset.label, self.train_dataset.label_format)
-        _assert_dtype(self.val_dataset.label, self.val_dataset.label_format)
-        _assert_dtype(self.test_dataset.label, self.test_dataset.label_format)
-        self.train_loader = DataLoader(
-            self.train_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
-        )
-        self.val_loader = DataLoader(
-            self.val_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
-        )
-        self.test_loader = DataLoader(
-            self.test_dataset, batch_size, shuffle=shuffle_test, num_workers=self.num_workers, **kwargs
-        )
 
     @staticmethod
     def download_sample_data(output: Optional[str] = 'sample_data'):

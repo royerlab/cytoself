@@ -42,7 +42,7 @@ def test_cytoselffull_trainer_embeddings(cytoselffull_trainer, opencell_datamgr_
     out = cytoselffull_trainer.infer_embeddings(opencell_datamgr_vanilla.test_loader)
     assert (
         out[0].shape
-        == (len(opencell_datamgr_vanilla.test_dataset), CYTOSELF_MODEL_ARGS['vq_args']['embedding_dim'])
+        == (len(opencell_datamgr_vanilla.test_loader.dataset), CYTOSELF_MODEL_ARGS['vq_args']['embedding_dim'])
         + CYTOSELF_MODEL_ARGS['emb_shapes'][1]
     )
 
@@ -60,11 +60,12 @@ def test_cytoselffull_trainer_reconstruction(cytoselffull_trainer, opencell_data
         cytoselffull_trainer.infer_embeddings(None)
 
     out = cytoselffull_trainer.infer_reconstruction(opencell_datamgr_vanilla.test_loader)
-    assert out.shape == opencell_datamgr_vanilla.test_dataset.data.shape
+    assert out.shape == opencell_datamgr_vanilla.test_loader.dataset.data.shape
 
     d = next(iter(opencell_datamgr_vanilla.test_loader))
     out = cytoselffull_trainer.infer_reconstruction(d['image'].numpy())
     assert (
         out.shape
-        == (opencell_datamgr_vanilla.test_loader.batch_size,) + opencell_datamgr_vanilla.test_dataset.data.shape[1:]
+        == (opencell_datamgr_vanilla.test_loader.batch_size,)
+        + opencell_datamgr_vanilla.test_loader.dataset.data.shape[1:]
     )

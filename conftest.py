@@ -57,7 +57,6 @@ def opencell_datamgr_1x32x32(gen_data_1x32x32):
 @pytest.fixture(scope='module')
 def opencell_datamgr_vanilla(gen_data_1x32x32):
     datamgr = DataManagerOpenCell(gen_data_1x32x32, ['nuc'])
-    datamgr.const_dataset()
     datamgr.const_dataloader(batch_size=2)
     return datamgr
 
