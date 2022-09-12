@@ -99,10 +99,6 @@ class DecoderResnet(nn.Module):
 
             if num_hidden_decrease:
                 _num_hiddens = max(int(num_hiddens / 2), min_hiddens)
-            if i == num_blocks - 1:
-                _num_hiddens = output_shape[0]
-                if linear_output:
-                    act = None
             self.decoder[f'resrep{i+1}last'] = Conv2dBN(
                 num_hiddens,
                 _num_hiddens,
@@ -112,6 +108,18 @@ class DecoderResnet(nn.Module):
                 **kwargs,
             )
             num_hiddens = _num_hiddens
+
+            if i == num_blocks - 1:
+                self.decoder['output_conv'] = nn.Conv2d(
+                    _num_hiddens,
+                    output_shape[0],
+                    kernel_size=3,
+                    stride=1,
+                    padding='same',
+                    dilation=1,
+                    groups=1,
+                    bias=False,
+                )
 
     def forward(self, x: Tensor) -> Tensor:
         for _, lyr in self.decoder.items():

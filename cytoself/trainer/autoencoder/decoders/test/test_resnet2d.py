@@ -13,7 +13,7 @@ def test_DecoderResnet():
     model = DecoderResnet(input_shape, output_shape)
     assert not hasattr(model.decoder, 'dec_first')
     assert list(model.decoder)[0] == 'up1'
-    assert len(list(model.decoder)) == 9
+    assert len(list(model.decoder)) == 10
 
     model = DecoderResnet(input_shape, output_shape, num_hiddens=num_hiddens)
     data = torch.randn(1, 576, 4, 4)
@@ -21,7 +21,7 @@ def test_DecoderResnet():
     assert hasattr(model.decoder, 'dec_first')
     assert isinstance(model.decoder.dec_first, Conv2dBN)
     assert tuple(output.shape)[1:] == output_shape
-    assert len(model.decoder._modules) == 10
+    assert len(model.decoder._modules) == 11
 
     for key, val in {
         'dec_first': Conv2dBN,
@@ -43,6 +43,4 @@ def test_DecoderResnet():
             test_ResidualBlockRepeat(getattr(model.decoder, key))
         elif key == 'resrep3last':
             last_layer = getattr(model.decoder, key)
-            assert last_layer.act is None
-            assert last_layer.bn is None
             assert isinstance(last_layer.conv, nn.Conv2d)
