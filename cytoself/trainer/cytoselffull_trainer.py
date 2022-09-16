@@ -163,7 +163,7 @@ class CytoselfFullTrainer(VQVAETrainer):
         """
         output.update({k: v.item() for k, v in self.model.fc_loss.items()})
         output.update({k: v.item() for k, v in self.model.perplexity.items()})
-        output.update({k: v.item() for k, v in self.model.mse_loss.items()})
+        output.update({k: self.model.mse_loss[k].item() for k in sorted(self.model.mse_loss)})
         vq_loss_dict = {}
         for key0, val0 in self.model.vq_loss.items():
             for key1, val1 in val0.items():

@@ -101,7 +101,7 @@ class DecoderResnet(nn.Module):
                 _num_hiddens = max(int(num_hiddens / 2), min_hiddens)
             self.decoder[f'resrep{i+1}last'] = Conv2dBN(
                 num_hiddens,
-                _num_hiddens,
+                output_shape[0] if (i == num_blocks - 1 and not linear_output) else _num_hiddens,
                 act=act,
                 conv_gp=1,
                 name=f'resrep{i + 1}last',
@@ -109,7 +109,7 @@ class DecoderResnet(nn.Module):
             )
             num_hiddens = _num_hiddens
 
-            if i == num_blocks - 1:
+            if i == num_blocks - 1 and linear_output:
                 self.decoder['output_conv'] = nn.Conv2d(
                     _num_hiddens,
                     output_shape[0],
