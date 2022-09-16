@@ -121,6 +121,12 @@ class DecoderResnet(nn.Module):
                     bias=False,
                 )
 
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.xavier_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
     def forward(self, x: Tensor) -> Tensor:
         for _, lyr in self.decoder.items():
             x = lyr(x)

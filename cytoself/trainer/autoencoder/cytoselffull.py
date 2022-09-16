@@ -40,7 +40,7 @@ class CytoselfFull(nn.Module):
         fc_args: Optional[Union[dict, Collection[dict]]] = None,
         encoders: Optional[Collection] = None,
         decoders: Optional[Collection] = None,
-    ):
+    ) -> None:
         """
         Construct a cytoself full model
 
@@ -101,8 +101,10 @@ class CytoselfFull(nn.Module):
         self.mse_loss = None
 
         # Construct fc blocks (same order as encoders)
+        fc_args_default = {'num_layers': 1, 'num_features': 1000}
         if fc_args is None:
-            fc_args = {'num_layers': 2, 'num_features': 1000}
+            fc_args = {}
+        fc_args.update({k: v for k, v in fc_args_default.items() if k not in fc_args})
         fc_args = duplicate_kwargs(fc_args, emb_shapes)
 
         self.fc_layers = nn.ModuleList()

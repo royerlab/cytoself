@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch import nn
 
@@ -43,19 +45,23 @@ class FCblock(nn.Module):
         self.last_activation = last_activation
         self.fc_list = nn.ModuleList()
         for i in range(num_layers):
+            self.fc_list.append(nn.Dropout(dropout_rate, inplace=False))
             self.fc_list.append(
                 nn.Linear(in_channels if i == 0 else num_features, num_features if i < num_layers - 1 else out_channels)
             )
             if i < num_layers - 1:
                 self.fc_list.append(act_layer(act))
-                self.fc_list.append(nn.Dropout(dropout_rate))
+
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init_range = 1.0 / math.sqrt(m.out_features)
+                nn.init.uniform_(m.weight, -init_range, init_range)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
 
     def forward(self, x):
         if not torch.is_floating_point(x):
             x = x.type(torch.float32)
         for lyr in self.fc_list:
             x = lyr(x)
-        if not self.training:
-            local_kwargs = {'dim': 1} if self.last_activation == 'softmax' else {}
-            x = act_layer(self.last_activation, **local_kwargs)(x)
         return x
