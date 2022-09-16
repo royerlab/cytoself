@@ -251,13 +251,13 @@ class CytoselfFull(nn.Module):
 
             if i + 1 in self.fc_output_idx:
                 if self.fc_input_type == 'vqvec':
-                    fcout = self.fc_layers[i](quantized.view(quantized.size(0), -1))
+                    fcout = self.fc_layers[i](quantized.reshape(quantized.size(0), -1))
                 elif self.fc_input_type == 'vqind':
-                    fcout = self.fc_layers[i](_encoding_indices.view(_encoding_indices.size(0), -1))
+                    fcout = self.fc_layers[i](_encoding_indices.reshape(_encoding_indices.size(0), -1))
                 elif self.fc_input_type == 'vqindhist':
                     fcout = self.fc_layers[i](softmax_histogram)
                 else:
-                    fcout = self.fc_layers[i](encoded.view(encoded.size(0), -1))
+                    fcout = self.fc_layers[i](encoded.reshape(encoded.size(0), -1))
                 fc_outs.append(fcout)
             encoded_list.append(encoded)
             self.vq_loss[f'vq{i + 1}'] = vq_loss
