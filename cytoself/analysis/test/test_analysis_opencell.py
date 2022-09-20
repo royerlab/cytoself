@@ -134,3 +134,46 @@ def test_plot_umap_of_embedding_vector_dataloader(analysis_opencell, _file_name,
     assert exists(_file_name)
     assert exists(join(join(analysis_opencell.trainer.savepath_dict['embeddings'], 'embeddings_for_umap.npy')))
     assert output.shape == (len(opencell_datamgr_vanilla.test_loader.dataset.label), 2)
+
+
+def test_calc_cellid_vqidx(analysis_cytoselflite):
+    cellid_by_idx = analysis_cytoselflite.calculate_cellid_ondim0_vqidx_ondim1(
+        savepath=analysis_cytoselflite.savepath_dict['feature_spectra_data']
+    )
+    assert cellid_by_idx.shape == (3, 7)
+    assert exists(join(analysis_cytoselflite.savepath_dict['feature_spectra_data'], 'cellid_vqidx1.npy'))
+
+
+def test_calc_corr_idx_idx(analysis_cytoselflite):
+    corr = analysis_cytoselflite.calculate_cellid_ondim0_vqidx_ondim1()
+    corr_idx_idx = analysis_cytoselflite.calculate_corr_vqidx_vqidx(
+        corr, filepath=join(analysis_cytoselflite.savepath_dict['feature_spectra_data'], 'corr_idx_idx.npy')
+    )
+    assert corr_idx_idx.shape == (7, 7)
+    assert exists(join(analysis_cytoselflite.savepath_dict['feature_spectra_data'], 'corr_idx_idx.npy'))
+
+
+def test_plot_clustermap(analysis_cytoselflite):
+    heatmap = analysis_cytoselflite.plot_clustermap(use_codebook=True)
+    assert hasattr(heatmap, 'dendrogram_row')
+
+    heatmap = analysis_cytoselflite.plot_clustermap()
+    assert hasattr(heatmap, 'dendrogram_row')
+    assert exists(join(analysis_cytoselflite.savepath_dict['feature_spectra_figures'], 'clustermap_vq1.png'))
+
+
+def test_compute_feature_spectrum(analysis_cytoselflite):
+    with pytest.raises(ValueError):
+        analysis_cytoselflite.compute_feature_spectrum(np.random.randint(7, size=(7,)))
+        analysis_cytoselflite.compute_feature_spectrum(
+            np.random.randint(7, size=(1, 7)), np.random.choice(7, size=(1, 7))
+        )
+        analysis_cytoselflite.compute_feature_spectrum(
+            np.random.randint(7, size=(1, 7)), np.random.choice(7, size=(1, 5))
+        )
+    analysis_cytoselflite.feature_spectrum_indices = None
+    vq_indhist = np.random.randint(7, size=(4, 7))
+    ft_spec = analysis_cytoselflite.compute_feature_spectrum(vq_indhist)
+    assert ft_spec.shape == (4, 7)
+    ft_spec2 = analysis_cytoselflite.compute_feature_spectrum(vq_indhist)
+    assert (ft_spec == ft_spec2).all()

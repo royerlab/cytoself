@@ -5,8 +5,14 @@ from typing import Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
+from numpy.typing import ArrayLike
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+import seaborn as sns
+import colorcet as cc
 
 from cytoself.analysis.base import BaseAnalysis
+from cytoself.analysis.pearson_correlation import selfpearson_multi
 
 
 class AnalysisOpenCell(BaseAnalysis):
@@ -16,6 +22,7 @@ class AnalysisOpenCell(BaseAnalysis):
 
     def __init__(self, datamanager, trainer, homepath: Optional[str] = None, **kwargs):
         super().__init__(datamanager, trainer, homepath, **kwargs)
+        self.feature_spectrum_indices = None
 
     def plot_umap_of_embedding_vector(
         self,
@@ -269,3 +276,173 @@ class AnalysisOpenCell(BaseAnalysis):
         if savepath:
             fig.savefig(savepath, dpi=dpi)
         return fig, ax
+
+    def calculate_cellid_ondim0_vqidx_ondim1(
+        self,
+        vq_idx: int = 1,
+        data_loader: Optional[DataLoader] = None,
+        unique_labels: Optional = None,
+        label_col: int = 0,
+        savepath: Optional[str] = None,
+    ):
+        """
+        Compute the matrix of cell line ID vs. vq index occurrence per image.
+        This is needed to compute feature heatmap.
+
+        Parameters
+        ----------
+        vq_idx : int
+            VQ layer index
+        data_loader : DataLoader
+            DataLoader to compute the matrix
+        unique_labels : Sequence or ArrayLike
+            Unique labels
+        label_col : int
+            Label column index to use
+        savepath : str
+            Path to save the resulting matrix
+
+        Returns
+        -------
+        Numpy array
+
+        """
+        if data_loader is None:
+            data_loader = self.datamanager.test_loader
+        if unique_labels is None:
+            unique_labels = self.datamanager.unique_labels
+        indhist = self.trainer.infer_embeddings(data_loader, output_layer=f'vqindhist{vq_idx}')[0]
+        print('Computing cell line ID vs vq index...')
+        cellid_by_idx = np.zeros((len(unique_labels), indhist.shape[-1]))
+        for i, cid in enumerate(tqdm(unique_labels)):
+            data0 = indhist[data_loader.dataset.label[:, label_col] == cid]
+            cellid_by_idx[i, :] = data0.sum(0) / data0.shape[0]
+        if savepath:
+            np.save(join(savepath, f'cellid_vqidx{vq_idx}.npy'), cellid_by_idx)
+        return cellid_by_idx
+
+    def calculate_corr_vqidx_vqidx(
+        self, data: ArrayLike, num_workers: int = 1, filepath: Optional[str] = None
+    ) -> ArrayLike:
+        """
+        Compute self pearson's correlation between vq index and vq index
+
+        Parameters
+        ----------
+        data : ArrayLike
+            Numpy array with VQ index on dim 1
+        num_workers : int
+            Number of workers
+        filepath : str
+            File path (including file name & extension)
+
+        Returns
+        -------
+        Numpy array
+
+        """
+        print('Computing self Pearson correlation...')
+        corr_idx_idx = np.nan_to_num(selfpearson_multi(data.T, num_workers=num_workers))
+        if filepath:
+            np.save(filepath, corr_idx_idx)
+        return corr_idx_idx
+
+    def plot_clustermap(
+        self,
+        vq_idx: int = 1,
+        data_loader: Optional[DataLoader] = None,
+        num_workers: int = 1,
+        filepath: str = 'default',
+        use_codebook: bool = False,
+        update_feature_spectrum_indices: bool = True,
+    ):
+        """
+        Generate hierarchical clustering heatmaps against vqind vs. vqind
+
+        Parameters
+        ----------
+        vq_idx : int
+            VQ layer index
+        data_loader : DataLoader
+            DataLoader to compute the matrix
+        num_workers : int
+            Number of workers
+        filepath : str
+            File path (including file name & extension)
+        use_codebook : bool
+            Uses codebook to compute self-correlation in VQ indices if Ture, otherwise uses cell id
+        update_feature_spectrum_indices : bool
+            Overwrite class attribute update_feature_spectrum_indices if True
+
+        Returns
+        -------
+        Seaborn heatmap object
+
+        """
+        if use_codebook:
+            _mat_idx = self.trainer.model.vq_layers[vq_idx - 1].codebook.weight.detach().cpu().numpy()
+        else:
+            _mat_idx = self.calculate_cellid_ondim0_vqidx_ondim1(
+                vq_idx=vq_idx, data_loader=data_loader, savepath=self.savepath_dict['feature_spectra_data']
+            )
+        corr_idx_idx = self.calculate_corr_vqidx_vqidx(
+            _mat_idx,
+            num_workers=num_workers,
+            filepath=join(self.savepath_dict['feature_spectra_data'], f'corr_idx_idx_vq{vq_idx}.npy'),
+        )
+        print('computing clustermaps...')
+        heatmap = sns.clustermap(
+            corr_idx_idx,
+            cmap=cc.diverging_bwr_20_95_c54,
+            vmin=-1,
+            vmax=1,
+        )
+        heatmap.ax_col_dendrogram.set_title(f'vq{vq_idx} indhist Pearson corr hierarchy link')
+        heatmap.ax_heatmap.set_xlabel('vq index')
+        heatmap.ax_heatmap.set_ylabel('vq index')
+        if update_feature_spectrum_indices:
+            self.feature_spectrum_indices = np.array(heatmap.dendrogram_row.reordered_ind)
+
+        if filepath:
+            if filepath == 'default':
+                filepath = join(self.savepath_dict['feature_spectra_figures'], f'clustermap_vq{vq_idx}.png')
+            heatmap.savefig(filepath, dpi=300)
+        return heatmap
+
+    def compute_feature_spectrum(
+        self, vq_index_histogram: ArrayLike, feature_spectrum_indices: Optional[ArrayLike] = None, **kwargs
+    ) -> ArrayLike:
+        """
+        Compute feature spectrum from VQ index histogram
+
+        Parameters
+        ----------
+        vq_index_histogram : ArrayLike
+            2D Numpy array of VQ index histogram
+        feature_spectrum_indices : ArrayLike
+            1D Numpy array of feature spectrum indices; obtained from cluster map
+        kwargs : dict
+            kwargs for plot_clustermap method
+
+        Returns
+        -------
+        2D Numpy array
+
+        """
+        if len(vq_index_histogram.shape) != 2:
+            raise ValueError('vq_index_histogram must be a 2D matrix.')
+        if feature_spectrum_indices is None:
+            if self.feature_spectrum_indices is None:
+                feature_spectrum_indices = np.array(self.plot_clustermap(**kwargs).dendrogram_row.reordered_ind)
+            else:
+                feature_spectrum_indices = self.feature_spectrum_indices
+        else:
+            if len(feature_spectrum_indices.shape) != 1:
+                raise ValueError('feature_spectrum_indices must be a 1D array.')
+        if vq_index_histogram.shape[-1] != len(feature_spectrum_indices):
+            raise ValueError(
+                f'The second dim of vq_index_histogram ({vq_index_histogram.shape[-1]}) '
+                f'must be same as the length of feature_spectrum_indices ({len(feature_spectrum_indices)}).'
+            )
+
+        return vq_index_histogram[:, feature_spectrum_indices]

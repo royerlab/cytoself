@@ -10,5 +10,5 @@ matplotlib>=3.5
 umap-learn==0.5.3
 gdown>=4.3
 natsort
-# colorcet>=3
-# seaborn>=0.11
+colorcet>=3
+seaborn>=0.11
