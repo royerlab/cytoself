@@ -1,4 +1,6 @@
 import numpy as np
+import pytest
+
 from cytoself.analysis.pearson_correlation import corr_single, selfpearson_multi, pearson_multi
 
 
@@ -16,3 +18,5 @@ def test_selfpearson_multi():
 def test_pearson_multi():
     corr = pearson_multi(np.arange(5), np.tile(np.arange(5), (5, 1)))
     assert np.unique(corr) == 1
+    with pytest.raises(ValueError):
+        pearson_multi(np.arange(5), np.tile(np.arange(4), (5, 1)))

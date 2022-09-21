@@ -68,6 +68,14 @@ def test_plot_umap_of_embedding_vector_nullinput(analysis_opencell, _label_data)
         analysis_opencell.plot_umap_of_embedding_vector(embedding_data=np.random.randn(100, 10))
 
 
+def test_plot_umap_by_group(analysis_opencell):
+    label = np.random.choice(2, (10,)).astype(object)
+    label[label == 0] = 'others'
+    label[label == 1] = 'group1'
+    with assert_not_raises():
+        analysis_opencell.plot_umap_by_group(np.random.random((10, 2)), label)
+
+
 def test_plot_umap_of_embedding_vector_umapdata(analysis_opencell, _file_name, _label_data):
     with assert_not_raises():
         output = analysis_opencell.plot_umap_of_embedding_vector(
@@ -165,11 +173,13 @@ def test_plot_clustermap(analysis_cytoselflite):
 def test_compute_feature_spectrum(analysis_cytoselflite):
     with pytest.raises(ValueError):
         analysis_cytoselflite.compute_feature_spectrum(np.random.randint(7, size=(7,)))
+    with pytest.raises(ValueError):
+        analysis_cytoselflite.compute_feature_spectrum(
+            np.random.randint(7, size=(1, 7)), np.random.choice(7, size=(5,))
+        )
+    with pytest.raises(ValueError):
         analysis_cytoselflite.compute_feature_spectrum(
             np.random.randint(7, size=(1, 7)), np.random.choice(7, size=(1, 7))
-        )
-        analysis_cytoselflite.compute_feature_spectrum(
-            np.random.randint(7, size=(1, 7)), np.random.choice(7, size=(1, 5))
         )
     analysis_cytoselflite.feature_spectrum_indices = None
     vq_indhist = np.random.randint(7, size=(4, 7))

@@ -49,6 +49,7 @@ def test_determine_load_paths(gen_data_2x10x10, opencell_datamgr_2x10x10):
 
 
 def test__load_data_multi(opencell_datamgr_2x10x10):
+    opencell_datamgr_2x10x10.intensity_adjustment = {'nuc': 1}
     df_toload = opencell_datamgr_2x10x10.determine_load_paths(suffix=opencell_datamgr_2x10x10.channel_list)
     image_all, label_all = opencell_datamgr_2x10x10._load_data_multi(df_toload)
     assert len(image_all) == len(test_label)

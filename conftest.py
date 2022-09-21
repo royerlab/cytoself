@@ -26,7 +26,7 @@ def basepath():
 def gen_data_2x10x10(basepath):
     path = join(basepath, "2x10x10")
     makedirs(path)
-    gen_npy(path, (2, 10, 10))
+    gen_npy(path, (10, 10))
     return path
 
 
@@ -34,15 +34,16 @@ def gen_data_2x10x10(basepath):
 def gen_data_1x32x32(basepath):
     path = join(basepath, "1x32x32")
     makedirs(path)
-    gen_npy(path, (1, 32, 32))
+    gen_npy(path, (32, 32))
     return path
 
 
 @pytest.fixture(scope='module')
 def opencell_datamgr_2x10x10(gen_data_2x10x10):
-    datamgr = DataManagerOpenCell(gen_data_2x10x10, ['nuc'])
+    datamgr = DataManagerOpenCell(gen_data_2x10x10, ['pro', 'nuc'])
     assert 'label' in datamgr.channel_list
     assert 'nuc' in datamgr.channel_list
+    assert 'pro' in datamgr.channel_list
     return datamgr
 
 
