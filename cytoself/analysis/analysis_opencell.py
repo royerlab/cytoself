@@ -12,7 +12,7 @@ import seaborn as sns
 import colorcet as cc
 
 from cytoself.analysis.base import BaseAnalysis
-from cytoself.analysis.pearson_correlation import selfpearson_multi
+from cytoself.analysis.utils.pearson_correlation import selfpearson_multi
 
 
 class AnalysisOpenCell(BaseAnalysis):
