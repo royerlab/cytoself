@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 
-![Alt Text](images/3DUMAP.gif)
+![A rotating 3D UMAP](images/3DUMAP.gif)
 
 ### Self-supervised deep learning encodes high-resolution features of protein subcellular localization
 
@@ -37,7 +37,7 @@ are associated to the same ID, and tries its best to tell images apart if they a
 can resolve very fine textural differences between image classes but also can ignore very complex sources of image variability 
 such as cell shapes, states, etc...
 
-![Alt Text](images/workflow.jpg)
+![A schematic of cytoself](images/workflow.jpg)
 
 
 ## What's in this repository
