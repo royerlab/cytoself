@@ -38,9 +38,13 @@ information (protein ID) as a label to learn the localization patterns of protei
 
 ## Installation
 Recommended: create a new environment and install cytoself on the environment from pypi
+
+(Optional) To run cytoself on GPUs, it is recommended to install pytorch GPU version before installing cytoself 
+following the [official instruction](https://pytorch.org/get-started/locally/).
 ```shell script
 conda create -y -n cytoself python=3.9
 conda activate cytoself
+# (Optional: Install pytorch GPU following the official instruction)
 pip install cytoself
 ```
 
@@ -67,9 +71,10 @@ Download one set of the image and label data from [Data Availability](##Data Ava
 ```python
 from cytoself.datamanager.opencell import DataManagerOpenCell
 
+data_ch = ['pro', 'nuc']
 datapath = 'sample_data'  # path to download sample data
 DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-datamanager = DataManagerOpenCell(datapath, ['pro'], fov_col=None)
+datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
 ```
 A folder, `sample_data`, will be created and sample data will be downloaded to this folder.
@@ -95,23 +100,26 @@ Data of nucleus distance map. Size 100x100. Images were cropped with nucleus bei
 ### 2. Create and train a cytoself model
 
 ```python
-from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
+from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 
 model_args = {
-    'input_shape': (1, 100, 100),
-    'emb_shapes': ((64, 25, 25), (64, 4, 4)),
-    'output_shape': (1, 100, 100),
+    'input_shape': (2, 100, 100),
+    'emb_shapes': ((25, 25), (4, 4)),
+    'output_shape': (2, 100, 100),
+    'fc_output_idx': [2],
+    'vq_args': {'num_embeddings': 512, 'embedding_dim': 64},
     'vq_args': {'num_embeddings': 512},
     'num_class': len(datamanager.unique_labels),
+    'fc_input_type': 'vqvec',
 }
 train_args = {
     'lr': 1e-3,
-    'max_epoch': 10,
+    'max_epoch': 1,
     'reducelr_patience': 3,
     'reducelr_increment': 0.1,
     'earlystop_patience': 6,
 }
-trainer = CytoselfLiteTrainer(model_args, train_args, homepath='demo_output')
+trainer = CytoselfFullTrainer(train_args, homepath='demo_output', model_args=model_args)
 trainer.fit(datamanager, tensorboard_path='tb_logs')
 ```
 
@@ -122,14 +130,13 @@ from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 analysis = AnalysisOpenCell(datamanager, trainer)
 umap_data = analysis.plot_umap_of_embedding_vector(
     data_loader=datamanager.test_loader,
-#     savepath='demo_output/analysis/umap_figures/UMAP_vqvec2.png',
-    group_col=1,
-    output_layer='vqvec2',
-    title='UMAP_vqvec2',
+    group_col=2,
+    output_layer=f'{model_args["fc_input_type"]}2',
+    title=f'UMAP {model_args["fc_input_type"]}2',
     xlabel='UMAP1',
     ylabel='UMAP2',
-    s=2,
-    alpha=1,
+    s=0.3,
+    alpha=0.5,
     show_legend=True,
 )
 ```
@@ -138,11 +145,8 @@ The output UMAP plot will be saved at `demo_output/analysis/umap_figures/UMAP_vq
 ![Result_UMAP](images/UMAP_vqvec2.png)
 
 ## Tested Environments
-~~Google Colab (CPU/GPU/TPU)~~
 
-~~macOS 10.14.6, RAM 32GB (CPU)~~
-
-~~Windows10 Pro 64bit, RAM 32GB (CPU)~~
+Rocky Linux 8.6, NVIDIA A100, CUDA 11.7 (GPU)
 
 Ubuntu 20.04.3 LTS, NVIDIA 3090, CUDA 11.4 (GPU)
 

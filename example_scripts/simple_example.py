@@ -1,44 +1,84 @@
-from cytoself.datamanager.opencell import DataManagerOpenCell
-from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
-from cytoself.analysis.analysis_opencell import AnalysisOpenCell
+from os.path import join
+import numpy as np
+import torch
+import matplotlib.pyplot as plt
 
+from cytoself.datamanager.opencell import DataManagerOpenCell
+from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
+from cytoself.analysis.analysis_opencell import AnalysisOpenCell
+from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
 # 1. Prepare Data
+data_ch = ['pro', 'nuc']
 datapath = 'sample_data'  # path to download sample data
 DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-datamanager = DataManagerOpenCell(datapath, ['pro'], fov_col=None)
+datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
 
 
 # 2. Create and train a cytoself model
 model_args = {
-    'input_shape': (1, 100, 100),
-    'emb_shapes': ((64, 25, 25), (64, 4, 4)),
-    'output_shape': (1, 100, 100),
-    'vq_args': {'num_embeddings': 512},
+    'input_shape': (2, 100, 100),
+    'emb_shapes': ((25, 25), (4, 4)),
+    'output_shape': (2, 100, 100),
+    'fc_output_idx': [2],
+    'vq_args': {'num_embeddings': 512, 'embedding_dim': 64},
     'num_class': len(datamanager.unique_labels),
+    'fc_input_type': 'vqvec',
 }
 train_args = {
     'lr': 1e-3,
-    'max_epoch': 10,
+    'max_epoch': 1,
     'reducelr_patience': 3,
     'reducelr_increment': 0.1,
     'earlystop_patience': 6,
 }
-trainer = CytoselfLiteTrainer(train_args, homepath='demo_output', model_args=model_args)
+trainer = CytoselfFullTrainer(train_args, homepath='demo_output', model_args=model_args)
 trainer.fit(datamanager, tensorboard_path='tb_logs')
 
+# 2.1 Generate training history
+plot_history_cytoself(trainer.history, savepath=trainer.savepath_dict['visualization'])
 
-# 3. Plot UMAP
+# 2.2 Compare the reconstructed images as a sunity check
+img = next(iter(datamanager.test_loader))['image'].detach().cpu().numpy()
+torch.cuda.empty_cache()
+reconstructed = trainer.infer_reconstruction(img)
+fig, ax = plt.subplots(2, len(data_ch), figsize=(5 * len(data_ch), 5), squeeze=False)
+for ii, ch in enumerate(data_ch):
+    t0 = np.zeros((2 * 100, 5 * 100))
+    for i, im in enumerate(img[:10, ii, ...]):
+        i0, i1 = np.unravel_index(i, (2, 5))
+        t0[i0 * 100 : (i0 + 1) * 100, i1 * 100 : (i1 + 1) * 100] = im
+    t1 = np.zeros((2 * 100, 5 * 100))
+    for i, im in enumerate(reconstructed[:10, ii, ...]):
+        i0, i1 = np.unravel_index(i, (2, 5))
+        t1[i0 * 100 : (i0 + 1) * 100, i1 * 100 : (i1 + 1) * 100] = im
+    ax[0, ii].imshow(t0, cmap='gray')
+    ax[0, ii].axis('off')
+    ax[0, ii].set_title('input ' + ch)
+    ax[1, ii].imshow(t1, cmap='gray')
+    ax[1, ii].axis('off')
+    ax[1, ii].set_title('output ' + ch)
+fig.tight_layout()
+fig.show()
+fig.savefig(join(trainer.savepath_dict['visualization'], 'reconstructed_images.png'), dpi=300)
+
+
+# 3. Analyze embeddings
 analysis = AnalysisOpenCell(datamanager, trainer)
+
+# 3.1 Generate biclustering heatmap
+analysis.plot_clustermap(num_workers=4)
+
+# 3.2 Plot UMAP
 umap_data = analysis.plot_umap_of_embedding_vector(
     data_loader=datamanager.test_loader,
     group_col=2,
-    output_layer='vqvec2',
-    title='UMAP vqvec2',
+    output_layer=f'{model_args["fc_input_type"]}2',
+    title=f'UMAP {model_args["fc_input_type"]}2',
     xlabel='UMAP1',
     ylabel='UMAP2',
-    s=2,
-    alpha=1,
+    s=0.3,
+    alpha=0.5,
     show_legend=True,
 )
