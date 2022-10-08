@@ -5,7 +5,7 @@ cytoself in pytorch implementation
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs41592--022--01541--z-%23403075)](https://doi.org/10.1038/s41592-022-01541-z)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
-[![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself_pytorch)
+[![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself)
 [![Tests](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml/badge.svg)](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml)
 
 
