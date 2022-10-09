@@ -446,7 +446,6 @@ class BaseTrainer:
                     else:
                         count_lr_no_improve += 1
                         count_early_stop += 1
-                        self.model = deepcopy(self.best_model)
 
                     # Reduce learn rate on plateau
                     count_lr_no_improve = self._reduce_lr_on_plateau(count_lr_no_improve)

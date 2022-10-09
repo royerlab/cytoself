@@ -149,7 +149,7 @@ def plot_umap_with_cluster_score(
         prop={'size': 6},
         bbox_to_anchor=(1, 1),
         loc='upper left',
-        ncol=1 + len(names) // 15,
+        ncol=1 + len(names) // 20,
         frameon=False,
     )
     for ll in leg.legendHandles:

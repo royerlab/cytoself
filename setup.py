@@ -34,9 +34,9 @@ setuptools.setup(
     description="An image feature extractor with self-supervised learning",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/royerlab/cytoself_pytorch",
+    url="https://github.com/royerlab/cytoself",
     project_urls={
-        "Bug Tracker": "https://github.com/royerlab/cytoself_pytorch/issues",
+        "Bug Tracker": "https://github.com/royerlab/cytoself/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3.9",
