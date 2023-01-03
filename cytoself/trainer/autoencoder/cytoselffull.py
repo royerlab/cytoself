@@ -22,7 +22,7 @@ Therefore, it needs two sets of block arguments for generating two EfficientNets
 
 class CytoselfFull(nn.Module):
     """
-    CytoselfLite original model (2-stage encoder & decoder with 2 VQ layers and 2 fc blocks)
+    Cytoself original model (2-stage encoder & decoder with 2 VQ layers and 2 fc blocks)
     EfficientNet_B0 is used for encoders for the sake of saving computation resource.
     """
 

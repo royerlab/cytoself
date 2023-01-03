@@ -10,14 +10,14 @@ from cytoself.trainer.autoencoder.cytoselffull import CytoselfFull
 from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
 
 """
-Cytoself by default uses a split EfficientNet B0 model as two encoders.
-Therefore, it needs two sets of block arguments for generating two EfficientNets.
+CytoselfLite only has decoder1.
+The performance is not as good as CytoselfFull model.
 """
 
 
 class CytoselfLite(CytoselfFull):
     """
-    CytoselfLite original model (2-stage encoder & decoder with 2 VQ layers and 2 fc blocks)
+    CytoselfLite model (2-stage encoder & decoder with 2 VQ layers and 2 fc blocks)
     EfficientNet_B0 is used for encoders for the sake of saving computation resource.
     """
 
