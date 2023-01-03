@@ -39,7 +39,7 @@ trainer.fit(datamanager, tensorboard_path='tb_logs')
 # 2.1 Generate training history
 plot_history_cytoself(trainer.history, savepath=trainer.savepath_dict['visualization'])
 
-# 2.2 Compare the reconstructed images as a sunity check
+# 2.2 Compare the reconstructed images as a sanity check
 img = next(iter(datamanager.test_loader))['image'].detach().cpu().numpy()
 torch.cuda.empty_cache()
 reconstructed = trainer.infer_reconstruction(img)
@@ -67,10 +67,28 @@ fig.savefig(join(trainer.savepath_dict['visualization'], 'reconstructed_images.p
 # 3. Analyze embeddings
 analysis = AnalysisOpenCell(datamanager, trainer)
 
-# 3.1 Generate biclustering heatmap
+# 3.1 Generate bi-clustering heatmap
 analysis.plot_clustermap(num_workers=4)
 
-# 3.2 Plot UMAP
+# 3.2 Generate feature spectrum
+vqindhist1 = trainer.infer_embeddings(img, 'vqindhist1')
+ft_spectrum = analysis.compute_feature_spectrum(vqindhist1)
+
+x_max = ft_spectrum.shape[1] + 1
+x_ticks = np.arange(0, x_max, 50)
+fig, ax = plt.subplots(figsize=(10, 3))
+ax.stairs(ft_spectrum[0], np.arange(x_max), fill=True)
+ax.spines[['right', 'top']].set_visible(False)
+ax.set_xlabel('Feature index')
+ax.set_ylabel('Counts')
+ax.set_xlim([0, x_max])
+ax.set_xticks(x_ticks, analysis.feature_spectrum_indices[x_ticks])
+fig.tight_layout()
+fig.show()
+fig.savefig(join(analysis.savepath_dict['feature_spectra_figures'], 'feature_spectrum.png'), dpi=300)
+
+
+# 3.3 Plot UMAP
 umap_data = analysis.plot_umap_of_embedding_vector(
     data_loader=datamanager.test_loader,
     group_col=2,

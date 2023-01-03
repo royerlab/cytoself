@@ -144,6 +144,38 @@ The output UMAP plot will be saved at `demo_output/analysis/umap_figures/UMAP_vq
 
 ![Result_UMAP](images/UMAP_vqvec2.png)
 
+
+### 4. Plot feature spectrum
+```python
+# Compute bi-clustering heatmap
+analysis.plot_clustermap(num_workers=4)
+
+# Prepare image data
+img = next(iter(datamanager.test_loader))['image'].detach().cpu().numpy()[:1]
+
+# Compute index histogram
+vqindhist1 = trainer.infer_embeddings(img, 'vqindhist1')
+
+# Reorder the index histogram according to the bi-clustering heatmap
+ft_spectrum = analysis.compute_feature_spectrum(vqindhist1)
+
+# Generate a plot
+import numpy as np
+import matplotlib.pyplot as plt
+
+x_max = ft_spectrum.shape[1] + 1
+x_ticks = np.arange(0, x_max, 50)
+fig, ax = plt.subplots(figsize=(10, 3))
+ax.stairs(ft_spectrum[0], np.arange(x_max), fill=True)
+ax.spines[['right', 'top']].set_visible(False)
+ax.set_xlabel('Feature index')
+ax.set_ylabel('Counts')
+ax.set_xlim([0, x_max])
+ax.set_xticks(x_ticks, analysis.feature_spectrum_indices[x_ticks])
+fig.tight_layout()
+fig.show()
+```
+
 ## Tested Environments
 
 Rocky Linux 8.6, NVIDIA A100, CUDA 11.7 (GPU)
