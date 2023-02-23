@@ -26,7 +26,7 @@ def get_version(rel_path):
 
 
 setuptools.setup(
-    name="cytoself_pytorch",
+    name="cytoself",
     version=get_version("cytoself/__init__.py"),
     author="",
     author_email="",
