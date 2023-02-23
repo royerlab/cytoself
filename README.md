@@ -1,6 +1,4 @@
 # cytoself
-cytoself in pytorch implementation. 
-The original cytoself implemented in tensorflow is archived in the branch [cytoself-tensorflow](https://github.com/royerlab/cytoself/tree/cytoself-tensorflow).  
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs41592--022--01541--z-%23403075)](https://doi.org/10.1038/s41592-022-01541-z)
@@ -8,6 +6,11 @@ The original cytoself implemented in tensorflow is archived in the branch [cytos
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself)
 [![Tests](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml/badge.svg)](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml)
+
+cytoself in pytorch implementation. 
+The original cytoself implemented in tensorflow is archived in the branch [cytoself-tensorflow](https://github.com/royerlab/cytoself/tree/cytoself-tensorflow).
+
+**Note: Branch names have been changed.** `cytoself-pytorch` -> `main`, the previous `main` -> `cytoself-tensorflow`.
 
 
 ![Rotating_3DUMAP](images/3DUMAP.gif)
