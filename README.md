@@ -1,5 +1,4 @@
-# cytoself_pytorch
-cytoself in pytorch implementation
+# cytoself
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs41592--022--01541--z-%23403075)](https://doi.org/10.1038/s41592-022-01541-z)
@@ -7,6 +6,11 @@ cytoself in pytorch implementation
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself)
 [![Tests](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml/badge.svg)](https://github.com/royerlab/cytoself/actions/workflows/pytest-codecov-conda.yml)
+
+cytoself in pytorch implementation. 
+The original cytoself implemented in tensorflow is archived in the branch [cytoself-tensorflow](https://github.com/royerlab/cytoself/tree/cytoself-tensorflow).
+
+**Note: Branch names have been changed.** `cytoself-pytorch` -> `main`, the previous `main` -> `cytoself-tensorflow`.
 
 
 ![Rotating_3DUMAP](images/3DUMAP.gif)
@@ -64,7 +68,7 @@ pip install -r requirements/development.txt
 
 ## How to use cytoself on the sample data 
 Download one set of the image and label data from [Data Availability](#data-availability).
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/cytoself/example_scripts/simple_example.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/example_scripts/simple_example.ipynb)
 is available.
 
 
