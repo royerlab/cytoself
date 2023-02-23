@@ -65,7 +65,7 @@ pip install -r requirements/development.txt
 
 ## How to use cytoself on the sample data 
 Download one set of the image and label data from [Data Availability](#data-availability).
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/cytoself/example_scripts/simple_example.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/royerlab/cytoself/blob/main/example_scripts/simple_example.ipynb)
 is available.
 
 
