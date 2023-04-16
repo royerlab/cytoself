@@ -81,11 +81,11 @@ class VQVAEFCTrainer(VQVAETrainer):
         """
         img = self.get_data_by_name(batch, 'image')
         lab = self.get_data_by_name(batch, 'label', force_float=False)
-        model_outputs = self.model(img)
 
         if zero_grad:
             self.optimizer.zero_grad()
 
+        model_outputs = self.model(img)
         loss = self._calc_losses(model_outputs, img, lab, variance, vq_coeff, fc_coeff, **kwargs)
 
         if backward:

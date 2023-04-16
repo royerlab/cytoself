@@ -118,11 +118,11 @@ class BaseTrainer:
 
         """
         img = self.get_data_by_name(batch, 'image')
-        model_outputs = self.model(img)
 
         if zero_grad:
             self.optimizer.zero_grad()
 
+        model_outputs = self.model(img)
         loss = self._calc_losses(model_outputs, img)
 
         if backward:
