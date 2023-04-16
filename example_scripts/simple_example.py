@@ -28,7 +28,7 @@ model_args = {
 }
 train_args = {
     'lr': 1e-3,
-    'max_epoch': 1,
+    'max_epoch': 10,
     'reducelr_patience': 3,
     'reducelr_increment': 0.1,
     'earlystop_patience': 6,
