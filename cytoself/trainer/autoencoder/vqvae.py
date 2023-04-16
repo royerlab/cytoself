@@ -72,5 +72,5 @@ class VQVAE(BaseAE):
         elif output_layer == 'vqindhist':
             return index_histogram
 
-        x = self.decoder(x)
+        x = self.decoder(quantized)
         return x

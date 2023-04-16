@@ -261,7 +261,7 @@ class CytoselfFull(nn.Module):
                 else:
                     fcout = self.fc_layers[i](encoded.reshape(encoded.size(0), -1))
                 fc_outs.append(fcout)
-            encoded_list.append(encoded)
+            encoded_list.append(quantized)
             self.vq_loss[f'vq{i + 1}'] = vq_loss
             self.perplexity[f'perplexity{i + 1}'] = perplexity
             x = encoded
