@@ -1,13 +1,18 @@
 repos:
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+        name: isort (python)
+        args: [cytoself, --profile black]
 -   repo: https://github.com/psf/black
-    rev: 22.1.0
+    rev: 23.3.0
     hooks:
     -   id: black
         args: [cytoself, -t, py39, -S, -l, "120"]
-        additional_dependencies: ['click==8.0.4']
 -   repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
+    rev: 6.0.0
     hooks:
     -   id: flake8
-        args: [--count, --max-complexity=15, --max-line-length=127, --ignore=E203 W503, --statistics,
+        args: [--count, --max-complexity=15, --max-line-length=120, --ignore=E203 W503, --statistics,
                cytoself]
