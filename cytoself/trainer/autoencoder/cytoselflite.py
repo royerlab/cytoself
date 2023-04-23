@@ -1,5 +1,5 @@
-from typing import Optional, Union, Sequence
 from collections.abc import Collection
+from typing import Optional, Sequence, Union
 
 import torch
 from torch import nn

@@ -1,12 +1,12 @@
 from os.path import join
-from typing import Optional, Union, Sequence
+from typing import Optional, Sequence, Union
+from warnings import warn
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import cm
 from matplotlib.ticker import MaxNLocator
-from warnings import warn
 
 
 def _draw_history_axis(axis: plt.Axes, history: pd.DataFrame, metrics: str, cmap: Sequence):

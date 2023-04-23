@@ -1,11 +1,11 @@
 import inspect
-from copy import copy
-from typing import Optional, Union, Sequence
 from collections.abc import Collection
+from copy import copy
+from typing import Optional, Sequence, Union
 
-import torch
-from torch import nn, Tensor
 import numpy as np
+import torch
+from torch import Tensor, nn
 from torchvision.transforms import InterpolationMode
 from torchvision.transforms.functional import resize
 

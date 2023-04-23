@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from cytoself.components.layers.vq import VectorQuantizer, split_channel, unsplit_channel
 
 

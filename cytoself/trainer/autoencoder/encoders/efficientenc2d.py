@@ -1,15 +1,13 @@
 import copy
 import math
 from functools import partial
-from typing import Any, Callable, List, Sequence, Optional
+from typing import Any, Callable, List, Optional, Sequence
 
-from torch import nn, Tensor
+from torch import Tensor, nn
+from torchvision.models._utils import _make_divisible
 from torchvision.ops import StochasticDepth
-
 from torchvision.ops.misc import ConvNormActivation, SqueezeExcitation
 from torchvision.utils import _log_api_usage_once
-from torchvision.models._utils import _make_divisible
-
 
 """
 This is adapted from torchvision.models.efficientnet

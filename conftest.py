@@ -1,15 +1,15 @@
 import tempfile
-from os.path import join
 from os import makedirs
+from os.path import join
 from shutil import rmtree
 
 import pytest
 
 from cytoself.datamanager.opencell import DataManagerOpenCell
 from cytoself.test_util.dummy_data_generation import gen_npy
-from cytoself.test_util.test_parameters import add_default_model_args, CYTOSELF_MODEL_ARGS
-from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
+from cytoself.test_util.test_parameters import CYTOSELF_MODEL_ARGS, add_default_model_args
 from cytoself.trainer.cytoselffull_trainer import CytoselfFullTrainer
+from cytoself.trainer.cytoselflite_trainer import CytoselfLiteTrainer
 from cytoself.trainer.vanilla_trainer import VanillaAETrainer
 
 

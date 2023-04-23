@@ -1,4 +1,5 @@
 from typing import Optional
+
 from torch import Tensor
 
 from cytoself.components.layers.vq import VectorQuantizer

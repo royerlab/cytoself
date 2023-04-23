@@ -1,6 +1,6 @@
 from typing import Optional
 
-from torch import nn, Tensor
+from torch import Tensor, nn
 from tqdm import tqdm
 
 from cytoself.trainer.autoencoder.vqvae import VQVAE

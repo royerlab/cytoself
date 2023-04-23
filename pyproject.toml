@@ -4,8 +4,13 @@ requires = [
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '--runslow \"run slow\"')",
     "serial",
 ]
+
+[tool.isort]
+profile = "black"
+line_length = 120

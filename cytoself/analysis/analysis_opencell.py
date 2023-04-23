@@ -2,14 +2,14 @@ import inspect
 from os.path import join
 from typing import Optional, Union
 
+import colorcet as cc
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 from matplotlib import cm
 from numpy.typing import ArrayLike
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import seaborn as sns
-import colorcet as cc
 
 from cytoself.analysis.base import BaseAnalysis
 from cytoself.analysis.utils.pearson_correlation import selfpearson_multi

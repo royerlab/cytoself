@@ -1,9 +1,7 @@
 from torch import nn
-from cytoself.components.blocks.residual_block import (
-    ResidualBlockUnit2d,
-    ResidualBlockRepeat,
-)
+
 from cytoself.components.blocks.conv_block import Conv2dBN
+from cytoself.components.blocks.residual_block import ResidualBlockRepeat, ResidualBlockUnit2d
 from cytoself.components.blocks.test.test_conv_block import test_Conv2dBN
 
 

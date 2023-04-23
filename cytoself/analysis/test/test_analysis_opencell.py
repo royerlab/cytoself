@@ -1,9 +1,11 @@
 import inspect
-from os.path import exists, join
 from contextlib import contextmanager
-import pytest
+from os.path import exists, join
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
+
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 
 

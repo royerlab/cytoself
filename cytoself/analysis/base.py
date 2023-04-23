@@ -1,7 +1,8 @@
 import os.path
 from os.path import join
-import umap
 from typing import Optional
+
+import umap
 
 
 class BaseAnalysis:

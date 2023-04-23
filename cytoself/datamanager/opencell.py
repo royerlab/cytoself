@@ -1,21 +1,22 @@
 from copy import copy
-from typing import Optional, Sequence, Union, List
-from os.path import join, basename, dirname
+from glob import glob
+from os.path import basename, dirname, join
+from typing import List, Optional, Sequence, Union
+
 import numpy as np
 import pandas as pd
 import torch
-from pandas import DataFrame
-from glob import glob
 from joblib import Parallel, delayed
-from tqdm import tqdm
-from numpy.typing import ArrayLike
 from numpy.distutils.misc_util import is_sequence
+from numpy.typing import ArrayLike
+from pandas import DataFrame
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from tqdm import tqdm
 
-from cytoself.datamanager.utils.splitdata_on_fov import splitdata_on_fov
 from cytoself.datamanager.base import DataManagerBase
 from cytoself.datamanager.preloaded_dataset import PreloadedDataset
+from cytoself.datamanager.utils.splitdata_on_fov import splitdata_on_fov
 
 
 class DataManagerOpenCell(DataManagerBase):

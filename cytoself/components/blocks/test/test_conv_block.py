@@ -1,6 +1,7 @@
 import pytest
 from torch import nn
-from cytoself.components.blocks.conv_block import calc_groups, Conv2dBN
+
+from cytoself.components.blocks.conv_block import Conv2dBN, calc_groups
 
 
 def test_calc_groups():

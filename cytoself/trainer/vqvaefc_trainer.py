@@ -1,7 +1,7 @@
 import inspect
 from typing import Optional
 
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from cytoself.trainer.autoencoder.vqvaefc import VQVAEFC
 from cytoself.trainer.vqvae_trainer import VQVAETrainer

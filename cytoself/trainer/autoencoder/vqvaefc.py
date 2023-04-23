@@ -1,6 +1,8 @@
 from typing import Optional
-from torch import Tensor
+
 import numpy as np
+from torch import Tensor
+
 from cytoself.components.blocks.fc_block import FCblock
 from cytoself.trainer.autoencoder.vqvae import VQVAE
 

@@ -1,8 +1,9 @@
 from typing import Sequence
+
 import numpy as np
-from numpy.typing import ArrayLike
 import pandas as pd
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike
 from tqdm import tqdm
 
 from cytoself.datamanager.utils.cumsum_split import cumsum_split

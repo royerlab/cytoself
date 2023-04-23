@@ -1,7 +1,8 @@
 from collections import OrderedDict
-from typing import Type, Optional
-from torch import nn
-from torch import Tensor
+from typing import Optional, Type
+
+from torch import Tensor, nn
+
 from cytoself.components.blocks.conv_block import Conv2dBN
 from cytoself.components.utils.activation_selecter import act_layer
 
