@@ -1,7 +1,9 @@
 from os.path import exists, join
-import pytest
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import pytest
+
 from cytoself.trainer.utils.plot_history import plot_history, plot_history_cytoself
 
 

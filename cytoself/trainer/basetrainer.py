@@ -5,15 +5,14 @@ from os.path import join
 from typing import Optional, Union
 from warnings import warn
 
-from natsort import natsorted
-import pandas as pd
-from tqdm import tqdm
 import numpy as np
-
+import pandas as pd
 import torch
-from torch import nn, optim, Tensor
-from torch.utils.tensorboard import SummaryWriter
+from natsort import natsorted
+from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 
 class BaseTrainer:

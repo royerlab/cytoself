@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from cytoself.analysis.utils.pearson_correlation import corr_single, selfpearson_multi, pearson_multi
+from cytoself.analysis.utils.pearson_correlation import corr_single, pearson_multi, selfpearson_multi
 
 
 def test_corr_single():

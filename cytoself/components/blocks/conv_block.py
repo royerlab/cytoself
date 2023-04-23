@@ -1,6 +1,7 @@
-from typing import Union, Optional
-from torch import nn
+from typing import Optional, Union
 from warnings import warn
+
+from torch import nn
 
 from cytoself.components.utils.activation_selecter import act_layer
 

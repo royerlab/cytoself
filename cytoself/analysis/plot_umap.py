@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
-import matplotlib.pyplot as plt
 
 from cytoself.analysis.utils.cluster_score import calculate_cluster_centrosize
 

@@ -3,7 +3,7 @@ from functools import partial
 from typing import Optional
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 from torch.utils.data import DataLoader
 
 from cytoself.trainer.autoencoder.cytoselffull import CytoselfFull

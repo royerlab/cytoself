@@ -1,11 +1,12 @@
 from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
 
+from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 from cytoself.datamanager.opencell import DataManagerOpenCell
 from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
-from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
 # 1. Prepare Data

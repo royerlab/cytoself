@@ -1,5 +1,6 @@
 import pytest
 from torch import nn
+
 from cytoself.components.utils.activation_selecter import act_layer
 
 

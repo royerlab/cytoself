@@ -2,7 +2,6 @@ import torch
 from torch import nn
 from torchvision.ops.misc import ConvNormActivation
 
-
 block_args = [
     {
         'expand_ratio': 1,

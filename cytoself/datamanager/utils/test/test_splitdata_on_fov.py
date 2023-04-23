@@ -1,5 +1,7 @@
-from math import floor, ceil
+from math import ceil, floor
+
 import numpy as np
+
 from cytoself.datamanager.utils.splitdata_on_fov import single_proc, splitdata_on_fov
 
 

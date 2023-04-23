@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from cytoself.datamanager.base import DataManagerBase
 from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 from cytoself.datamanager.test.util import assert_instance

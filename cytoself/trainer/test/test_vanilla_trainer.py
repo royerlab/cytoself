@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from os.path import join, exists, splitext
+from os.path import exists, join, splitext
 
 import pandas as pd
 import pytest

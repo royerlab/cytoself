@@ -1,4 +1,5 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
+
 from numpy.typing import ArrayLike
 from torch.utils.data import Dataset
 

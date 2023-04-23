@@ -1,12 +1,13 @@
-from math import floor, ceil
 import os
-from os.path import join, exists
+from math import ceil, floor
+from os.path import exists, join
+
 import numpy as np
 import pytest
 import torch
 
-from cytoself.datamanager.test.util import assert_dataset
 from cytoself.datamanager.opencell import DataManagerOpenCell, get_file_df
+from cytoself.datamanager.test.util import assert_dataset
 from cytoself.test_util.test_parameters import n_fovs, test_label
 
 

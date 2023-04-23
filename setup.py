@@ -1,5 +1,6 @@
-from os import path
 import codecs
+from os import path
+
 import setuptools
 
 # Load long description

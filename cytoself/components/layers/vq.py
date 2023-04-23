@@ -1,8 +1,8 @@
 from typing import Optional
-import numpy as np
 
+import numpy as np
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 
 def split_channel(z: Tensor, channel_split: int, embedding_dim: int) -> Tensor:

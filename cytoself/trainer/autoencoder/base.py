@@ -1,8 +1,9 @@
 from typing import Optional
-from torch import nn, Tensor
 
-from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
+from torch import Tensor, nn
+
 from cytoself.trainer.autoencoder.decoders.resnet2d import DecoderResnet
+from cytoself.trainer.autoencoder.encoders.efficientenc2d import efficientenc_b0
 
 
 class BaseAE(nn.Module):
