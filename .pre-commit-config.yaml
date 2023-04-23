@@ -14,5 +14,4 @@ repos:
     rev: 6.0.0
     hooks:
     -   id: flake8
-        args: [--count, --max-complexity=15, --max-line-length=120, --ignore=E203 W503, --statistics,
-               cytoself]
+        args: [--count, --max-complexity=15, --max-line-length=120, --ignore=E203 W503, --statistics, cytoself]
