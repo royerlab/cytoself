@@ -3,41 +3,52 @@ import ipdb
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 import torch
+import tqdm
+from pathlib import Path
 
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
 from cytoself.datamanager.opencell import DataManagerOpenCell
+from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
+# declare results dir 
+results_dir = Path("results/20231010_train_all_no_nucdist")
+results_dir.mkdir(exist_ok=True) 
+tensorboard_path = "logs"
+
 # 1. Prepare Data
-data_ch = ['pro', 'nuc']
-# datapath = 'sample_data'  # path to download sample data
-datapath = "/home/james.burgess/cytoself_inference/cytoself/example_scripts/sample_data"
-DataManagerOpenCell.download_sample_data(datapath)  # donwload data
+# data_ch = ['pro', 'nuc', 'nucdist'] # ['pro', 'nuc', 'nucdist']
+data_ch = ['pro', 'nuc'] # 
+
+datapath = Path("data/opencell_crops_proteins/")
+
+# DataManagerOpenCell.download_sample_data(datapath)  # donwload data
 datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
 
-
 # 2. Create and train a cytoself model
 model_args = {
-    'input_shape': (2, 100, 100),
+    'input_shape': (len(data_ch), 100, 100),
     'emb_shapes': ((25, 25), (4, 4)),
-    'output_shape': (2, 100, 100),
+    'output_shape': (len(data_ch), 100, 100),
     'fc_output_idx': [2],
     'vq_args': {'num_embeddings': 512, 'embedding_dim': 64},
     'num_class': len(datamanager.unique_labels),
     'fc_input_type': 'vqvec',
 }
 train_args = {
-    'lr': 1e-3,
-    'max_epoch': 10,
-    'reducelr_patience': 3,
+    'lr': 0.0004,
+    'max_epoch': 100,
+    'reducelr_patience': 4,
     'reducelr_increment': 0.1,
-    'earlystop_patience': 6,
+    'earlystop_patience': 12,
 }
-trainer = CytoselfFullTrainer(train_args, homepath='example_scripts/demo_output', model_args=model_args)
-trainer.fit(datamanager, tensorboard_path='tb_logs')
+
+trainer = CytoselfFullTrainer(train_args, homepath=results_dir, model_args=model_args)
+trainer.fit(datamanager, tensorboard_path=tensorboard_path)
 
 # 2.1 Generate training history
 plot_history_cytoself(trainer.history, savepath=trainer.savepath_dict['visualization'])

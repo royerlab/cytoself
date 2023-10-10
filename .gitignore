@@ -1,3 +1,10 @@
+# stuff I added 
+example_scripts/demo_output/
+example_scripts/sample_data/
+example_scripts/simple_example.ipynb
+data/
+results/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

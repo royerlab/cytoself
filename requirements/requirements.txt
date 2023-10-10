@@ -1,6 +1,6 @@
 numpy>=1.21
-torch>=1.11
-torchvision>=0.12
+torch==1.13.1
+torchvision==0.12
 tqdm>=4.63
 pandas>=1.4
 joblib>=1.1
@@ -12,3 +12,4 @@ gdown>=4.3
 natsort
 colorcet>=3
 seaborn>=0.11
+ipdb

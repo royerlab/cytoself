@@ -1,3 +1,8 @@
+# changes from the original cytoself 
+- changed `requirements.txt` for torch and torchvision. Previously it was (`torch>=1.11`) but I was getting some error in the torch Upsample layer. I think it was some issue with torch 2.0, so I set it to `torch==1.13.1` and `torchvision==0.12`.
+- scripts to train cytoself from scratch in `scripts`
+- added the 10 `.npy` file and 10 `.csv` files from `https://github.com/royerlab/cytoself/tree/main` and put them in `data/opencell_crops` (which is obviously not comitted to the repo).
+
 # cytoself
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
