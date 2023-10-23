@@ -44,25 +44,20 @@ information (protein ID) as a label to learn the localization patterns of protei
 Recommended: create a new environment and install cytoself on the environment from pypi
 
 (Optional) To run cytoself on GPUs, it is recommended to install pytorch GPU version before installing cytoself 
-following the [official instruction](https://pytorch.org/get-started/locally/).
+following the [official instruction](https://pytorch.org/get-started/locally/). The way to install pytorch GPU may vary upon your OS and CUDA version.
 ```shell script
 conda create -y -n cytoself python=3.9
 conda activate cytoself
 # (Optional: Install pytorch GPU following the official instruction)
-pip install cytoself
-```
-
-### (For the developers) Install from this repository
-Make sure you are in the root directory of the repository.
-
-```bash
 pip install -e .
 ```
 
+### (For the developers) Install from this repository
 Install development dependencies
 
 ```bash
 pip install -r requirements/development.txt
+pre-commit install
 ```
 
 
@@ -184,9 +179,10 @@ fig.show()
 
 ## Tested Environments
 
-Rocky Linux 8.6, NVIDIA A100, CUDA 11.7 (GPU)
+Rocky Linux 8.6, NVIDIA A100, CUDA 11.7 (GPU)<br/>
+Ubuntu 20.04.3 LTS, NVIDIA 3090, CUDA 11.4 (GPU)<br/>
+Ubuntu 22.04.3 LTS, NVIDIA 4090, CUDA 12.2 (GPU)
 
-Ubuntu 20.04.3 LTS, NVIDIA 3090, CUDA 11.4 (GPU)
 
 ## Data Availability
 The full data used in this work can be found here.
