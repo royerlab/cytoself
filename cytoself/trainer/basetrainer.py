@@ -442,6 +442,7 @@ class BaseTrainer:
                         self.best_model = deepcopy(self.model)
                         # Save the best model checkpoint
                         self.save_checkpoint()
+                        count_early_stop = 0
                     else:
                         count_lr_no_improve += 1
                         count_early_stop += 1
