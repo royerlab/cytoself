@@ -87,7 +87,7 @@ class DecoderResnet(nn.Module):
 
         for i in range(num_blocks):
             if use_upsampling:
-                target_shape = tuple(np.ceil(output_shape[1:] / (2 ** (num_blocks - (i + 1)))).astype(int))
+                target_shape = tuple(np.ceil(output_shape[1:] / (2 ** (num_blocks - (i + 1)))).astype(int).tolist())
                 self.decoder[f'up{i + 1}'] = nn.Upsample(size=target_shape, mode=sampling_mode, align_corners=False)
 
             self.decoder[f'resrep{i+1}'] = ResidualBlockRepeat(
