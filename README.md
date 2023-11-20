@@ -183,6 +183,12 @@ Ubuntu 20.04.3 LTS, NVIDIA 3090, CUDA 11.4 (GPU)<br/>
 Ubuntu 22.04.3 LTS, NVIDIA 4090, CUDA 12.2 (GPU)
 
 
+## Known Issues
+There seems to be compatibility issues of python multiprocessing on Windows, 
+causing a DataLoader unable to load data ([issue](https://github.com/royerlab/cytoself/issues/32), [issue](https://github.com/royerlab/cytoself/issues/33)). 
+Please try [the temporal workaround](https://github.com/royerlab/cytoself/issues/32#issuecomment-1815910434).
+
+
 ## Data Availability
 The full data used in this work can be found here.
 The image data have the shape of `[batch, 100, 100, 4]`, in which the last channel dimension corresponds to `[target 
