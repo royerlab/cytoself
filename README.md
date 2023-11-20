@@ -109,7 +109,6 @@ model_args = {
     'output_shape': (2, 100, 100),
     'fc_output_idx': [2],
     'vq_args': {'num_embeddings': 512, 'embedding_dim': 64},
-    'vq_args': {'num_embeddings': 512},
     'num_class': len(datamanager.unique_labels),
     'fc_input_type': 'vqvec',
 }
