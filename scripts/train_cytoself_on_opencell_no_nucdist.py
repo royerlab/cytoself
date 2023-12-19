@@ -6,6 +6,7 @@ import numpy as np
 from pathlib import Path
 import torch
 import tqdm
+import json
 from pathlib import Path
 
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
@@ -15,7 +16,8 @@ from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
 # declare results dir 
-results_dir = Path("results/20231010_train_all_no_nucdist")
+results_dir = Path("results/20231011_train_all_no_nucdist")
+results_dir = Path("results/20231025_train_all_no_nucdist")
 results_dir.mkdir(exist_ok=True) 
 tensorboard_path = "logs"
 
@@ -28,6 +30,7 @@ datapath = Path("data/opencell_crops_proteins/")
 # DataManagerOpenCell.download_sample_data(datapath)  # donwload data
 datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
+ipdb.set_trace()
 
 # 2. Create and train a cytoself model
 model_args = {
@@ -46,6 +49,12 @@ train_args = {
     'reducelr_increment': 0.1,
     'earlystop_patience': 12,
 }
+
+# log the training and model args 
+with open(results_dir / "model_args.json", 'w') as f:
+    json.dump(model_args, f)
+with open(results_dir / "train_args.json", 'w') as f:
+    json.dump(train_args, f)
 
 trainer = CytoselfFullTrainer(train_args, homepath=results_dir, model_args=model_args)
 trainer.fit(datamanager, tensorboard_path=tensorboard_path)

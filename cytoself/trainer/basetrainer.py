@@ -331,7 +331,13 @@ class BaseTrainer:
         if len(output_label) == len(output):
             output_label = np.vstack(output_label)
         else:
-            _output_label = np.hstack(output_label)
+            # JB added on top of OG cytoself authors. The next few lines are a 
+            # hack to deal with some difference I didn't properly fix.
+            from cytoself.datamanager import preloaded_dataset
+            if type(data_loader.dataset) == preloaded_dataset.PreloadedDataset:
+                _output_label = torch.cat(output_label)
+            else:
+                _output_label = np.hstack(output_label)
             if len(_output_label) == len(output):
                 output_label = _output_label
             else:

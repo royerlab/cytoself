@@ -4,6 +4,12 @@ example_scripts/sample_data/
 example_scripts/simple_example.ipynb
 data/
 results/
+science_paper_repo/
+data
+results
+slurm_logs
+inference/results
+inference/viz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

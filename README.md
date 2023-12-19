@@ -2,6 +2,10 @@
 - changed `requirements.txt` for torch and torchvision. Previously it was (`torch>=1.11`) but I was getting some error in the torch Upsample layer. I think it was some issue with torch 2.0, so I set it to `torch==1.13.1` and `torchvision==0.12`.
 - scripts to train cytoself from scratch in `scripts`
 - added the 10 `.npy` file and 10 `.csv` files from `https://github.com/royerlab/cytoself/tree/main` and put them in `data/opencell_crops` (which is obviously not comitted to the repo).
+- In the run scripts, I save the `train_args` and `model_args`. This is so that I can more easily reconstruct the model in the inference scripts.
+- in the `cytoself/datamanager/opencell.py` I add a step to the end of the dataloading of the dataloader. This saves the test dataset - it's indices and its crops into separate files. This is useful for doing analysis afterwards. You can load the embeddings and these labeles or images. It's necessary for doing inference with a new dataset. That puts data files in 'data/test_dataset_metadata/`
+- TODO: include the `data/cz_infectedcell_finalwellmapping.csv` in the eventual repo. 
+
 
 # cytoself
 

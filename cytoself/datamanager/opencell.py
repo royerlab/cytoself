@@ -11,13 +11,23 @@ from joblib import Parallel, delayed
 from numpy.distutils.misc_util import is_sequence
 from numpy.typing import ArrayLike
 from pandas import DataFrame
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import transforms
 from tqdm import tqdm
 
 from cytoself.datamanager.base import DataManagerBase
 from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 from cytoself.datamanager.utils.splitdata_on_fov import splitdata_on_fov
+
+# these lyso annotations are based on my looking at it ... not used for any 
+# supervsion ... only for class balanced sampling
+lyso_proteins = ['ARL8B','ATP6V1F','ATP6V1B2','LAMTOR2','LAMP1','LAMP2',
+    'MFSD12','MFSD11','RAB7A','TMEM106B','TMEM192','TMEM63B'
+]
+lyso_proteins_maybe = ['SLC37A3', 'PTK7','RAB3D','VAMP4',]
+golgi_trans_prots = ['ARF1','ARFGAP3','ARFGAP2','ARFGAP1','ARFIP1','ARFIP2','ARL1','CERT1',
+    'COPB2','COPE','COPZ1','GOLGA2','GPR107','OSBP','RAB1A','RER1','SACM1L',
+    'SLC30A5','SLC35E1','STX5']
 
 
 class DataManagerOpenCell(DataManagerBase):
@@ -34,6 +44,7 @@ class DataManagerOpenCell(DataManagerBase):
         fov_col: Optional[int] = -1,
         shuffle_seed: int = 1,
         intensity_adjustment: Optional[dict] = None,
+        sampling_strategy = None,
     ):
         """
         Parameters
@@ -52,6 +63,9 @@ class DataManagerOpenCell(DataManagerBase):
             Rnadom seed to shuffle data
         intensity_adjustment : dict
             Intensity adjustment for each channel.
+        sampling_strategy : str
+            None, then random. 'class_weighted_X' where X is an int for the 
+            strategy So far, only implemented class_weighted_0. 
         """
         super().__init__(basepath=basepath, data_split=data_split, shuffle_seed=shuffle_seed)
         self.label_col = label_col
@@ -60,6 +74,7 @@ class DataManagerOpenCell(DataManagerBase):
         self.train_variance = None
         self.val_variance = None
         self.test_variance = None
+        self.sampling_strategy = sampling_strategy
 
         # Make sure label is in the list as data splitting depends on label information.
         if 'label' not in channel_list:
@@ -217,6 +232,63 @@ class DataManagerOpenCell(DataManagerBase):
         """
         self.unique_labels = np.unique(label_data[:, self.label_col])
 
+    def get_data_loader_sampler(self, train_dataset, num_samples, 
+        add_lysosome_class=True):
+        """
+
+        """
+        if self.sampling_strategy is None:
+            return None 
+        
+        elif self.sampling_strategy in (1,2,):
+            # some tests 
+            df = pd.DataFrame(train_dataset.label, columns=['ensg_id','name','loc'])
+            locs = df['loc'].values
+
+            # lets maually add lysosome as a tag here. it's a bit slow
+            if add_lysosome_class:
+                for i in range(len(locs)):
+                    if df.iloc[i]['name'] in lyso_proteins + lyso_proteins_maybe:
+                        locs[i] += ';lysosome'
+                    if self.sampling_strategy == 2:
+                        if df.iloc[i]['name'] in golgi_trans_prots:
+                            locs[i] += ';golgi_trans'
+            
+            # this gets one row per protein (1311,) not per crop
+            df_lookup = df.groupby('name').sample(1) # one row per protein
+            locs_prots = df_lookup['loc'].values # at the prot
+            
+            # get unique localization labels
+            unique_locs = [l.split(";") for l in locs_prots]
+            unique_locs = np.unique([l for lst in unique_locs for l in lst])
+            unique_locs = np.array([l for l in unique_locs if l!=''])
+            
+            # count appearances of each loc. `membrane;cytoskeleton` will be
+            # counted for both membrane and cytoskeleton
+            cnts = []
+            for loc in unique_locs:
+                cnts.append(sum([loc in l for l in locs]))
+
+            weights_loc = 1 / np.array(cnts) # (n_uniq_locs,)
+            weights_lookup = dict(zip(unique_locs, weights_loc))
+            weights_per_sample = np.zeros(len(df))
+            
+            # choose the max probability  
+            for i in range(len(locs)):    
+                loc_lst = locs[i].split(";") # all locs in this sample
+                if loc_lst == ['']:
+                    continue
+                loc_lst_weights = [weights_lookup[l] for l in loc_lst]
+                weights_per_sample[i] = max(loc_lst_weights)
+
+            sampler = WeightedRandomSampler(weights_per_sample, 
+                num_samples=num_samples)
+
+            return sampler 
+    
+        else:
+            raise NotImplementedError()
+
     def const_dataloader(
         self,
         batch_size: int = 32,
@@ -298,9 +370,37 @@ class DataManagerOpenCell(DataManagerBase):
                 train_label, train_data, transform_all, self.unique_labels, label_format, self.label_col
             )
             _assert_dtype(train_dataset.label, train_dataset.label_format)
+
+            sampler = self.get_data_loader_sampler(train_dataset, 
+                num_samples=len(train_dataset))
+            if sampler is not None:
+                shuffle = False
+
             self.train_loader = DataLoader(
-                train_dataset, batch_size, shuffle=shuffle, num_workers=self.num_workers, **kwargs
+                train_dataset, batch_size, sampler=sampler, shuffle=shuffle, 
+                num_workers=self.num_workers, **kwargs
             )
+
+            # manual checking that the sampler is behaving reasonable.
+            if 0:
+                df = pd.DataFrame(train_dataset.label, columns=['ensg_id','name','loc'])
+                df_lookup = df.groupby('name').sample(1) # one row per protein
+                self.num_workers = 0
+                self.train_loader = DataLoader(
+                    train_dataset, batch_size, sampler=sampler, shuffle=shuffle, 
+                    num_workers=self.num_workers, **kwargs
+                )
+                loader = iter(self.train_loader)
+
+                
+                cnt = 0 
+                cnt_mito = 0
+                for i in range(100):
+                    data = next(loader)
+                    locs_this = [df_lookup.iloc[idx.item()]['loc'] for idx in data['label'].long()] 
+                    cnt += len(data)
+                    cnt_mito += sum([1 if 'mito' in s else 0 for s in locs_this])
+
             print('Computing variance of training data...')
             self.train_variance = np.var(train_data).item()
         if len(val_ind) > 0:
@@ -318,7 +418,9 @@ class DataManagerOpenCell(DataManagerBase):
             )
             print('Computing variance of validation data...')
             self.val_variance = np.var(val_data).item()
+
         if len(test_ind) > 0:
+            
             test_label = label_all[test_ind]
             if len(image_all) > 0:
                 test_data = image_all[test_ind]
@@ -333,6 +435,25 @@ class DataManagerOpenCell(DataManagerBase):
             )
             print('Computing variance of test data...')
             self.test_variance = np.var(test_data).item()
+
+            # JB added this branch: log metadata about the saved test model 
+            if 1: 
+                assert shuffle_test is False
+                from pathlib import Path 
+                DIR_TEST_DATASET_META = Path("data/test_dataset_metadata")
+                DIR_TEST_DATASET_META.mkdir(exist_ok=True)
+
+                if test_data.shape[1] == 2:
+                    DIR_TEST_DATASET_META = Path("data/test_dataset_metadata")
+                elif test_data.shape[1] == 3:
+                    DIR_TEST_DATASET_META = Path("data/test_dataset_metadata_nonucdist")
+                
+                DIR_TEST_DATASET_META.mkdir(exist_ok=True)
+
+                np.save(DIR_TEST_DATASET_META / "test_dataset_labels.npy",  test_label)
+                np.save(DIR_TEST_DATASET_META / "test_dataset_indices.npy", test_ind)
+                np.save(DIR_TEST_DATASET_META / "test_dataset_crops.npy", test_data)
+                
 
     @staticmethod
     def download_sample_data(output: Optional[str] = 'sample_data'):
@@ -410,3 +531,4 @@ def get_file_df(basepath: str, suffix: Union[str, Sequence] = 'label', extension
     else:
         raise TypeError('Only str or list is accepted for suffix.')
     return df
+
