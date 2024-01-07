@@ -75,6 +75,7 @@ class DataManagerOpenCell(DataManagerBase):
         self.val_variance = None
         self.test_variance = None
         self.sampling_strategy = sampling_strategy
+        self.basepath = basepath
 
         # Make sure label is in the list as data splitting depends on label information.
         if 'label' not in channel_list:
@@ -358,6 +359,7 @@ class DataManagerOpenCell(DataManagerBase):
         self.const_label_book(label_all)
 
         # Split data
+        ipdb.set_trace()
         train_ind, val_ind, test_ind = self.split_data(label_all)
 
         if len(train_ind) > 0:
@@ -437,16 +439,16 @@ class DataManagerOpenCell(DataManagerBase):
             self.test_variance = np.var(test_data).item()
 
             # JB added this branch: log metadata about the saved test model 
-            if 1: 
+            if 0: 
                 assert shuffle_test is False
                 from pathlib import Path 
-                DIR_TEST_DATASET_META = Path("data/test_dataset_metadata")
+                DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata/{self.basepath}")
                 DIR_TEST_DATASET_META.mkdir(exist_ok=True)
 
                 if test_data.shape[1] == 2:
-                    DIR_TEST_DATASET_META = Path("data/test_dataset_metadata")
+                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata/{self.basepath}")
                 elif test_data.shape[1] == 3:
-                    DIR_TEST_DATASET_META = Path("data/test_dataset_metadata_nonucdist")
+                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata_nonucdist/{self.basepath}")
                 
                 DIR_TEST_DATASET_META.mkdir(exist_ok=True)
 

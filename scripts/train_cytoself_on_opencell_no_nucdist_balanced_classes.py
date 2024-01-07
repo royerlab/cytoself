@@ -18,21 +18,20 @@ from cytoself.trainer.utils.plot_history import plot_history_cytoself
 # declare results dir
 # results_dir = Path("results/20231011_train_all_no_nucdist")
 # results_dir = Path("results/20231025_train_all_no_nucdist")
-results_dir = Path(
-    "results/20231218_train_all_no_nucdist_balanced_classes_2"
-)
+# results_dir = Path("results/20231221_train_with_orphans_no_nucdist")
+results_dir = Path("results/20231222_train_all_no_nucdist_balanced_classes_1")
+
 results_dir.mkdir(exist_ok=True)
 tensorboard_path = "logs"
 sampling_strategy = 2  # this does balanced sampling
+sampling_strategy = 1  # this does balanced sampling
 
 # 1. Prepare Data
 # data_ch = ['pro', 'nuc', 'nucdist'] # ['pro', 'nuc', 'nucdist']
 data_ch = ['pro', 'nuc']  #
 
 datapath = Path("data/opencell_crops_proteins/")
-
 # DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-
 datamanager = DataManagerOpenCell(datapath,
                                   data_ch,
                                   fov_col=None,

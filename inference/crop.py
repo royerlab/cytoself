@@ -33,6 +33,7 @@ from torchvision.utils import make_grid
 import os
 from skimage.morphology import binary_erosion, binary_dilation
 from scipy.ndimage import distance_transform_edt
+import torchvision.transforms as T
 
 def norm_0_1(x):
 	l, u = x.min(), x.max()
@@ -157,7 +158,6 @@ def generate_crops(dir_infdata, fname_segmasks, min_nuclear_diam=50,
 	f_save_df_meta = dir_results / "crops_meta.csv"
 	df_meta_all_save.to_csv(f_save_df_meta)
 
-
 def do_nuclear_dist_transform(mask_crop):
 	# next two lines are from chatgpt
 	boundary = binary_dilation(mask_crop) ^ binary_erosion(mask_crop)
@@ -180,9 +180,53 @@ def do_nuclear_dist_transform(mask_crop):
 	
 	return distance_array  
 
+def save_crops_to_dataset():
+	"""
+	Save the crops in the style needed to be added to the training dataset. 
+	"""
+	fname_crops = "inference/results/crop/crops.pt"
+	fname_crops_meta = "inference/results/crop/crops_meta.csv"
+	dir_data = Path("data/opencell_crops_proteins_plus_orphans")
+	
+	crops_inf = torch.load(fname_crops)
+	crops_inf = T.Resize(100)(crops_inf)
+
+	df_meta_inf =  pd.read_csv(fname_crops_meta)
+	df_meta_inf['well_id'] = [s.split("_")[-3] for s in df_meta_inf['fname_pro']]
+	fname_annotations = "data/cz_infectedcell_finalwellmapping.csv"
+	df_annotations = pd.read_csv(fname_annotations)
+	
+	df_meta_inf = df_meta_inf.merge(df_annotations,
+										how='left',
+										left_on='well_id',
+										right_on='well_id_new')
+	# the next file we pull is created by get_crop_features.py
+	from compare_opencell_targets import get_df_inf_lookup
+	df_inf_lookup = get_df_inf_lookup(df_meta_inf)
+
+	proteins = df_inf_lookup.protein.unique()
+	proteins = [p for p in proteins if 'pML' not in p]
+	for prot in proteins: 
+		print(prot)
+		# ipdb.set_trace()
+		row_lookup = df_inf_lookup[df_inf_lookup['protein']==prot]
+		well_ids = row_lookup.well_id
+		idxs = np.where(df_meta_inf['well_id'].isin(well_ids))[0]
+		crops_this = crops_inf[idxs].numpy()
+
+		protein_id = row_lookup['protein_id'].values[0]
+		labels = np.array([[protein_id, prot,'']]*len(crops_this))
+		np.save(dir_data / f"{prot}_pro.npy", crops_this[:,0])
+		np.save(dir_data / f"{prot}_nuc.npy", crops_this[:,1])
+		np.save(dir_data / f"{prot}_nucdist.npy", crops_this[:,2])
+		np.save(dir_data / f"{prot}_label.npy", labels)
+
+	pass 
+
 if __name__=="__main__":
 	dir_infdata = "inference/results/load_inf_data/"
 	fname_segmasks = "inference/results/nuclear_segmentation/all_segmasks.pt"
+	save_crops_to_dataset()
 	min_nuclear_diam = 50 # px
 	width, height = 200, 200 # px
 	generate_crops(dir_infdata, fname_segmasks, min_nuclear_diam=min_nuclear_diam, 

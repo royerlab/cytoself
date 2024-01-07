@@ -16,7 +16,7 @@ from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
 # declare results dir 
-results_dir = Path("results/20231011_train_all_with_nucdist")
+results_dir = Path("results/20231022_train_all")
 results_dir.mkdir(exist_ok=True)
 tensorboard_path = "logs"
 
@@ -36,7 +36,10 @@ model_args = {
     'emb_shapes': ((25, 25), (4, 4)),
     'output_shape': (len(data_ch), 100, 100),
     'fc_output_idx': [2],
-    'vq_args': {'num_embed
+    'vq_args': {
+        'num_embeddings': 512,
+        'embedding_dim': 64
+    },
     'num_class': len(datamanager.unique_labels),
     'fc_input_type': 'vqvec',
 }

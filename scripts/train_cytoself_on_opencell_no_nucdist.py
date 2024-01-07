@@ -18,6 +18,8 @@ from cytoself.trainer.utils.plot_history import plot_history_cytoself
 # declare results dir 
 results_dir = Path("results/20231011_train_all_no_nucdist")
 results_dir = Path("results/20231025_train_all_no_nucdist")
+results_dir = Path("results/20231218_train_all_no_nucdist")
+results_dir = Path("results/tmp")
 results_dir.mkdir(exist_ok=True) 
 tensorboard_path = "logs"
 
@@ -30,7 +32,7 @@ datapath = Path("data/opencell_crops_proteins/")
 # DataManagerOpenCell.download_sample_data(datapath)  # donwload data
 datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
-ipdb.set_trace()
+
 
 # 2. Create and train a cytoself model
 model_args = {
