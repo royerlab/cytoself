@@ -105,6 +105,8 @@ def get_nearest_proteins(
         embed_opencell, protein_label_opencell)
     torch.save(embeds_consensus_opencell,
                dir_results / "consensus_embeddings.pt")
+    torch.save(labels_consensus_opencell,
+               dir_results / "consensus_labels.pt")
 
     lookup_loss_ce, lookup_loss_recon = get_opencell_protein_losses(
         dir_pretrained_model, checkpoint)
@@ -127,6 +129,10 @@ def get_nearest_proteins(
         sort_key=sort_key,
         do_filtering=do_filtering,
         crops=crops_inf)
+    torch.save(embeds_consensus_inf,
+               dir_results / "consensus_embeddings_inference.pt")
+    torch.save(labels_consensus_inf, 
+        dir_results / "consensus_labels_inference.pt")
 
     # check that the labels for the consensus embeddings are sorted the same as their lookup dataframes
     # for inference dataset, if combine_inference_wells, sort by protein, otherwise sort by well id.
@@ -148,9 +154,23 @@ def get_nearest_proteins(
                               embeds_consensus_opencell,
                               metric=mode)
     dist = torch.from_numpy(dist)
-
     # matrix (n_well_ids_inf, n_prots_opencell), which here is (80,1311)
     dist_argsort = torch.argsort(dist, axis=1)
+
+    ipdb.set_trace()
+    # debugging whether the inference images come from the same place 
+    if 0: 
+        embeds_all = np.vstack((embeds_consensus_opencell, embeds_consensus_inf))
+        prots_all = np.concatenate((df_opencell_lookup['prot_id'].values, df_inf_lookup['protein'].values)) 
+        mode = 'euclidean'
+        dist = pairwise_distances(embeds_all, embeds_all, metric=mode)
+        dist = torch.from_numpy(dist)
+        dist_argsort = torch.argsort(dist, axis=1)
+
+        dist_argsort[1311]
+        idxs_nearest = dist_argsort[1320]
+        print(idxs_nearest, prots_all[idxs_nearest])
+
 
     # branch for manual checking
     if 1:
@@ -400,7 +420,6 @@ def get_opencell_protein_losses(dir_pretrained_model, checkpoint):
 
     return lookup_loss_ce, lookup_loss_recon
 
-
 def find_nearest_analysis(embeds_consensus_opencell,
                           labels_consensus_opencell,
                           embeds_consensus_inf,
@@ -499,6 +518,19 @@ def find_nearest_analysis(embeds_consensus_opencell,
     f_save = dir_results / f"knn_opencell_preds_{fname_stem}.csv"
     print(f"saving results csv [{f_save}]")
     df_results_summary.transpose().to_csv(f_save)
+
+    # create a distance matrix of everything to everything and save it 
+    if 1:
+        embeds_all = np.concatenate((embeds_consensus_inf, embeds_consensus_opencell))
+        prots_all = np.concatenate((labels_consensus_inf, labels_consensus_opencell))
+        dist_all = pairwise_distances(embeds_all, embeds_all, metric=mode)
+        if mode=='correlation':
+            dist_all = 1-dist_all
+
+        df_dist_all = pd.DataFrame(data=dist_all, index=prots_all, columns=prots_all)
+        f_save = dir_results / f"distmat_{fname_stem}.csv"
+        df_dist_all.to_csv(f_save)
+
 
     return df_results_summary
 
@@ -887,8 +919,8 @@ if __name__ == "__main__":
 
     dir_pretrained_models_checkpoints = [
         # ["results/20231218_train_all_balanced_classes_2", None],
-        ["results/20231222_train_all_balanced_classes_1", None],
         ["results/20231218_train_all_no_nucdist_balanced_classes_2", None],
+        ["results/20231222_train_all_balanced_classes_1", None],
         ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
         ["results/20231222_train_all_balanced_classes_1", None],
         ["results/20231221_train_with_orphans", None],
@@ -906,7 +938,7 @@ if __name__ == "__main__":
     do_include_nn_losses = True
     # do_filtering = True
 
-    do_visualize_knns = True  # create an image for each protein visualizing nearest-neighbors
+    do_visualize_knns = False  # create an image for each protein visualizing nearest-neighbors
     combine_augmented_embeddings = True
 
     # for representation in ('vqvec2', 'hist'):
