@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import torch
 import tqdm
-import json 
+import json
 from pathlib import Path
 
 from cytoself.analysis.analysis_opencell import AnalysisOpenCell
@@ -15,19 +15,24 @@ from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 from cytoself.trainer.utils.plot_history import plot_history_cytoself
 
-# declare results dir 
-results_dir = Path("results/20231022_train_all")
+# declare results dir
+results_dir = Path("results/20240129_train_all")
 results_dir.mkdir(exist_ok=True)
 tensorboard_path = "logs"
 
 # 1. Prepare Data
-data_ch = ['pro', 'nuc', 'nucdist'] # ['pro', 'nuc', 'nucdist']
-# data_ch = ['pro', 'nuc'] # 
+data_ch = ['pro', 'nuc', 'nucdist']  # ['pro', 'nuc', 'nucdist']
+# data_ch = ['pro', 'nuc'] #
 
-datapath = Path("data/opencell_crops_proteins/")
+# datapath = Path("data/opencell_crops_proteins/")
+datapath = Path("data/opencell_crops_processed2/")
 
 # DataManagerOpenCell.download_sample_data(datapath)  # donwload data
-datamanager = DataManagerOpenCell(datapath, data_ch, fov_col=None)
+intensity_adjustment = {'pro': 1, 'nuc': 1, 'nucdist': 1}
+datamanager = DataManagerOpenCell(datapath,
+                                  data_ch,
+                                  fov_col=None,
+                                  intensity_adjustment=intensity_adjustment)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
 
 # 2. Create and train a cytoself model
@@ -51,32 +56,38 @@ train_args = {
     'earlystop_patience': 12,
 }
 
-# log the training and model args 
+# log the training and model args
 with open(results_dir / "model_args.json", 'w') as f:
     json.dump(model_args, f)
 with open(results_dir / "train_args.json", 'w') as f:
     json.dump(train_args, f)
 
-trainer = CytoselfFullTrainer(train_args, homepath=results_dir, model_args=model_args)
+trainer = CytoselfFullTrainer(train_args,
+                              homepath=results_dir,
+                              model_args=model_args)
 trainer.fit(datamanager, tensorboard_path=tensorboard_path)
 
 # 2.1 Generate training history
-plot_history_cytoself(trainer.history, savepath=trainer.savepath_dict['visualization'])
+plot_history_cytoself(trainer.history,
+                      savepath=trainer.savepath_dict['visualization'])
 
 # 2.2 Compare the reconstructed images as a sanity check
 img = next(iter(datamanager.test_loader))['image'].detach().cpu().numpy()
 torch.cuda.empty_cache()
 reconstructed = trainer.infer_reconstruction(img)
-fig, ax = plt.subplots(2, len(data_ch), figsize=(5 * len(data_ch), 5), squeeze=False)
+fig, ax = plt.subplots(2,
+                       len(data_ch),
+                       figsize=(5 * len(data_ch), 5),
+                       squeeze=False)
 for ii, ch in enumerate(data_ch):
     t0 = np.zeros((2 * 100, 5 * 100))
     for i, im in enumerate(img[:10, ii, ...]):
         i0, i1 = np.unravel_index(i, (2, 5))
-        t0[i0 * 100 : (i0 + 1) * 100, i1 * 100 : (i1 + 1) * 100] = im
+        t0[i0 * 100:(i0 + 1) * 100, i1 * 100:(i1 + 1) * 100] = im
     t1 = np.zeros((2 * 100, 5 * 100))
     for i, im in enumerate(reconstructed[:10, ii, ...]):
         i0, i1 = np.unravel_index(i, (2, 5))
-        t1[i0 * 100 : (i0 + 1) * 100, i1 * 100 : (i1 + 1) * 100] = im
+        t1[i0 * 100:(i0 + 1) * 100, i1 * 100:(i1 + 1) * 100] = im
     ax[0, ii].imshow(t0, cmap='gray')
     ax[0, ii].axis('off')
     ax[0, ii].set_title('input ' + ch)
@@ -85,8 +96,9 @@ for ii, ch in enumerate(data_ch):
     ax[1, ii].set_title('output ' + ch)
 fig.tight_layout()
 fig.show()
-fig.savefig(join(trainer.savepath_dict['visualization'], 'reconstructed_images.png'), dpi=300)
-
+fig.savefig(join(trainer.savepath_dict['visualization'],
+                 'reconstructed_images.png'),
+            dpi=300)
 
 # 3. Analyze embeddings
 analysis = AnalysisOpenCell(datamanager, trainer)
@@ -109,8 +121,9 @@ ax.set_xlim([0, x_max])
 ax.set_xticks(x_ticks, analysis.feature_spectrum_indices[x_ticks])
 fig.tight_layout()
 fig.show()
-fig.savefig(join(analysis.savepath_dict['feature_spectra_figures'], 'feature_spectrum.png'), dpi=300)
-
+fig.savefig(join(analysis.savepath_dict['feature_spectra_figures'],
+                 'feature_spectrum.png'),
+            dpi=300)
 
 # 3.3 Plot UMAP
 umap_data = analysis.plot_umap_of_embedding_vector(

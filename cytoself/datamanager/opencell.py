@@ -84,6 +84,7 @@ class DataManagerOpenCell(DataManagerBase):
         self.channel_list = channel_list
 
         # Intensity adjustment is needed when using nucdist.
+        # raise NotImplementedError("fix the nucdist adjustment ")
         intensity_adjustment_default = {'pro': 1, 'nuc': 1, 'nucdist': 0.01}
         if isinstance(intensity_adjustment, dict):
             self.intensity_adjustment = intensity_adjustment
@@ -359,7 +360,6 @@ class DataManagerOpenCell(DataManagerBase):
         self.const_label_book(label_all)
 
         # Split data
-        ipdb.set_trace()
         train_ind, val_ind, test_ind = self.split_data(label_all)
 
         if len(train_ind) > 0:
@@ -439,18 +439,19 @@ class DataManagerOpenCell(DataManagerBase):
             self.test_variance = np.var(test_data).item()
 
             # JB added this branch: log metadata about the saved test model 
-            if 0: 
+            # ipdb.set_trace()
+            if 0:
                 assert shuffle_test is False
                 from pathlib import Path 
-                DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata/{self.basepath}")
-                DIR_TEST_DATASET_META.mkdir(exist_ok=True)
+                # DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata_v1/{self.basepath}")
+                # DIR_TEST_DATASET_META.mkdir(exist_ok=True)
 
                 if test_data.shape[1] == 2:
-                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata/{self.basepath}")
+                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_nonucdist_metadata_v1/{self.basepath}")
                 elif test_data.shape[1] == 3:
-                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata_nonucdist/{self.basepath}")
+                    DIR_TEST_DATASET_META = Path(f"data/test_dataset_metadata_v1/{self.basepath}")
                 
-                DIR_TEST_DATASET_META.mkdir(exist_ok=True)
+                DIR_TEST_DATASET_META.mkdir(exist_ok=True, parents=True)
 
                 np.save(DIR_TEST_DATASET_META / "test_dataset_labels.npy",  test_label)
                 np.save(DIR_TEST_DATASET_META / "test_dataset_indices.npy", test_ind)

@@ -19,22 +19,29 @@ from cytoself.trainer.utils.plot_history import plot_history_cytoself
 # results_dir = Path("results/20231011_train_all_no_nucdist")
 # results_dir = Path("results/20231025_train_all_no_nucdist")
 # results_dir = Path("results/20231221_train_with_orphans_no_nucdist")
-results_dir = Path("results/20231222_train_all_no_nucdist_balanced_classes_1")
+sampling_strategy = 2  # this does balanced sampling
+# sampling_strategy = 1  # this does balanced sampling
+results_dir = Path(
+    #f"results/20240129_train_all_no_nucdist_balanced_classes_{sampling_strategy}"
+    f"results/20240130_train_all_no_nucdist_balanced_classes_{sampling_strategy}"
+)
 
 results_dir.mkdir(exist_ok=True)
 tensorboard_path = "logs"
-sampling_strategy = 2  # this does balanced sampling
-sampling_strategy = 1  # this does balanced sampling
 
 # 1. Prepare Data
 # data_ch = ['pro', 'nuc', 'nucdist'] # ['pro', 'nuc', 'nucdist']
 data_ch = ['pro', 'nuc']  #
 
-datapath = Path("data/opencell_crops_proteins/")
+# datapath = Path("data/opencell_crops_proteins/")
+datapath = Path("data/opencell_crops_processed2/")
+
 # DataManagerOpenCell.download_sample_data(datapath)  # donwload data
+intensity_adjustment = {'pro': 1, 'nuc': 1, 'nucdist': 1}
 datamanager = DataManagerOpenCell(datapath,
                                   data_ch,
                                   fov_col=None,
+                                  intensity_adjustment=intensity_adjustment,
                                   sampling_strategy=sampling_strategy)
 datamanager.const_dataloader(batch_size=32, label_name_position=1)
 
@@ -53,7 +60,7 @@ model_args = {
 }
 train_args = {
     'lr': 0.0004,
-    'max_epoch': 100, # 100
+    'max_epoch': 100,  # 100
     'reducelr_patience': 4,
     'reducelr_increment': 0.1,
     'earlystop_patience': 12,

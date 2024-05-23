@@ -16,6 +16,7 @@ import scanpy as sc
 import seaborn as sns
 import sys
 import os
+from collections import OrderedDict
 import torch
 
 import sklearn.manifold
@@ -68,7 +69,7 @@ df_opencell_lookup = pd.DataFrame(np.unique(labels_opencell_crops, axis=0),
 # fname_crops, nsamples=100, ncols=10)
 dir_pretrained_models_checkpoints = [
     # ["results/20231218_train_all_balanced_classes_2", None],
-    ["results/20231218_train_all_no_nucdist_balanced_classes_2", None],
+    # ["results/20231218_train_all_no_nucdist_balanced_classes_2", None],
     # ["results/20231222_train_all_balanced_classes_1", None],
     # ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
     # ["results/20231222_train_all_balanced_classes_1", None],
@@ -78,6 +79,10 @@ dir_pretrained_models_checkpoints = [
     # ["results/20231222_train_all_balanced_classes_1", None],
     # ["results/20231218_train_all_no_nucdist", None],
     # ["results/20231022_train_all", None],
+    ["results/20240129_train_all_no_nucdist_balanced_classes_1", 36],
+    ["results/20240129_train_all_balanced_classes_2", None],
+    ["results/20240129_train_all", None],
+    ["results/20240129_train_all_no_nucdist", None],  
 ]
 for (dir_pretrained_model, checkpoint) in dir_pretrained_models_checkpoints:
 
@@ -85,7 +90,8 @@ for (dir_pretrained_model, checkpoint) in dir_pretrained_models_checkpoints:
                        ) / dir_pretrained_model / f"ckpt_{checkpoint}"
     data_opencell = torch.load(dir_results / "consensus_embeddings.pt").numpy()
     prots_opencell = torch.load(dir_results / "consensus_labels.pt")
-    assert all(labels_opencell == df_opencell_lookup['prot_id'].values)
+    # ipdb.set_trace()
+    # assert all(labels_opencell_crops == df_opencell_lookup['prot_id'].values)
 
     data_inf = torch.load(dir_results /
                           "consensus_embeddings_inference.pt").numpy()
@@ -102,29 +108,71 @@ for (dir_pretrained_model, checkpoint) in dir_pretrained_models_checkpoints:
                             n_pcs=n_pcs,
                             metric=metric)
 
-    resolution = 1 # 0.63  # 0.63
-    random_state = 0
-    cwv.run_leiden(resolution=resolution, random_state=random_state)
-    y_leiden = np.array(adata.obs.leiden)
-    
-    # print out some samples from each cluster to check it's coherent 
-    n_samples = 50
-    y='7'
-    for y in np.unique(y_leiden):
-        idxs = np.where(y_leiden == y)[0]
-        print(f"Label: {y}, num_prots: {len(idxs)}")
-        print(f"Annots: ")
-        print(labels_loc_grade1[idxs[:n_samples]])
-        print(prots_all[idxs[:n_samples]])
-        print()
+    # resolution = 20 # 0.63  # 0.63
+    # random_state = 0
+    all_results = []
+    all_cols = []
+    for resolution in [1, 5, 10, 20]:
+        for random_state in [0,1]:
+            print(resolution, random_state)
+            cwv.run_leiden(resolution=resolution, random_state=random_state)
+            y_leiden = np.array(adata.obs.leiden)
 
+            res = OrderedDict()
+            for prot in prots_inf:
+                idx = np.where(prots_all == prot)[0][-1] # choose `-1` bc it will choose the orphan if it's also in opencell
+                cluster_idx = y_leiden[idx]
+                prot_idxs_this_cluster = np.where(y_leiden==cluster_idx)
+                prots_this_cluster = prots_all[prot_idxs_this_cluster]
+                labels_loc_grade1_this_cluster = labels_loc_grade1[prot_idxs_this_cluster]
+                res[prot + "_prots"] = str(prots_this_cluster)
+                res[prot + "_locs"] = str(labels_loc_grade1_this_cluster)
+
+            all_results.append(pd.Series(res))
+            all_cols.append(f"res_{resolution}_seed_{random_state}")
+
+    df = pd.concat(all_results, axis=1)
+    df.columns=all_cols
+    dir_save = Path(__file__).parent / "results/clustering_leiden" / Path(dir_pretrained_model) 
+    dir_save.mkdir(exist_ok=True, parents=True)
+    df.to_csv(dir_save / "clustering_sets.csv")
     ipdb.set_trace()
+    pass 
+        
+    # print out some samples from each cluster to check it's coherent 
+#     n_samples = 50
+#     y='7'
+#     for y in np.unique(y_leiden):
+#         idxs = np.where(y_leiden == y)[0]
+#         print(f"Label: {y}, num_prots: {len(idxs)}")
+#         print(f"Annots: ")
+#         print(labels_loc_grade1[idxs[:n_samples]])
+#         print(prots_all[idxs[:n_samples]])
+#         print()
 
-prot = "TMEM184C" # "ANKRD46"
-idx = np.where(labels == prot)[0] # idx = 1311
-neighbors = adata.obsp['distances'][idx].indices
-prots = labels[[neighbors]]
+#     ipdb.set_trace()
+# pass 
 
-dist = pairwise_distances(data, data, metric=metric)
-dist = torch.from_numpy(dist)
-dist_argsort = torch.argsort(dist, axis=1)
+# # for a target protein, get the protein and annotations of the other prots in the cluster
+# prot = "TMEM184C" # "ANKRD46"
+# idx = np.where(prots_all == prot)[0] # idx = 1311
+# cluster_idx = y_leiden[idx]
+# prot_idxs_this_cluster = np.where(y_leiden==cluster_idx)
+# prots_this_cluster = prots_all[prot_idxs_this_cluster]
+# labels_loc_grade1_this_cluster = labels_loc_grade1[prot_idxs_this_cluster]
+# print(prots_this_cluster)
+# print(labels_loc_grade1_this_cluster)
+
+
+
+# # now get the nearest neighbors on the raw distance 
+# idx = np.where(prots_all == prot)[0] # idx = 1311
+# neighbors_idx = adata.obsp['distances'][idx].indices
+# neighbors_prots = prots_all[[neighbors_idx]]
+# neighbors_loc_grade1 = labels_loc_grade1[[neighbors_idx]
+
+
+# # dist = pairwise_distances(data, data, metric=metric)
+# # dist = torch.from_numpy(dist)
+# # dist_argsort = torch.argsort(dist, axis=1)
+# # 

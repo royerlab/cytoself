@@ -1,6 +1,6 @@
 """
 Run in project home dir as 
-	python inference/compare_opencell_targets.py
+    python inference/compare_opencell_targets.py
 
 For a pretrained model in `<pretrained_model_dir>`, read in the embeddings for 
 that model on the OpenCell dataset. This is the dataset the model was trained on
@@ -25,24 +25,26 @@ from tqdm import tqdm
 from collections import Counter
 from sklearn.decomposition import PCA
 
-protein_filter = dict(
-    # GLT8D1=[1, 2, 4, 11, 13, 18, 52, 64, 96, 97],
-    GLT8D1=[2, 4, 11, 18, 52, 64, 96, 97],
-    # GLT8D1=[97],
-    MFSD5=[
-        0, 2, 8, 12, 13, 15, 21, 22, 24, 25, 40, 42, 44, 46, 48, 51, 57, 67,
-        68, 71, 73, 75, 77, 78, 86, 89, 92, 94, 96, 97, 98, 99
-    ],
-    MPZL1=[
-        19, 24, 26, 27, 39, 35, 36, 39, 40, 41, 42, 45, 46, 47, 48, 49, 50, 51,
-        53, 54, 55, 56, 70, 71, 72, 73, 74, 75, 76, 77, 78, 80, 81, 85, 86, 87,
-        88, 89, 91, 93, 94, 95, 97
-    ],
-    TSPAN3=[
-        0, 1, 23, 8, 9, 10, 11, 12, 13, 15, 19, 21, 22, 29, 30, 31, 32, 33, 34,
-        37, 39, 40, 42, 43, 44, 45, 49, 51, 52, 54, 63, 64, 90, 92, 98
-    ],
-)
+VERSION = 2
+
+# protein_filter = dict(
+#     # GLT8D1=[1, 2, 4, 11, 13, 18, 52, 64, 96, 97],
+#     GLT8D1=[2, 4, 11, 18, 52, 64, 96, 97],
+#     # GLT8D1=[97],
+#     MFSD5=[
+#         0, 2, 8, 12, 13, 15, 21, 22, 24, 25, 40, 42, 44, 46, 48, 51, 57, 67,
+#         68, 71, 73, 75, 77, 78, 86, 89, 92, 94, 96, 97, 98, 99
+#     ],
+#     MPZL1=[
+#         19, 24, 26, 27, 39, 35, 36, 39, 40, 41, 42, 45, 46, 47, 48, 49, 50, 51,
+#         53, 54, 55, 56, 70, 71, 72, 73, 74, 75, 76, 77, 78, 80, 81, 85, 86, 87,
+#         88, 89, 91, 93, 94, 95, 97
+#     ],
+#     TSPAN3=[
+#         0, 1, 23, 8, 9, 10, 11, 12, 13, 15, 19, 21, 22, 29, 30, 31, 32, 33, 34,
+#         37, 39, 40, 42, 43, 44, 45, 49, 51, 52, 54, 63, 64, 90, 92, 98
+#     ],
+# )
 
 current_filename = Path(os.path.basename(__file__))
 mito_proteins = np.array([
@@ -65,15 +67,18 @@ def get_nearest_proteins(
         checkpoint=None,
         do_include_nn_losses=False,
         combine_augmented_embeddings=False,
+        do_compare_orphans=True,
         test=None):
     """ 
-	deorphaning analysis 
-	Args: 
-		do_filtering (bool).
-	"""
+    deorphaning analysis 
+    Args: 
+        do_filtering (bool).
+    """
     dir_results = Path(
         "inference/results"
     ) / current_filename.stem / dir_pretrained_model / f"ckpt_{checkpoint}"
+    if VERSION > 0:
+        dir_results = dir_results / f"version{VERSION}"  
     dir_results.mkdir(exist_ok=True, parents=True)
 
     dir_viz = dir_results
@@ -105,8 +110,7 @@ def get_nearest_proteins(
         embed_opencell, protein_label_opencell)
     torch.save(embeds_consensus_opencell,
                dir_results / "consensus_embeddings.pt")
-    torch.save(labels_consensus_opencell,
-               dir_results / "consensus_labels.pt")
+    torch.save(labels_consensus_opencell, dir_results / "consensus_labels.pt")
 
     lookup_loss_ce, lookup_loss_recon = get_opencell_protein_losses(
         dir_pretrained_model, checkpoint)
@@ -131,8 +135,8 @@ def get_nearest_proteins(
         crops=crops_inf)
     torch.save(embeds_consensus_inf,
                dir_results / "consensus_embeddings_inference.pt")
-    torch.save(labels_consensus_inf, 
-        dir_results / "consensus_labels_inference.pt")
+    torch.save(labels_consensus_inf,
+               dir_results / "consensus_labels_inference.pt")
 
     # check that the labels for the consensus embeddings are sorted the same as their lookup dataframes
     # for inference dataset, if combine_inference_wells, sort by protein, otherwise sort by well id.
@@ -149,19 +153,12 @@ def get_nearest_proteins(
         embeds_consensus_opencell = pca.transform(embeds_consensus_opencell)
         embeds_consensus_inf = pca.transform(embeds_consensus_inf)
 
-    # get distances
-    dist = pairwise_distances(embeds_consensus_inf,
-                              embeds_consensus_opencell,
-                              metric=mode)
-    dist = torch.from_numpy(dist)
-    # matrix (n_well_ids_inf, n_prots_opencell), which here is (80,1311)
-    dist_argsort = torch.argsort(dist, axis=1)
-
-    ipdb.set_trace()
-    # debugging whether the inference images come from the same place 
-    if 0: 
-        embeds_all = np.vstack((embeds_consensus_opencell, embeds_consensus_inf))
-        prots_all = np.concatenate((df_opencell_lookup['prot_id'].values, df_inf_lookup['protein'].values)) 
+    # debugging whether the inference images come from the same place
+    if 0:
+        embeds_all = np.vstack(
+            (embeds_consensus_opencell, embeds_consensus_inf))
+        prots_all = np.concatenate((df_opencell_lookup['prot_id'].values,
+                                    df_inf_lookup['protein'].values))
         mode = 'euclidean'
         dist = pairwise_distances(embeds_all, embeds_all, metric=mode)
         dist = torch.from_numpy(dist)
@@ -171,9 +168,16 @@ def get_nearest_proteins(
         idxs_nearest = dist_argsort[1320]
         print(idxs_nearest, prots_all[idxs_nearest])
 
-
     # branch for manual checking
-    if 1:
+    if 0:
+        # get distances
+        dist = pairwise_distances(embeds_consensus_inf,
+                                  embeds_consensus_opencell,
+                                  metric=mode)
+        dist = torch.from_numpy(dist)
+        # matrix (n_well_ids_inf, n_prots_opencell), which here is (80,1311)
+        dist_argsort = torch.argsort(dist, axis=1)
+
         target_protein = 'GLT8D1'
         idxs = np.where(df_inf_lookup['protein'] == target_protein)
         assert len(idxs) > 0
@@ -193,7 +197,7 @@ def get_nearest_proteins(
             )
 
     # this function is where the csv file gets saved
-    fname_stem = f"filter_{do_filtering}__representation_{representation}__rotations_{combine_augmented_embeddings}__mode_{mode}__pcadim_{pca_dim}"
+    fname_stem = f"manualfilter_{do_filtering}__representation_{representation}__rotations_{combine_augmented_embeddings}__mode_{mode}__pcadim_{pca_dim}"
     df_results_summary = find_nearest_analysis(
         embeds_consensus_opencell,
         labels_consensus_opencell,
@@ -206,9 +210,9 @@ def get_nearest_proteins(
         fname_stem,
         do_include_nn_losses=do_include_nn_losses,
         mode=mode,
-        dist=dist,
         lookup_loss_ce=lookup_loss_ce,
         lookup_loss_recon=lookup_loss_recon,
+        do_compare_orphans=do_compare_orphans,
         k_nearest_prots=8)
     if do_visualize_knns:
         visualize_knns(
@@ -232,12 +236,12 @@ def nearest_prots_within_opencell(
         representation='vqvec2',
         get_rank=['STT3A', 'STT3B', 'OSTC', 'DAD1', 'KRTCAP2']):
     """
-	Given a target_protein that is in OpenCell, get the nearest proteins that are also 
-	in OPenCell (this does not support a separate orphan protein). 
-	Args:
-		target_protein (str): target protein whose neighbors we're looking for
-		get_rank (List[str]): list of proteins whose position in the kNN list we want to query
-	"""
+    Given a target_protein that is in OpenCell, get the nearest proteins that are also 
+    in OPenCell (this does not support a separate orphan protein). 
+    Args:
+        target_protein (str): target protein whose neighbors we're looking for
+        get_rank (List[str]): list of proteins whose position in the kNN list we want to query
+    """
     ## results dirs
     dir_results = Path(
         "inference/results") / current_filename.stem / dir_pretrained_model
@@ -292,13 +296,13 @@ def get_embeds_and_crops(
         combine_augmented_embeddings=False,
         dataset: Literal['opencell', 'inference'] = "opencell"):
     """
-	Get cytoself embeddings and image crops for either opencell or the inference dataset. 
-	Args: 
-		'dataset' (str): one of 'opencell'
-		combine_inference_wells (bool): if True AND if dataset=='opencell', then 
-			combine the encodings 
-		do_filtering: for inferencendataset, filter the crops to only include the ones listed
-	"""
+    Get cytoself embeddings and image crops for either opencell or the inference dataset. 
+    Args: 
+        'dataset' (str): one of 'opencell'
+        combine_inference_wells (bool): if True AND if dataset=='opencell', then 
+            combine the encodings 
+        do_filtering: for inferencendataset, filter the crops to only include the ones listed
+    """
     print(f"loading dataset embeddings and crops [{dataset}]")
 
     augmentations = ("0", "90", "180", "270", "0_f", "90_f", "180_f", "270_f")
@@ -310,6 +314,8 @@ def get_embeds_and_crops(
         # f_embed = Path(dir_pretrained_model) / "embeddings/vqvec2.npy"
         dir_embeddings = Path("inference/results/get_crop_features"
                               ) / dir_pretrained_model / f"ckpt_{checkpoint}"
+        # if VERSION == 1:
+        #     dir_embeddings = dir_embeddings / "version1"
 
         embeds = []
         for augmentation in augmentations:
@@ -325,7 +331,13 @@ def get_embeds_and_crops(
             embeds.append(embed_opencell)
         embeds = torch.stack(embeds)
 
-        dir_opencell_test = Path("data/test_dataset_metadata")
+        if "2023" in dir_pretrained_model:
+           dir_opencell_test = Path("data/test_dataset_metadata")
+        elif "2024" in dir_pretrained_model:
+            dir_opencell_test = Path("data/test_dataset_metadata_v1/data/opencell_crops_processed2/")
+        else:
+            raise 
+
         crops_opencell = np.load(
             dir_opencell_test /
             "test_dataset_crops.npy")  # (93037, 3, 100, 100)
@@ -334,8 +346,10 @@ def get_embeds_and_crops(
         labels_opencell = np.load(
             dir_opencell_test /
             "test_dataset_labels.npy")  # (93037, 3) protid, prot, loc_grade1
+        # ipdb.set_trace()
         df_opencell = pd.DataFrame(
             labels_opencell, columns=['ensg_id', 'prot_id', 'loc_grade1'])
+
         df_opencell_lookup = pd.DataFrame(
             np.unique(labels_opencell, axis=0),
             columns=['ensg_id', 'prot_id',
@@ -347,6 +361,8 @@ def get_embeds_and_crops(
     elif dataset == "inference":
         dir_embeddings = Path("inference/results/get_crop_features"
                               ) / dir_pretrained_model / f"ckpt_{checkpoint}"
+        if VERSION > 0:
+            dir_embeddings = dir_embeddings / f"version{VERSION}"
 
         embeds = []
         for augmentation in augmentations:
@@ -363,7 +379,13 @@ def get_embeds_and_crops(
             embeds.append(embed_inf)
         embeds = torch.stack(embeds)
 
-        df_meta_inf = pd.read_csv(dir_embeddings / "crops_meta.csv")
+        if VERSION == 0:
+            df_meta_inf = pd.read_csv(dir_embeddings / "crops_meta.csv")
+        elif VERSION > 0:
+            df_meta_inf = pd.read_csv(dir_embeddings / f"crops_meta_v{VERSION}.csv")
+        else: 
+            raise ValueError()
+
         df_annotations = pd.read_csv(fname_annotations)
         crops_inf = torch.load(fname_crops)
         crops_inf = T.Resize(100)(crops_inf)
@@ -380,6 +402,8 @@ def get_embeds_and_crops(
                                         left_on='well_id',
                                         right_on='well_id_new')
         df_inf_lookup = get_df_inf_lookup(df_meta_inf)
+
+        assert df_meta_inf.shape[0] == embeds.shape[1]
 
         return embeds, labels_inf, crops_inf, df_meta_inf, df_annotations, df_inf_lookup
 
@@ -399,9 +423,9 @@ def order_by_frequency_with_counts(strings):
 
 def get_opencell_protein_losses(dir_pretrained_model, checkpoint):
     """ 
-	For the proteins in the OpenCell test set, measure the get the average 
-	of the losses (the protein classification loss & the recon loss).
-	"""
+    For the proteins in the OpenCell test set, measure the get the average 
+    of the losses (the protein classification loss & the recon loss).
+    """
     fname_loss_ce = Path(
         "inference/results/get_crop_features"
     ) / dir_pretrained_model / f"ckpt_{checkpoint}" / "loss_ce.csv"
@@ -420,6 +444,7 @@ def get_opencell_protein_losses(dir_pretrained_model, checkpoint):
 
     return lookup_loss_ce, lookup_loss_recon
 
+
 def find_nearest_analysis(embeds_consensus_opencell,
                           labels_consensus_opencell,
                           embeds_consensus_inf,
@@ -433,36 +458,50 @@ def find_nearest_analysis(embeds_consensus_opencell,
                           lookup_loss_ce,
                           lookup_loss_recon,
                           do_include_nn_losses=False,
-                          dist=None,
                           k_nearest_prots=10,
+                          do_compare_orphans=True,
                           return_dists_only=False):
     """
-	Take the consensus embeddings for opencell and inference data. For each inf 
-	well_id, get the nearest `k_nearest_prots` proteins in Opencell. 
-	The option `mode`, controls how 'nearest' is defined:
-		`mode==correlation` is wrt vqvec2. 
+    Take the consensus embeddings for opencell and inference data. For each inf 
+    well_id, get the nearest `k_nearest_prots` proteins in Opencell. 
+    The option `mode`, controls how 'nearest' is defined:
+        `mode==correlation` is wrt vqvec2. 
 
-	If `return_dists_only` then return early and just return the distance matrix. This is 
-	useful for doing thresholding. 
-	"""
-    ## compute the distance matrix between the inf proteins and the 1311 OpenCell proteins
-    if dist is None:
-        dist = pairwise_distances(embeds_consensus_inf,
-                                  embeds_consensus_opencell,
-                                  metric=mode)
-        dist = torch.from_numpy(dist)
+    If `return_dists_only` then return early and just return the distance matrix. This is 
+    useful for doing thresholding. 
+    """
+
+    ## compute the distance matrix between the inf prots and all prots (in opencell)
+    if not do_compare_orphans:
+        embeds_compare = embeds_consensus_opencell
+        prots_compare = df_opencell_lookup['prot_id'].values
+        loc_grade1_compare = df_opencell_lookup['loc_grade1'].values
+    else:
+        embeds_compare = np.concatenate(
+            (embeds_consensus_opencell, embeds_consensus_inf))
+        prots_compare = np.concatenate((df_opencell_lookup['prot_id'].values,
+                                   df_inf_lookup['protein'].values))
+        loc_grade1_compare = np.concatenate((df_opencell_lookup['loc_grade1'].values,
+            np.array(["ORF"]*len(df_opencell_lookup))))
+
+    dist = pairwise_distances(embeds_consensus_inf,
+                              embeds_compare,
+                              metric=mode)
+    dist = torch.from_numpy(dist)
 
     # matrix (n_well_ids_inf, n_prots_opencell), which here is (80,1311)
-    dist_argsort = torch.argsort(dist, axis=1)[:, :k_nearest_prots]
-    prots_nearest = df_opencell_lookup['prot_id'].values[
-        dist_argsort]  # (n_well_ids_inf,k_nearest_prots)
+    dist_argsort = torch.argsort(dist, axis=1)
+    if do_compare_orphans:
+        dist_argsort = dist_argsort[:,1:] # nearest will always be itself
+    dist_argsort = dist_argsort[:, :k_nearest_prots]
+
+    prots_nearest = prots_compare[dist_argsort]  # (n_well_ids_inf,k_nearest_prots)
     dist_nearest = np.zeros(dist_argsort.shape)
     for i in range(len(dist_nearest)):
         dist_nearest[i] = dist[i, dist_argsort[i]]
     if mode == 'correlation':
         dist_nearest = 1 - dist_nearest
-    loc_grade1_nearest = df_opencell_lookup['loc_grade1'].values[
-        dist_argsort]  # (n_well_ids_inf,k_nearest_prots)
+    loc_grade1_nearest = loc_grade1_compare[dist_argsort]  # (n_well_ids_inf,k_nearest_prots)
 
     if return_dists_only:
         return dist, dist_argsort, prots_nearest, loc_grade1_nearest
@@ -519,27 +558,30 @@ def find_nearest_analysis(embeds_consensus_opencell,
     print(f"saving results csv [{f_save}]")
     df_results_summary.transpose().to_csv(f_save)
 
-    # create a distance matrix of everything to everything and save it 
+    # create a distance matrix of everything to everything and save it
     if 1:
-        embeds_all = np.concatenate((embeds_consensus_inf, embeds_consensus_opencell))
-        prots_all = np.concatenate((labels_consensus_inf, labels_consensus_opencell))
+        embeds_all = np.concatenate(
+            (embeds_consensus_inf, embeds_consensus_opencell))
+        prots_all = np.concatenate(
+            (labels_consensus_inf, labels_consensus_opencell))
         dist_all = pairwise_distances(embeds_all, embeds_all, metric=mode)
-        if mode=='correlation':
-            dist_all = 1-dist_all
+        if mode == 'correlation':
+            dist_all = 1 - dist_all
 
-        df_dist_all = pd.DataFrame(data=dist_all, index=prots_all, columns=prots_all)
+        df_dist_all = pd.DataFrame(data=dist_all,
+                                   index=prots_all,
+                                   columns=prots_all)
         f_save = dir_results / f"distmat_{fname_stem}.csv"
         df_dist_all.to_csv(f_save)
-
 
     return df_results_summary
 
 
 def norm_0_1_perimg_perch(crops):
     """ 
-	input is (n,nchanells,Y,X)
-	Normalize to [0,1] within each image and within each channel. 
-	"""
+    input is (n,nchanells,Y,X)
+    Normalize to [0,1] within each image and within each channel. 
+    """
     if type(crops) == np.ndarray:
         crops = torch.from_numpy(crops)
     crops_view = crops.view((*crops.shape[:2], -1))
@@ -574,6 +616,7 @@ def visualize_knns(df_results_summary,
         # get the nearest protein set
         prots_nearest = []
         dist_nearest = []
+
         for j in range(k_nearest_prots):
             prot = row[f'prot_nn{j}']
             prots_nearest.append(prot)
@@ -613,8 +656,8 @@ def get_consensus_encoding(embed_data,
                            do_filtering=False,
                            crops=None):
     """  
-	`crops` only used for DEBUG=True
-	"""
+    `crops` only used for DEBUG=True
+    """
     labels_uniq = np.array(sorted(np.unique(labels), key=sort_key))  # (1311,)
 
     embeds_consensus = []
@@ -688,20 +731,20 @@ def threshold_based_filtering(self):
 
 def custom_sort_key(x):
     """
-	in `df_inf_lookup`, sort the wellids ('A1','A2','A10'...) according to 
-	the letter and then the number, where you treat the number as an int and not a string
-	So, split the well_id into a prefix (e.g., 'A') and a numeric part 
-	(e.g., '1', '3', '10', '11')
-	"""
+    in `df_inf_lookup`, sort the wellids ('A1','A2','A10'...) according to 
+    the letter and then the number, where you treat the number as an int and not a string
+    So, split the well_id into a prefix (e.g., 'A') and a numeric part 
+    (e.g., '1', '3', '10', '11')
+    """
     prefix, numeric = x[0], int(x[1:])
     return (prefix, numeric)
 
 
 def get_df_inf_lookup(df_meta_inf):
     """
-	`df_meta_inf` is a row for each crop. Each crop from the same well_id has 
-	identical rows. This function returns a lookup function that is well_id 
-	"""
+    `df_meta_inf` is a row for each crop. Each crop from the same well_id has 
+    identical rows. This function returns a lookup function that is well_id 
+    """
     df_inf_lookup = df_meta_inf.groupby('well_id').sample(
         n=1).sort_values('well_id')
     df_inf_lookup['sort_key'] = df_inf_lookup['well_id'].apply(custom_sort_key)
@@ -853,10 +896,10 @@ def analysis_choose_opencell_threshold(dir_pretrained_model,
 
 def make_crops_imgs(imgs):
     """ 
-	image crops are either 2 channel (protein+nucleus) or 3-channel (protein+
-	nucleus+distance transform). Make an image where the protein is in the green
-	channel, and the nucleus in the blue channel, and the red channel is all 0s.
-	"""
+    image crops are either 2 channel (protein+nucleus) or 3-channel (protein+
+    nucleus+distance transform). Make an image where the protein is in the green
+    channel, and the nucleus in the blue channel, and the red channel is all 0s.
+    """
     imgs_show = torch.zeros(len(imgs), 3, *imgs.shape[-2:], dtype=imgs.dtype)
     imgs_show[:, 1] = imgs[:, 0]  # protein in green channel
     imgs_show[:, 2] = imgs[:, 1]  # nucleus in green channel
@@ -870,7 +913,7 @@ def generate_inference_crop_grids(dir_pretrained_model,
                                   ncols=10,
                                   checkpoint=None):
     """
-	"""
+    """
     dir_results = Path(
         "inference/results") / current_filename.stem / dir_pretrained_model
     dir_results.mkdir(exist_ok=True, parents=True)
@@ -910,6 +953,10 @@ def generate_inference_crop_grids(dir_pretrained_model,
 if __name__ == "__main__":
     fname_crops = "inference/results/crop/crops.pt"
     fname_crops_meta = "inference/results/crop/crops_meta.csv"
+    if VERSION>0:
+        fname_crops = f"inference/results/crop/crops_v{VERSION}.pt"
+        fname_crops_meta = "inference/results/crop/crops_meta_v{VERSION}.csv"
+
     # this file is protein ids and estimates of their annotations
     fname_annotations = "data/cz_infectedcell_finalwellmapping.csv"
     pca_dim = 200
@@ -918,28 +965,33 @@ if __name__ == "__main__":
     # fname_crops, nsamples=100, ncols=10)
 
     dir_pretrained_models_checkpoints = [
+        # ["results/20231218_train_all_no_nucdist_balanced_classes_2", None],
         # ["results/20231218_train_all_balanced_classes_2", None],
-        ["results/20231218_train_all_no_nucdist_balanced_classes_2", None],
-        ["results/20231222_train_all_balanced_classes_1", None],
-        ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
-        ["results/20231222_train_all_balanced_classes_1", None],
-        ["results/20231221_train_with_orphans", None],
-        ["results/20231221_train_with_orphans_no_nucdist", None],
-        ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
-        ["results/20231222_train_all_balanced_classes_1", None],
-        ["results/20231218_train_all_no_nucdist", None],
-        ["results/20231022_train_all", None],
+        # ["results/20231222_train_all_balanced_classes_1", None],
+        # ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
+        # ["results/20231222_train_all_balanced_classes_1", None],
+        # ["results/20231221_train_with_orphans", None],
+        # ["results/20231221_train_with_orphans_no_nucdist", None],
+        # ["results/20231222_train_all_no_nucdist_balanced_classes_1", None],
+        # ["results/20231222_train_all_balanced_classes_1", None],
+        # ["results/20231218_train_all_no_nucdist", None],
+        # ["results/20231022_train_all", None],
+        # ["results/20240129_train_all_no_nucdist_balanced_classes_1", 36],
+        ["results/20240129_train_all_balanced_classes_2", None],
+        ["results/20240129_train_all", None],
+        # ["results/20240129_train_all_no_nucdist", None], 
     ]
 
     # analyse distances
     representation = 'vqvec2'  #'hist'
     mode = 'correlation'
     combine_inference_wells = True
-    do_include_nn_losses = True
-    # do_filtering = True
+    do_include_nn_losses = False
+    do_compare_orphans = True  # when doing kNN's, include the orphans in the new orphans in the lookup
+    do_filtering = False # now set to true because we use the intesnity based filtering
 
-    do_visualize_knns = False  # create an image for each protein visualizing nearest-neighbors
-    combine_augmented_embeddings = True
+    do_visualize_knns = False # create an image for each protein visualizing nearest-neighbors
+    # combine_augmented_embeddings = False
 
     # for representation in ('vqvec2', 'hist'):
     for (dir_pretrained_model,
@@ -953,12 +1005,15 @@ if __name__ == "__main__":
                         'correlation',
                         'euclidean',
                 ):
+                    # if we have VERSION==2 then the filtering is done ahead of time 
                     for do_filtering in (
-                            # False,
-                            True, ):
+                            False,
+                            # True, 
+                            ):
                         for combine_augmented_embeddings in (
                                 # False,
-                                True, ):
+                                True, 
+                                ):
                             get_nearest_proteins(
                                 fname_crops=fname_crops,
                                 fname_crops_meta=fname_crops_meta,
@@ -973,6 +1028,6 @@ if __name__ == "__main__":
                                 combine_augmented_embeddings=
                                 combine_augmented_embeddings,
                                 do_include_nn_losses=do_include_nn_losses,
+                                do_compare_orphans=do_compare_orphans,
                                 mode=mode)
 
-    ipdb.set_trace()

@@ -4,11 +4,12 @@ script_name=$(basename $0)
 partition=gpu 
 
 cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell_no_nucdist_balanced_classes.py"
-cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell.py"
 #cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell_balanced_classes.py"
+#cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell.py"
 #cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell_no_nucdist.py"
+
 #cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_cytoself_on_opencell_no_nucdist.py"
-cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_with_orphans.py"
+#cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_with_orphans.py"
 #cmd="/hpc/mydata/james.burgess/.conda/envs/cytoself/bin/python scripts/train_with_orphans_no_nucdist.py"
 mem="700gb"
 
