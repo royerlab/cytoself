@@ -37,10 +37,11 @@ from skimage.morphology import binary_erosion, binary_dilation
 from scipy.ndimage import distance_transform_edt
 import torchvision.transforms as T
 from aicsimageio import AICSImage
+import tqdm
 
 # VERSION defines the cropping strategy, and defines how the crops will be saved 
-# If 0 then do the normalization on each crop (recommended)
-# If 1, then do the normalization on each FOV. 
+# If 0 do the normalization on each crop (recommended)
+# If 1, do the normalization on each FOV. 
 # If 2, do crop-level normalization (just like version 0) AND also do intensity-threshold based filtering. 
 # 		This version produces logs btw. 
 VERSION = 0
@@ -89,7 +90,7 @@ def generate_crops(dir_infdata,
 
 	# iterate over the FOVs
 
-	for i, mask in enumerate(masks):
+	for i, mask in tqdm.tqdm(enumerate(masks), total=len(masks)):
 		print("Mask ", i)
 		crops = []
 		df_meta = pd.DataFrame(columns=[
@@ -490,7 +491,7 @@ def save_crops_to_dataset():
 
 if __name__ == "__main__":
 	# crops for opencell
-	if 1:
+	if 0:
 		min_nuclear_diam = 50  # px
 		width, height = 200, 200  # px
 		generate_crops_opencell(min_nuclear_diam=min_nuclear_diam,
@@ -500,7 +501,7 @@ if __name__ == "__main__":
 								viz_dpi=150)
 
 	# crops for orphans (the inference set)
-	if 0:
+	if 1:
 		min_nuclear_diam = 50  # px
 		width, height = 200, 200  # px
 		dir_infdata = "inference/results/load_inf_data/"

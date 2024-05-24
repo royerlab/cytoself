@@ -48,10 +48,15 @@ def load_inf_dataset52(dir_fovs, DO_VIZ=True):
 	dir_viz.mkdir(exist_ok=True, parents=True)
 
 	fnames = [f for f in dir_fovs.glob("*.tif")] 
+
+	# manual filter 
+	if 0:
+		fnames = [f for f in fnames if 'H5' in str(f)]
 	print(f"Num files {len(fnames)}")
 
 	# construct a dataframe for the image metadata
 	df_imgs_meta = pd.DataFrame(columns=["fname", "well_id", "fov_id", "is_green"])
+
 
 	# create the metadata dataframe before reading the images
 	for fname in fnames:
@@ -109,4 +114,9 @@ def load_inf_dataset52(dir_fovs, DO_VIZ=True):
 
 if __name__ == "__main__":
 	dir_fovs = "/hpc/instruments/leonetti.dragonfly/infected-cell-microscopy/TICM052-1/raw_data"
+	dir_fovs = "/hpc/instruments/leonetti.dragonfly/infected-cell-microscopy/TICM048-1/raw_data"
 	load_inf_dataset52(dir_fovs=dir_fovs, DO_VIZ=True)
+
+
+
+

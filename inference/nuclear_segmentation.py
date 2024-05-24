@@ -31,6 +31,9 @@ def segment_nuclei_fovs(dir_data, diameter=None, batch_size=2048, is_opencell=Fa
 
 	dir_data = Path(dir_data)
 	fnames = [l for l in dir_data.iterdir()]
+	if 0:
+		fnames = [f for f in fnames if 'H5' in str(f)]	
+
 	# results dirs 
 	current_filename = Path(os.path.basename(__file__))
 	dir_results = Path("inference/results") / os.path.join(current_filename.stem, "")
@@ -49,7 +52,7 @@ def segment_nuclei_fovs(dir_data, diameter=None, batch_size=2048, is_opencell=Fa
 
 	# imgs_pro = [np.array(Image.open(f)) for f in fnames_pro]
 	imgs_nuc = [np.array(Image.open(f)) for f in fnames_nuc]
-
+	print(len(imgs_nuc), " images")
 
 	from cellpose import models
 	is_cuda = torch.cuda.is_available()
@@ -60,7 +63,7 @@ def segment_nuclei_fovs(dir_data, diameter=None, batch_size=2048, is_opencell=Fa
 	print("Running cellpose ... may take a minute ")
 
 	masks, flows, styles, diams = model.eval(imgs_nuc, diameter=diameter, 
-		flow_threshold=None, channels=None, batch_size=batch_size)
+		flow_threshold=None, channels=None, batch_size=batch_size, progress=True)
 
 	# save the masks 
 	fname_mask = dir_results / f"all_segmasks.pt"
@@ -124,10 +127,11 @@ def segment_opencell():
 
 if __name__ == "__main__":
 	# orphan proteins 
-	if 0:
+	if 1:
 		dir_data = Path("inference/results/load_inf_data/")
 		is_opencell = False
 		segment_nuclei_fovs(dir_data, is_opencell)
 
-	segment_opencell()
+	if 0:
+		segment_opencell()
 

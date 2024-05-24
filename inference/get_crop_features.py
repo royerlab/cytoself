@@ -34,7 +34,7 @@ from cytoself.datamanager.preloaded_dataset import PreloadedDataset
 from cytoself.trainer.cytoselflite_trainer import CytoselfFullTrainer
 
 # description of the versions in the 
-VERSION = 2 
+VERSION = 0
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def get_features(fname_crops,
@@ -446,8 +446,8 @@ if __name__ == "__main__":
 		fname_crops_meta = "inference/results/crop/crops_meta.csv"
 	do_reconstructions = False 
 
-	for (dir_pretrained_model, checkpoint) in dir_pretrained_models_checkpoints:
-		for augmentation in ("0","90","180","270","0_f","90_f","180_f","270_f"):
+	for augmentation in ("0","90","180","270","0_f","90_f","180_f","270_f"):
+		for (dir_pretrained_model, checkpoint) in dir_pretrained_models_checkpoints:
 		# for augmentation in ("0"): # (,"90","180","270","0_f","90_f","180_f","270_f"):
 			get_features(
 				fname_crops=fname_crops,
@@ -468,18 +468,18 @@ if __name__ == "__main__":
 			else:
 				raise 
 
-			fname_crops_opencell = dir_opencell_test / "test_dataset_crops.npy"
-			fname_crops_opencell_meta = dir_opencell_test / "test_dataset_labels.npy"
+			# fname_crops_opencell = dir_opencell_test / "test_dataset_crops.npy"
+			# fname_crops_opencell_meta = dir_opencell_test / "test_dataset_labels.npy"
 
-			get_features_opencell(
-				fname_crops=fname_crops_opencell,
-				fname_crops_meta=fname_crops_opencell_meta,
-				dir_pretrained_model=dir_pretrained_model,
-				checkpoint=checkpoint,
-				do_reconstructions=do_reconstructions,
-				augmentation=augmentation,
-				do_retrieval_test=False,
-			)
+			# get_features_opencell(
+			# 	fname_crops=fname_crops_opencell,
+			# 	fname_crops_meta=fname_crops_opencell_meta,
+			# 	dir_pretrained_model=dir_pretrained_model,
+			# 	checkpoint=checkpoint,
+			# 	do_reconstructions=do_reconstructions,
+			# 	augmentation=augmentation,
+			# 	do_retrieval_test=False,
+			# )
 
 candidate_shitty_proteins = ["MYO19","DNAJC11"]
 candidate_shitty_proteins = ["MYO19","MFN2","VDAC2","DNAJC11","VDAC3"] # mito 

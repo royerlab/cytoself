@@ -25,7 +25,7 @@ from tqdm import tqdm
 from collections import Counter
 from sklearn.decomposition import PCA
 
-VERSION = 2
+VERSION = 0
 
 # protein_filter = dict(
 #     # GLT8D1=[1, 2, 4, 11, 13, 18, 52, 64, 96, 97],
@@ -119,9 +119,10 @@ def get_nearest_proteins(
     if combine_inference_wells:
         protein_label_inf = df_meta_inf['protein'].values
         sort_key = None
+        ipdb.set_trace()
         df_inf_lookup = df_inf_lookup.sort_values(
             by='protein'
-        ).iloc[::2]  # we'll have an assert check that this is fine
+        )#.iloc[::2]  # we'll have an assert check that this is fine
     else:
         protein_label_inf = df_meta_inf['well_id'].values
         sort_key = custom_sort_key
@@ -346,7 +347,7 @@ def get_embeds_and_crops(
         labels_opencell = np.load(
             dir_opencell_test /
             "test_dataset_labels.npy")  # (93037, 3) protid, prot, loc_grade1
-        # ipdb.set_trace()
+
         df_opencell = pd.DataFrame(
             labels_opencell, columns=['ensg_id', 'prot_id', 'loc_grade1'])
 
@@ -401,9 +402,15 @@ def get_embeds_and_crops(
                                         how='left',
                                         left_on='well_id',
                                         right_on='well_id_new')
+        # manually add these things on in df_lookup 
+        df_meta_inf.loc[df_meta_inf['well_id']=="H5", 'protein'] = 'well_H5_protein'
+        df_meta_inf.loc[df_meta_inf['well_id']=="H8", 'protein'] = 'well_H8_protein'
+
         df_inf_lookup = get_df_inf_lookup(df_meta_inf)
 
         assert df_meta_inf.shape[0] == embeds.shape[1]
+        
+        # ipdb.set_trace()
 
         return embeds, labels_inf, crops_inf, df_meta_inf, df_annotations, df_inf_lookup
 
@@ -976,10 +983,11 @@ if __name__ == "__main__":
         # ["results/20231222_train_all_balanced_classes_1", None],
         # ["results/20231218_train_all_no_nucdist", None],
         # ["results/20231022_train_all", None],
-        # ["results/20240129_train_all_no_nucdist_balanced_classes_1", 36],
+
+        ["results/20240129_train_all_no_nucdist_balanced_classes_1", 36],
         ["results/20240129_train_all_balanced_classes_2", None],
         ["results/20240129_train_all", None],
-        # ["results/20240129_train_all_no_nucdist", None], 
+        ["results/20240129_train_all_no_nucdist", None], 
     ]
 
     # analyse distances
@@ -1011,8 +1019,8 @@ if __name__ == "__main__":
                             # True, 
                             ):
                         for combine_augmented_embeddings in (
-                                # False,
-                                True, 
+                                False,
+                                # True, 
                                 ):
                             get_nearest_proteins(
                                 fname_crops=fname_crops,

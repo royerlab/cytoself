@@ -1,10 +1,26 @@
-# changes from the original cytoself 
+# about 
+This repo is inference for image-based orphan protein analysis in the paper [Global organelle profiling reveals subcellular localization and remodeling at proteome scale](https://www.biorxiv.org/content/10.1101/2023.12.18.572249v1). This analysis is by [James Burgess](https://jmhb0.github.io/) and [Chad Liu](https://www.linkedin.com/in/chad-liu-14a77749/).
+
+It copies the [cytoself repo](https://github.com/royerlab/cytoself) for training a Cytoself representation learning model. We modify the training a little bit (see next section), and then write some inference code for comparing representations of orphan proteins to representations from [Opencell](https://opencell.czbiohub.org/). In this Readme, the content after the section called `cytoself` is from the README of the original project.
+
+
+# changes from the original cytoself (the training part)
 - changed `requirements.txt` for torch and torchvision. Previously it was (`torch>=1.11`) but I was getting some error in the torch Upsample layer. I think it was some issue with torch 2.0, so I set it to `torch==1.13.1` and `torchvision==0.12`.
 - scripts to train cytoself from scratch in `scripts`
 - added the 10 `.npy` file and 10 `.csv` files from `https://github.com/royerlab/cytoself/tree/main` and put them in `data/opencell_crops` (which is obviously not comitted to the repo).
 - In the run scripts, I save the `train_args` and `model_args`. This is so that I can more easily reconstruct the model in the inference scripts.
 - in the `cytoself/datamanager/opencell.py` I add a step to the end of the dataloading of the dataloader. This saves the test dataset - it's indices and its crops into separate files. This is useful for doing analysis afterwards. You can load the embeddings and these labeles or images. It's necessary for doing inference with a new dataset. That puts data files in 'data/test_dataset_metadata/`
 - TODO: include the `data/cz_infectedcell_finalwellmapping.csv` in the eventual repo. 
+
+# inference pipeline 
+The new inference code for is in `inference/`.
+- `python inference/load_inf_data.py` saves stacks as max-intensity projs, and does some fov-level normalizations. Saved to `results/load_inf_data`.
+- `python inference/nuclear_segmentation.py`. Saves masks to `inference/nuclear_segmentation/all_masks.pt`. Issue is that if you take only a subset of these images, then you overwrite the pt file with only these images (this is not true of other steps)
+- `python inference/crop.py`. For each segmented nucleus in the fov, take a crop around it. There is a `VERSION` parameter that controls how normalization is done. If `VERSION==0` (recommended), then do `[0,1]` normalization within each crop, treating nucleus and target channel independently. If `VERSION==1` then normalize the FOV before cropping. IMO this is worse because, for example, you can get very bright (e.g. due to mitosis I guess), so doing normalization at the whole-FOV level makes the rest of the image very dim. If you normalize at the crop level, then only the abnormally bright areas are affected. Results saved in `inference/results/crop/` as `crops_v0` for `VERSION==0` or `crops_v1` for `VERSION==1`. Also the crop-metadata is saved to `crops_meta.csv`, which has the fov filename, the centroid coords (in the fov-space) of the nucleus  that is centered in this crop, and some other stuff. 
+- `python inference/get_crop_features.py` loads the pretrained cytoself model. For model name, for example `20240129_train_all`, features saved to `inference/results/get_crop_features/results/20240129_train_all/ckpt_None/`. Need to define the pretrained models in the bottom of the script. Also an option to create features for rotated versions of the crops, which should give better robustness overall according to [this paper](https://www.nature.com/articles/s41467-024-45362-4). (you have to make sure the `VERSION` matches what was used in the cropping - sorry, this should have been handled automatically)
+- `python inference/compare_opencell_targets.py` gets the 'consensus embeddings' for each protein by averaging over the crop representations for that protein. It does it for opencell and orphans, and makes a distance matrix for all proteins.
+
+
 
 
 # cytoself
