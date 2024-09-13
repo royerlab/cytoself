@@ -2,6 +2,7 @@
 
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![DOI](https://img.shields.io/badge/DOI-10.1038%2Fs41592--022--01541--z-%23403075)](https://doi.org/10.1038/s41592-022-01541-z)
+[![DOI](https://zenodo.org/badge/361991448.svg)](https://zenodo.org/doi/10.5281/zenodo.13761237)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-green.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![codecov](https://codecov.io/gh/royerlab/cytoself_pytorch/branch/main/graph/badge.svg?token=2SMIDRRC5L)](https://codecov.io/gh/royerlab/cytoself)
